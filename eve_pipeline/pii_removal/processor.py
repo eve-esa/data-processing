@@ -50,8 +50,19 @@ class PIIRemover(ProcessorBase):
                 if hasattr(self.analyzer, 'nlp_engine'):
                     nlp_engine = self.analyzer.nlp_engine
                     if hasattr(nlp_engine, 'nlp') and nlp_engine.nlp:
-                        # Clear spaCy model cache
-                        nlp_engine.nlp.vocab.strings._reset_index()
+                        if isinstance(nlp_engine.nlp, dict):
+                            for lang_code, model in nlp_engine.nlp.items():
+                                if hasattr(model, 'vocab') and hasattr(model.vocab, 'strings'):
+                                    try:
+                                        model.vocab.strings._reset_index()
+                                    except (AttributeError, TypeError):
+                                        # Skip if reset_index is not available or fails
+                                        pass
+                        elif hasattr(nlp_engine.nlp, 'vocab') and hasattr(nlp_engine.nlp.vocab, 'strings'):
+                            try:
+                                nlp_engine.nlp.vocab.strings._reset_index()
+                            except (AttributeError, TypeError):
+                                pass
                 
                 # Clean up Presidio analyzer
                 self.analyzer = None
