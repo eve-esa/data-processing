@@ -1,0 +1,17 @@
+__pycache__/
+
+*.ipynb
+
+.venv/
+.env
+sql_queries/
+pdfs/
+logs.txt
+
+fastapi_expts/
+data/
+logs/
+*.log
+cleaned_data/
+
+

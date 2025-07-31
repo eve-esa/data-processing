@@ -1,0 +1,167 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "eve-pipeline"
+version = "0.1.0"
+description = "A scalable, modular data processing pipeline for document extraction, cleaning, PII removal, and deduplication"
+readme = "README.md"
+license = "MIT"
+authors = [
+    {name = "Eve Data Processing Team"}
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+requires-python = ">=3.9"
+dependencies = [
+    # Core dependencies
+    "pydantic>=2.0.0",
+    "click>=8.0.0",
+    "tqdm>=4.64.0",
+    "python-dotenv>=1.0.0",
+    "boto3>=1.26.0",
+    "pathlib-mate>=1.0.0",
+    
+    # Data processing
+    "pandas>=2.0.0",
+    "numpy==1.26.4",
+    "scipy>=1.10.0",
+    
+    # Web extraction
+    "trafilatura>=1.6.0",
+    "beautifulsoup4>=4.12.0",
+    "requests>=2.28.0",
+    
+    # PDF processing
+    "pypdf>=5.0.0",
+    "pypdfium2>=4.20.0",
+    "nougat-ocr[api]>=0.1.17",
+    
+    # ML/NLP
+    "torch>=2.0.0",
+    "transformers>=4.30.0",
+    "flair>=0.12.0",
+    "nltk>=3.8.0",
+    "spacy>=3.6.0",
+    
+    # PII detection
+    "presidio-analyzer>=2.2.0",
+    "presidio-anonymizer>=2.2.0",
+    
+    # Deduplication
+    "datasketch>=1.6.0",
+    
+    # Web frameworks
+    "fastapi>=0.100.0",
+    "uvicorn>=0.20.0",
+    "litserve>=0.2.0",
+    
+    # Database
+    "mysql-connector-python>=8.0.0",
+    "sqlalchemy>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.1.0",
+    "black>=23.0.0",
+    "mypy>=1.5.0",
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pre-commit>=3.0.0",
+]
+
+[project.scripts]
+eve-pipeline = "eve_pipeline.cli:main"
+eve-extract = "eve_pipeline.extraction.cli:main"
+eve-clean = "eve_pipeline.cleaning.cli:main"
+eve-pii = "eve_pipeline.pii_removal.cli:main"
+eve-dedup = "eve_pipeline.deduplication.cli:main"
+
+[tool.ruff]
+target-version = "py39"
+line-length = 88
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "UP", # pyupgrade
+    "ARG", # flake8-unused-arguments
+    "COM", # flake8-commas
+    "T20", # flake8-print
+    "SIM", # flake8-simplify
+    "RUF", # ruff-specific rules
+]
+ignore = [
+    "E501",  # line too long, handled by black
+    "B008",  # do not perform function calls in argument defaults
+    "C901",  # too complex
+    "B904",  # raise from
+]
+
+[tool.ruff.per-file-ignores]
+"__init__.py" = ["F401"]
+"**/tests/**/*.py" = ["T20"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --strict-markers --cov=eve_pipeline --cov-report=term-missing"
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[tool.coverage.run]
+source = ["eve_pipeline"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__init__.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
