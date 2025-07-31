@@ -77,9 +77,3 @@ The pipeline consists of 5 main stages:
 3. **PII Removal**: Sensitive data anonymization  
 4. **Deduplication**: Exact and approximate duplicate detection
 5. **LaTeX Correction**: Mathematical notation fixes using GPT-4o-mini
-
-See [HOSTING_EVALUATION.md](HOSTING_EVALUATION.md) for deployment recommendations.
-
-## 📝 License
-
-MIT License - see LICENSE file for details.
