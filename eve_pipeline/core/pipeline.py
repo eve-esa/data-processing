@@ -15,6 +15,8 @@ from eve_pipeline.cleaning.pipeline import CleaningPipeline
 from eve_pipeline.pii_removal.processor import PIIRemover
 from eve_pipeline.deduplication.pipeline import DeduplicationPipeline
 from eve_pipeline.latex_correction.pipeline import LatexCorrectionPipeline
+from eve_pipeline.storage.factory import StorageFactory
+from eve_pipeline.storage.base import StorageBase
 
 
 class Pipeline:
@@ -33,6 +35,9 @@ class Pipeline:
         
         # Set up logging
         self._setup_logging()
+        
+        # Get storage configuration
+        self.storage_config = self.config.storage.to_storage_kwargs()
         
         # Initialize stage processors
         self.extractor_factory = None
@@ -64,6 +69,7 @@ class Pipeline:
                 config=self.config.cleaning,
                 num_processes=1,  # Will handle multiprocessing at pipeline level
                 debug=self.config.debug,
+                storage_config=self.storage_config,
             )
             self.logger.info("Cleaning stage initialized")
         
@@ -75,6 +81,7 @@ class Pipeline:
                 use_flair=self.config.pii_removal.use_flair,
                 server_url=self.config.pii_removal.server_url,
                 debug=self.config.debug,
+                storage_config=self.storage_config,
             )
             self.logger.info("PII removal stage initialized")
         
@@ -82,6 +89,7 @@ class Pipeline:
             self.deduplication_pipeline = DeduplicationPipeline(
                 config=self.config.deduplication,
                 debug=self.config.debug,
+                storage_config=self.storage_config,
             )
             self.logger.info("Deduplication stage initialized")
         
@@ -89,6 +97,7 @@ class Pipeline:
             self.latex_correction_pipeline = LatexCorrectionPipeline(
                 config=self.config.latex_correction,
                 debug=self.config.debug,
+                storage_config=self.storage_config,
             )
             self.logger.info("LaTeX correction stage initialized")
     
@@ -106,10 +115,12 @@ class Pipeline:
         Returns:
             ProcessorResult with final processing outcome.
         """
-        input_path = Path(input_path)
+        input_path_str = str(input_path)
         start_time = time.time()
         
-        if not input_path.exists():
+        # Check if input exists using appropriate storage backend
+        input_storage = StorageFactory.get_storage_for_path(input_path_str, **self.storage_config)
+        if not input_storage.exists(input_path_str):
             return ProcessorResult(
                 status=ProcessorStatus.FAILED,
                 input_path=input_path,
@@ -125,15 +136,17 @@ class Pipeline:
             if self.extractor_factory and self.config.extraction.enabled:
                 step_start = time.time()
                 
-                extractor = self.extractor_factory.get_extractor(input_path)
+                extractor = self.extractor_factory.get_extractor(input_path_str)
                 if not extractor:
+                    # Try to get file extension from path string
+                    file_ext = Path(input_path_str).suffix if hasattr(Path(input_path_str), 'suffix') else ""
                     return ProcessorResult(
                         status=ProcessorStatus.FAILED,
                         input_path=input_path,
-                        error_message=f"No extractor available for file type: {input_path.suffix}",
+                        error_message=f"No extractor available for file type: {file_ext}",
                     )
                 
-                extraction_result = extractor.process_file(input_path)
+                extraction_result = extractor.process_file(input_path_str)
                 
                 step_info = {
                     "stage": "extraction",
@@ -160,7 +173,7 @@ class Pipeline:
                 all_metadata["extraction"] = extraction_result.metadata or {}
             else:
                 # Read file content directly if extraction disabled
-                current_content = self._read_file(input_path)
+                current_content = self._read_file(input_path_str)
             
             # Stage 2: Cleaning
             if self.cleaning_pipeline and self.config.cleaning.enabled:
@@ -294,8 +307,8 @@ class Pipeline:
             
             # Save final output if path provided
             if output_path and current_content:
-                output_path = Path(output_path)
-                self._write_file(output_path, current_content)
+                output_path_str = str(output_path)
+                self._write_file(output_path_str, current_content)
             
             return ProcessorResult(
                 status=ProcessorStatus.SUCCESS,
@@ -353,23 +366,26 @@ class Pipeline:
         """Process all files in a directory through the pipeline.
         
         Args:
-            input_dir: Path to input directory.
-            output_dir: Optional path to output directory.
+            input_dir: Path to input directory (local or S3).
+            output_dir: Optional path to output directory (local or S3).
             file_patterns: List of file patterns to process.
             
         Returns:
             Dictionary with processing results and statistics.
         """
-        input_dir = Path(input_dir)
-        if not input_dir.exists():
+        input_dir_str = str(input_dir)
+        input_storage = StorageFactory.get_storage_for_path(input_dir_str, **self.storage_config)
+        
+        if not input_storage.exists(input_dir_str):
             return {
                 "success": False,
                 "error_message": f"Input directory does not exist: {input_dir}",
             }
         
+        output_storage = None
         if output_dir:
-            output_dir = Path(output_dir)
-            output_dir.mkdir(parents=True, exist_ok=True)
+            output_dir_str = str(output_dir)
+            output_storage = StorageFactory.get_storage_for_path(output_dir_str, **self.storage_config)
         
         # Default file patterns based on enabled stages
         if file_patterns is None:
@@ -378,10 +394,10 @@ class Pipeline:
             else:
                 file_patterns = ["*.md"]  # Assume markdown if no extraction
         
-        # Find all matching files
+        # Find all matching files using storage backend
         files = []
         for pattern in file_patterns:
-            files.extend(input_dir.rglob(pattern))
+            files.extend(input_storage.list_files(input_dir_str, pattern))
         
         files = list(set(files))  # Remove duplicates
         
@@ -397,16 +413,16 @@ class Pipeline:
         
         # Process files
         if self.config.num_processes > 1:
-            results = self._process_files_parallel(files, input_dir, output_dir)
+            results = self._process_files_parallel(files, input_dir_str, output_dir)
         else:
-            results = self._process_files_sequential(files, input_dir, output_dir)
+            results = self._process_files_sequential(files, input_dir_str, output_dir)
         
         # Generate statistics
         stats = self._generate_statistics(results)
         
         return {
             "success": True,
-            "input_directory": str(input_dir),
+            "input_directory": input_dir_str,
             "output_directory": str(output_dir) if output_dir else None,
             "file_patterns": file_patterns,
             "total_files": len(files),
@@ -416,9 +432,9 @@ class Pipeline:
     
     def _process_files_sequential(
         self,
-        files: List[Path],
-        input_dir: Path,
-        output_dir: Optional[Path],
+        files: List[str],
+        input_dir: str,
+        output_dir: Optional[Union[str, Path]],
     ) -> List[ProcessorResult]:
         """Process files sequentially."""
         results = []
@@ -427,9 +443,19 @@ class Pipeline:
             # Create output path if output directory provided
             output_path = None
             if output_dir:
-                relative_path = file_path.relative_to(input_dir)
-                output_path = output_dir / relative_path.with_suffix('.md')
-                output_path.parent.mkdir(parents=True, exist_ok=True)
+                # Calculate relative path and create output path
+                if StorageBase.is_s3_path(file_path) and StorageBase.is_s3_path(input_dir):
+                    # S3 to S3 - use key-based relative path
+                    input_key = file_path.replace(input_dir, "").lstrip("/")
+                    output_path = f"{str(output_dir).rstrip('/')}/{input_key}".replace(Path(input_key).suffix, '.md')
+                elif not StorageBase.is_s3_path(file_path) and not StorageBase.is_s3_path(str(output_dir)):
+                    # Local to local - use Path relative_to
+                    relative_path = Path(file_path).relative_to(Path(input_dir))
+                    output_path = Path(output_dir) / relative_path.with_suffix('.md')
+                else:
+                    # Mixed storage - use filename
+                    filename = Path(file_path).name
+                    output_path = f"{str(output_dir).rstrip('/')}/{filename}".replace(Path(filename).suffix, '.md')
             
             result = self.process_file(file_path, output_path)
             results.append(result)
@@ -438,20 +464,30 @@ class Pipeline:
     
     def _process_files_parallel(
         self,
-        files: List[Path],
-        input_dir: Path,
-        output_dir: Optional[Path],
+        files: List[str],
+        input_dir: str,
+        output_dir: Optional[Union[str, Path]],
     ) -> List[ProcessorResult]:
         """Process files in parallel."""
         results = []
         
-        def process_single_file(file_path: Path) -> ProcessorResult:
+        def process_single_file(file_path: str) -> ProcessorResult:
             # Create output path if output directory provided
             output_path = None
             if output_dir:
-                relative_path = file_path.relative_to(input_dir)
-                output_path = output_dir / relative_path.with_suffix('.md')
-                output_path.parent.mkdir(parents=True, exist_ok=True)
+                # Calculate relative path and create output path
+                if StorageBase.is_s3_path(file_path) and StorageBase.is_s3_path(input_dir):
+                    # S3 to S3 - use key-based relative path
+                    input_key = file_path.replace(input_dir, "").lstrip("/")
+                    output_path = f"{str(output_dir).rstrip('/')}/{input_key}".replace(Path(input_key).suffix, '.md')
+                elif not StorageBase.is_s3_path(file_path) and not StorageBase.is_s3_path(str(output_dir)):
+                    # Local to local - use Path relative_to
+                    relative_path = Path(file_path).relative_to(Path(input_dir))
+                    output_path = Path(output_dir) / relative_path.with_suffix('.md')
+                else:
+                    # Mixed storage - use filename
+                    filename = Path(file_path).name
+                    output_path = f"{str(output_dir).rstrip('/')}/{filename}".replace(Path(filename).suffix, '.md')
             
             return self.process_file(file_path, output_path)
         
@@ -507,21 +543,12 @@ class Pipeline:
             }
         }
     
-    def _read_file(self, file_path: Path) -> str:
+    def _read_file(self, file_path: str) -> str:
         """Read file with encoding detection."""
-        encodings = ["utf-8", "latin-1", "cp1252", "iso-8859-1"]
-        
-        for encoding in encodings:
-            try:
-                with open(file_path, "r", encoding=encoding) as f:
-                    return f.read()
-            except UnicodeDecodeError:
-                continue
-        
-        raise Exception(f"Cannot decode file {file_path} with any supported encoding")
+        storage = StorageFactory.get_storage_for_path(file_path, **self.storage_config)
+        return storage.read_text(file_path)
     
-    def _write_file(self, file_path: Path, content: str) -> None:
+    def _write_file(self, file_path: str, content: str) -> None:
         """Write content to file."""
-        file_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(file_path, "w", encoding="utf-8") as f:
-            f.write(content)
+        storage = StorageFactory.get_storage_for_path(file_path, **self.storage_config)
+        storage.write_text(file_path, content)

@@ -8,6 +8,9 @@ import logging
 import time
 from enum import Enum
 
+from eve_pipeline.storage.factory import StorageFactory
+from eve_pipeline.storage.base import StorageBase
+
 
 class ProcessorStatus(Enum):
     """Status of a processor operation."""
@@ -61,6 +64,7 @@ class ProcessorBase(ABC):
         name: Optional[str] = None,
         enabled: bool = True,
         debug: bool = False,
+        storage_config: Optional[Dict[str, Any]] = None,
         **kwargs: Any,
     ) -> None:
         """Initialize processor.
@@ -69,12 +73,14 @@ class ProcessorBase(ABC):
             name: Processor name. If None, uses class name.
             enabled: Whether processor is enabled.
             debug: Enable debug logging.
+            storage_config: Configuration for storage backends.
             **kwargs: Additional configuration.
         """
         self.name = name or self.__class__.__name__
         self.enabled = enabled
         self.debug = debug
         self.config = kwargs
+        self.storage_config = storage_config or {}
         
         # Set up logging
         self.logger = logging.getLogger(f"eve_pipeline.{self.name}")
@@ -109,19 +115,19 @@ class ProcessorBase(ABC):
         """Process a file.
         
         Args:
-            input_path: Path to input file.
-            output_path: Optional path for output file.
+            input_path: Path to input file (local or S3).
+            output_path: Optional path for output file (local or S3).
             **kwargs: Additional processing parameters.
             
         Returns:
             ProcessorResult with processing outcome.
         """
         start_time = time.time()
-        input_path = Path(input_path)
+        input_path_str = str(input_path)
         
         try:
-            # Read input file
-            content = self._read_file(input_path)
+            # Read input file using appropriate storage backend
+            content = self._read_file(input_path_str)
             
             # Process content
             result = self.process(content, input_path, **kwargs)
@@ -132,8 +138,8 @@ class ProcessorBase(ABC):
             
             # Save output if path provided and processing succeeded
             if output_path and result.is_success and result.content:
-                output_path = Path(output_path)
-                self._write_file(output_path, result.content)
+                output_path_str = str(output_path)
+                self._write_file(output_path_str, result.content)
                 result.output_path = output_path
             
             return result
@@ -147,11 +153,11 @@ class ProcessorBase(ABC):
                 error_message=str(e),
             )
     
-    def _read_file(self, file_path: Path) -> str:
+    def _read_file(self, file_path: Union[str, Path]) -> str:
         """Read file with multiple encoding attempts.
         
         Args:
-            file_path: Path to file.
+            file_path: Path to file (local or S3).
             
         Returns:
             File content as string.
@@ -159,34 +165,39 @@ class ProcessorBase(ABC):
         Raises:
             Exception: If file cannot be read with any encoding.
         """
-        encodings = ["utf-8", "latin-1", "cp1252", "iso-8859-1"]
+        file_path_str = str(file_path)
         
-        for encoding in encodings:
-            try:
-                with open(file_path, "r", encoding=encoding) as f:
-                    return f.read()
-            except UnicodeDecodeError:
-                continue
+        # Get appropriate storage backend
+        storage = StorageFactory.get_storage_for_path(file_path_str, **self.storage_config)
         
-        raise Exception(f"Cannot decode file {file_path} with any supported encoding")
+        try:
+            return storage.read_text(file_path_str)
+        except Exception as e:
+            raise Exception(f"Cannot read file {file_path_str}: {str(e)}")
     
-    def _write_file(self, file_path: Path, content: str) -> None:
+    def _write_file(self, file_path: Union[str, Path], content: str) -> None:
         """Write content to file.
         
         Args:
-            file_path: Output file path.
+            file_path: Output file path (local or S3).
             content: Content to write.
         """
-        file_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(file_path, "w", encoding="utf-8") as f:
-            f.write(content)
+        file_path_str = str(file_path)
+        
+        # Get appropriate storage backend
+        storage = StorageFactory.get_storage_for_path(file_path_str, **self.storage_config)
+        
+        try:
+            storage.write_text(file_path_str, content)
+        except Exception as e:
+            raise Exception(f"Cannot write to file {file_path_str}: {str(e)}")
     
-    def should_skip(self, input_path: Path, output_path: Optional[Path] = None) -> bool:
+    def should_skip(self, input_path: Union[str, Path], output_path: Optional[Union[str, Path]] = None) -> bool:
         """Check if processing should be skipped.
         
         Args:
-            input_path: Input file path.
-            output_path: Optional output file path.
+            input_path: Input file path (local or S3).
+            output_path: Optional output file path (local or S3).
             
         Returns:
             True if processing should be skipped.
@@ -195,8 +206,11 @@ class ProcessorBase(ABC):
             return True
         
         # Skip if output already exists (basic implementation)
-        if output_path and output_path.exists():
-            return True
+        if output_path:
+            output_path_str = str(output_path)
+            storage = StorageFactory.get_storage_for_path(output_path_str, **self.storage_config)
+            if storage.exists(output_path_str):
+                return True
         
         return False
     

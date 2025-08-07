@@ -1,6 +1,5 @@
 """Main CLI interface for the Eve data processing pipeline."""
 
-import argparse
 import atexit
 import json
 import sys
@@ -49,8 +48,8 @@ def main():
 
 
 @main.command()
-@click.argument('input_path', type=click.Path(exists=True))
-@click.option('--output', '-o', type=click.Path(), help='Output file or directory path')
+@click.argument('input_path', type=str, help='Input file or directory path (local or S3)')
+@click.option('--output', '-o', type=str, help='Output file or directory path (local or S3)')
 @click.option('--config', '-c', type=click.Path(exists=True), help='Configuration file path')
 @click.option('--extraction/--no-extraction', default=True, help='Enable/disable extraction stage')
 @click.option('--cleaning/--no-cleaning', default=True, help='Enable/disable cleaning stage')
@@ -60,6 +59,10 @@ def main():
 @click.option('--num-processes', type=int, help='Number of parallel processes')
 @click.option('--debug', is_flag=True, help='Enable debug logging')
 @click.option('--save-results', type=click.Path(), help='Save processing results to JSON file')
+@click.option('--aws-access-key-id', type=str, help='AWS access key ID (overrides config/env)')
+@click.option('--aws-secret-access-key', type=str, help='AWS secret access key (overrides config/env)')
+@click.option('--aws-region', type=str, help='AWS region (overrides config/env)')
+@click.option('--aws-session-token', type=str, help='AWS session token (overrides config/env)')
 def process(
     input_path: str,
     output: Optional[str],
@@ -72,6 +75,10 @@ def process(
     num_processes: Optional[int],
     debug: bool,
     save_results: Optional[str],
+    aws_access_key_id: Optional[str],
+    aws_secret_access_key: Optional[str],
+    aws_region: Optional[str],
+    aws_session_token: Optional[str],
 ):
     """Process files through the complete pipeline."""
     
@@ -92,6 +99,15 @@ def process(
     if num_processes:
         pipeline_config.num_processes = num_processes
     
+    if aws_access_key_id:
+        pipeline_config.storage.aws_access_key_id = aws_access_key_id
+    if aws_secret_access_key:
+        pipeline_config.storage.aws_secret_access_key = aws_secret_access_key
+    if aws_region:
+        pipeline_config.storage.aws_region = aws_region
+    if aws_session_token:
+        pipeline_config.storage.aws_session_token = aws_session_token
+    
     # Initialize pipeline
     try:
         pipeline = Pipeline(config=pipeline_config)
@@ -102,10 +118,16 @@ def process(
         click.echo(f"Error: Failed to initialize pipeline: {e}", err=True)
         sys.exit(1)
     
-    input_path = Path(input_path)
+    from eve_pipeline.storage.factory import StorageFactory
+    
+    # Validate input path
+    input_storage = StorageFactory.get_storage_for_path(input_path, **pipeline_config.storage.to_storage_kwargs())
+    if not input_storage.exists(input_path):
+        click.echo(f"Error: Input path does not exist: {input_path}", err=True)
+        sys.exit(1)
     
     # Process input
-    if input_path.is_file():
+    if input_storage.is_file(input_path):
         # Single file processing
         click.echo(f"Processing file: {input_path}")
         
@@ -130,14 +152,14 @@ def process(
         
         final_result = {
             "type": "single_file",
-            "input": str(input_path),
+            "input": input_path,
             "output": str(result.output_path) if result.output_path else None,
             "status": result.status.value,
             "processing_time": result.processing_time,
             "metadata": result.metadata,
         }
     
-    elif input_path.is_dir():
+    elif input_storage.is_dir(input_path):
         # Directory processing
         click.echo(f"Processing directory: {input_path}")
         

@@ -25,6 +25,7 @@ class CleaningPipeline:
         config: Optional[CleaningConfig] = None,
         num_processes: Optional[int] = None,
         debug: bool = False,
+        storage_config: Optional[Dict] = None,
     ) -> None:
         """Initialize cleaning pipeline.
         
@@ -32,10 +33,12 @@ class CleaningPipeline:
             config: Cleaning configuration.
             num_processes: Number of processes for parallel processing.
             debug: Enable debug logging.
+            storage_config: Storage configuration for processors.
         """
         self.config = config or CleaningConfig()
         self.num_processes = num_processes or multiprocessing.cpu_count()
         self.debug = debug
+        self.storage_config = storage_config or {}
         
         # Initialize processors based on configuration
         self.processors = self._initialize_processors()
@@ -45,27 +48,29 @@ class CleaningPipeline:
         processors = []
         
         if self.config.ocr_corrections:
-            processors.append(OCRCorrector(debug=self.debug))
+            processors.append(OCRCorrector(debug=self.debug, storage_config=self.storage_config))
         
         if self.config.ocr_deduplication:
             processors.append(OCRDeduplicator(
                 similarity_threshold=self.config.similarity_threshold,
                 debug=self.debug,
+                storage_config=self.storage_config,
             ))
         
         if self.config.nougat_correction:
-            processors.append(NougatCorrector(debug=self.debug))
+            processors.append(NougatCorrector(debug=self.debug, storage_config=self.storage_config))
         
         if self.config.rule_based_corrections:
-            processors.append(RuleBasedCorrector(debug=self.debug))
+            processors.append(RuleBasedCorrector(debug=self.debug, storage_config=self.storage_config))
         
         if self.config.artifact_removal:
-            processors.append(ArtifactRemover(debug=self.debug))
+            processors.append(ArtifactRemover(debug=self.debug, storage_config=self.storage_config))
         
         if self.config.latex_correction:
             processors.append(LatexCorrector(
                 api_key=self.config.openai_api_key,
-                debug=self.debug
+                debug=self.debug,
+                storage_config=self.storage_config,
             ))
         
         return processors

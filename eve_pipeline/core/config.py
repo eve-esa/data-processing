@@ -15,9 +15,20 @@ class StorageConfig(BaseModel):
     local_base_dir: Optional[str] = None
     s3_bucket: Optional[str] = None
     s3_prefix: Optional[str] = None
-    aws_region: Optional[str] = Field(default_factory=lambda: os.getenv("AWS_REGION"))
-    aws_access_key: Optional[str] = Field(default_factory=lambda: os.getenv("AWS_ACCESS_KEY"))
-    aws_secret_key: Optional[str] = Field(default_factory=lambda: os.getenv("AWS_SECRET_KEY"))
+    aws_region: Optional[str] = Field(default_factory=lambda: os.getenv("AWS_DEFAULT_REGION", "us-east-1"))
+    aws_access_key_id: Optional[str] = Field(default_factory=lambda: os.getenv("AWS_ACCESS_KEY_ID"))
+    aws_secret_access_key: Optional[str] = Field(default_factory=lambda: os.getenv("AWS_SECRET_ACCESS_KEY"))
+    aws_session_token: Optional[str] = Field(default_factory=lambda: os.getenv("AWS_SESSION_TOKEN"))
+    
+    def to_storage_kwargs(self) -> Dict[str, Any]:
+        """Convert to storage factory kwargs."""
+        return {
+            "aws_access_key_id": self.aws_access_key_id,
+            "aws_secret_access_key": self.aws_secret_access_key,
+            "aws_region": self.aws_region,
+            "aws_session_token": self.aws_session_token,
+            "base_path": self.local_base_dir,
+        }
 
 
 class DatabaseConfig(BaseModel):
