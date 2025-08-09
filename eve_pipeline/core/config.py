@@ -46,7 +46,7 @@ class ExtractionConfig(BaseModel):
     """Configuration for extraction stage."""
     
     enabled: bool = True
-    supported_formats: List[str] = ["pdf", "xml", "html", "txt", "csv"]
+    supported_formats: List[str] = ["pdf", "xml", "html", "htm", "txt", "text", "csv", "tsv", "md", "markdown"]
     pdf_extractor: str = "nougat"  # nougat, marker, pypdf
     nougat_checkpoint: Optional[str] = Field(default_factory=lambda: os.getenv("NOUGAT_CHECKPOINT"))
     batch_size: int = 4

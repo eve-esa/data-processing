@@ -202,14 +202,17 @@ class LSHDeduplicator(ProcessorBase):
         """Find near-duplicates in a directory using LSH.
         
         Args:
-            input_dir: Path to input directory.
+            input_dir: Path to input directory (local or S3).
             file_pattern: File pattern to match.
             
         Returns:
             List of duplicate groups (each group is a list of similar files).
         """
-        input_dir = Path(input_dir)
-        files = list(input_dir.rglob(file_pattern))
+        from eve_pipeline.storage.factory import StorageFactory
+        
+        input_dir_str = str(input_dir)
+        storage = StorageFactory.get_storage_for_path(input_dir_str, **self.storage_config)
+        files = storage.list_files(input_dir_str, file_pattern)
         
         if not files:
             self.logger.warning(f"No files found matching pattern {file_pattern}")
@@ -236,11 +239,11 @@ class LSHDeduplicator(ProcessorBase):
         
         return duplicate_groups
     
-    def _process_batch(self, files: List[Path]) -> None:
+    def _process_batch(self, files: List[str]) -> None:
         """Process a batch of files."""
         for file_path in files:
             try:
-                # Read file content
+                # Read file content (file_path is already a string from storage.list_files)
                 content = self._read_file(file_path)
                 
                 # Process with LSH
@@ -250,13 +253,13 @@ class LSHDeduplicator(ProcessorBase):
                 self.logger.warning(f"Failed to process {file_path}: {e}")
                 continue
     
-    def _find_duplicate_groups(self, files: List[Path]) -> List[List[str]]:
+    def _find_duplicate_groups(self, files: List[str]) -> List[List[str]]:
         """Find groups of near-duplicate files."""
         processed = set()
         groups = []
         
         for file_path in files:
-            file_key = str(file_path)
+            file_key = file_path  # file_path is already a string
             
             if file_key in processed or file_key not in self.file_hashes:
                 continue
@@ -283,18 +286,7 @@ class LSHDeduplicator(ProcessorBase):
         
         return groups
     
-    def _read_file(self, file_path: Path) -> str:
-        """Read file with encoding detection."""
-        encodings = ["utf-8", "latin-1", "cp1252", "iso-8859-1"]
-        
-        for encoding in encodings:
-            try:
-                with open(file_path, "r", encoding=encoding) as f:
-                    return f.read()
-            except UnicodeDecodeError:
-                continue
-        
-        raise Exception(f"Cannot decode file {file_path} with any supported encoding")
+
     
     def reset(self) -> None:
         """Reset the deduplicator state."""

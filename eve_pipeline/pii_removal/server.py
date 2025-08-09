@@ -311,7 +311,7 @@ def create_server(workers: int = 1, devices: str = "auto", port: int = 8000):
         api,
         accelerator=devices,
         workers_per_device=workers,
-        timeout=120,  # 2 minute timeout
+        timeout=300,  # 5 minutes timeout
         max_batch_size=1,
     )
     

@@ -18,6 +18,7 @@ class LatexCorrectionPipeline:
         config: Optional[LatexConfig] = None,
         num_processes: Optional[int] = None,
         debug: bool = False,
+        storage_config: Optional[Dict] = None,
     ) -> None:
         """Initialize LaTeX correction pipeline.
         
@@ -25,13 +26,24 @@ class LatexCorrectionPipeline:
             config: LaTeX correction configuration.
             num_processes: Number of processes for parallel processing.
             debug: Enable debug logging.
+            storage_config: Storage configuration for S3/local file operations.
         """
         self.config = config or LatexConfig()
         self.num_processes = num_processes or multiprocessing.cpu_count()
         self.debug = debug
+        self.storage_config = storage_config or {}
+        
+        # Set up logging
+        import logging
+        self.logger = logging.getLogger("eve_pipeline.LatexCorrectionPipeline")
+        if debug:
+            self.logger.setLevel(logging.DEBUG)
         
         # Initialize the LaTeX corrector processor
-        self.latex_corrector = LatexCorrector(debug=debug)
+        self.latex_corrector = LatexCorrector(
+            debug=debug,
+            storage_config=self.storage_config,
+        )
     
     def process_content(self, content: str, input_path: Optional[Path] = None) -> ProcessorResult:
         """Process content through LaTeX correction.
@@ -56,16 +68,19 @@ class LatexCorrectionPipeline:
         """Process a single file.
         
         Args:
-            input_path: Path to input file.
+            input_path: Path to input file (local or S3).
             
         Returns:
             ProcessorResult with processing results.
         """
-        input_path = Path(input_path)
+        from eve_pipeline.storage.factory import StorageFactory
+        
+        input_path_str = str(input_path)
         
         try:
-            with open(input_path, 'r', encoding='utf-8') as f:
-                content = f.read()
+            # Use storage factory to handle both local and S3 paths
+            storage = StorageFactory.get_storage_for_path(input_path_str, **self.storage_config)
+            content = storage.read_text(input_path_str)
             
             return self.process_content(content, input_path)
             
@@ -90,6 +105,10 @@ class LatexCorrectionPipeline:
         Returns:
             Dictionary mapping file paths to processing results.
         """
+        self.logger.info(f"Processing {len(input_paths)} files for LaTeX correction")
+        if self.debug:
+            self.logger.debug(f"Files to process: {[str(p) for p in input_paths[:10]]}{'...' if len(input_paths) > 10 else ''}")
+        
         results = {}
         
         if self.num_processes == 1:
@@ -136,21 +155,26 @@ class LatexCorrectionPipeline:
         
         Args:
             result: Processing result to save.
-            output_dir: Output directory.
+            output_dir: Output directory (local or S3).
             input_path: Original input file path.
         """
-        output_dir = Path(output_dir)
-        input_path = Path(input_path)
+        from eve_pipeline.storage.factory import StorageFactory
+        from eve_pipeline.storage.base import StorageBase
         
-        # Create output directory if it doesn't exist
-        output_dir.mkdir(parents=True, exist_ok=True)
+        output_dir_str = str(output_dir)
+        input_path_str = str(input_path)
         
-        # Generate output file path
-        output_path = output_dir / input_path.name
+        storage = StorageFactory.get_storage_for_path(output_dir_str, **self.storage_config)
+        
+        if StorageBase.is_s3_path(input_path_str):
+            filename = input_path_str.split('/')[-1]
+        else:
+            filename = Path(input_path_str).name
+        
+        output_path = f"{output_dir_str.rstrip('/')}/{filename}"
         
         try:
-            with open(output_path, 'w', encoding='utf-8') as f:
-                f.write(result.content or "")
+            storage.write_text(output_path, result.content or "")
         except Exception as e:
             if self.debug:
                 print(f"Failed to save result to {output_path}: {e}")

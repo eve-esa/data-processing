@@ -1,12 +1,13 @@
 """Deduplication pipeline orchestrator."""
 
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from eve_pipeline.core.base import ProcessorResult, ProcessorStatus
 from eve_pipeline.core.config import DeduplicationConfig
 from eve_pipeline.deduplication.exact_deduplicator import ExactDeduplicator
 from eve_pipeline.deduplication.lsh_deduplicator import LSHDeduplicator
+from eve_pipeline.storage.factory import StorageFactory
 
 
 class DeduplicationPipeline:
@@ -16,22 +17,34 @@ class DeduplicationPipeline:
         self,
         config: Optional[DeduplicationConfig] = None,
         debug: bool = False,
+        storage_config: Optional[Dict] = None,
     ) -> None:
         """Initialize deduplication pipeline.
         
         Args:
             config: Deduplication configuration.
             debug: Enable debug logging.
+            storage_config: Storage configuration for S3/local file operations.
         """
         self.config = config or DeduplicationConfig()
         self.debug = debug
+        self.storage_config = storage_config or {}
+        
+        # Set up logging
+        import logging
+        self.logger = logging.getLogger("eve_pipeline.DeduplicationPipeline")
+        if debug:
+            self.logger.setLevel(logging.DEBUG)
         
         # Initialize deduplicators
         self.exact_deduplicator = None
         self.lsh_deduplicator = None
         
         if self.config.exact_deduplication:
-            self.exact_deduplicator = ExactDeduplicator(debug=debug)
+            self.exact_deduplicator = ExactDeduplicator(
+                debug=debug,
+                storage_config=self.storage_config,
+            )
         
         if self.config.lsh_deduplication:
             self.lsh_deduplicator = LSHDeduplicator(
@@ -39,6 +52,7 @@ class DeduplicationPipeline:
                 num_perm=self.config.lsh_num_perm,
                 shingle_size=self.config.lsh_shingle_size,
                 debug=debug,
+                storage_config=self.storage_config,
             )
     
     def process_content(
@@ -136,22 +150,49 @@ class DeduplicationPipeline:
         """Process all files in a directory for deduplication.
         
         Args:
-            input_dir: Path to input directory.
+            input_dir: Path to input directory (local or S3).
             file_pattern: File pattern to match.
             
         Returns:
             Dictionary with deduplication results and statistics.
         """
-        input_dir = Path(input_dir)
-        files = list(input_dir.rglob(file_pattern))
+        input_dir_str = str(input_dir)
+        
+        # Use storage factory to handle both local and S3 paths
+        storage = StorageFactory.get_storage_for_path(input_dir_str, **self.storage_config)
+        
+        if not storage.exists(input_dir_str):
+            return {
+                "success": False,
+                "error_message": f"Input directory does not exist: {input_dir}",
+                "total_files": 0,
+                "results": {},
+            }
+        
+        # List files using storage backend
+        self.logger.info(f"Searching for files in {input_dir} with pattern: {file_pattern}")
+        files = storage.list_files(input_dir_str, file_pattern)
         
         if not files:
+            self.logger.warning(f"No files found matching pattern {file_pattern} in {input_dir}")
             return {
                 "success": False,
                 "error_message": f"No files found matching pattern {file_pattern}",
                 "total_files": 0,
                 "results": {},
             }
+        
+        self.logger.info(f"Found {len(files)} files to process for deduplication")
+        if self.debug:
+            self.logger.debug(f"Files to process: {files[:10]}{'...' if len(files) > 10 else ''}")
+        
+        # Log which deduplication stages are enabled
+        stages = []
+        if self.config.exact_deduplication:
+            stages.append("exact deduplication")
+        if self.config.lsh_deduplication:
+            stages.append("LSH near-duplicate detection")
+        self.logger.info(f"Deduplication stages enabled: {stages}")
         
         results = {
             "total_files": len(files),
@@ -163,7 +204,7 @@ class DeduplicationPipeline:
         
         # Step 1: Exact deduplication
         if self.config.exact_deduplication and self.exact_deduplicator:
-            print("Running exact deduplication...")
+            self.logger.info(f"Starting exact deduplication on {len(files)} files...")
             exact_duplicates = self.exact_deduplicator.process_directory(input_dir, file_pattern)
             results["exact_duplicates"] = exact_duplicates
             
@@ -178,8 +219,6 @@ class DeduplicationPipeline:
         
         # Step 2: LSH deduplication on remaining files
         if self.config.lsh_deduplication and self.lsh_deduplicator:
-            print("Running LSH-based near-duplicate detection...")
-            
             # Reset LSH deduplicator for fresh analysis
             self.lsh_deduplicator.reset()
             
@@ -187,6 +226,8 @@ class DeduplicationPipeline:
             remaining_files = [f for f in files if str(f) not in exact_duplicate_files]
             
             if remaining_files:
+                self.logger.info(f"Starting LSH near-duplicate detection on {len(remaining_files)} remaining files...")
+                
                 # Create temporary directory list for LSH processing
                 temp_dir = Path(input_dir)
                 
@@ -219,6 +260,7 @@ class DeduplicationPipeline:
                     for duplicate_file in group[1:]:
                         near_duplicate_files.add(duplicate_file)
             else:
+                self.logger.info("No files remaining after exact deduplication for LSH processing")
                 near_duplicate_files = set()
         else:
             near_duplicate_files = set()
@@ -271,18 +313,15 @@ class DeduplicationPipeline:
             }
         }
     
-    def _read_file(self, file_path: Path) -> str:
-        """Read file with encoding detection."""
-        encodings = ["utf-8", "latin-1", "cp1252", "iso-8859-1"]
+    def _read_file(self, file_path: Union[str, Path]) -> str:
+        """Read file using storage factory (supports both local and S3 paths)."""
+        file_path_str = str(file_path)
+        storage = StorageFactory.get_storage_for_path(file_path_str, **self.storage_config)
         
-        for encoding in encodings:
-            try:
-                with open(file_path, "r", encoding=encoding) as f:
-                    return f.read()
-            except UnicodeDecodeError:
-                continue
-        
-        raise Exception(f"Cannot decode file {file_path} with any supported encoding")
+        try:
+            return storage.read_text(file_path_str)
+        except Exception as e:
+            raise Exception(f"Cannot read file {file_path_str}: {str(e)}")
     
     def reset(self) -> None:
         """Reset all deduplicators."""

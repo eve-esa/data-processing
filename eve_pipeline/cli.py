@@ -2,6 +2,7 @@
 
 import atexit
 import json
+import logging
 import sys
 from pathlib import Path
 from typing import Optional
@@ -10,6 +11,7 @@ import click
 
 from eve_pipeline.core.config import PipelineConfig
 from eve_pipeline.core.pipeline import Pipeline
+from eve_pipeline.core.base import ProcessorStatus
 
 # Global reference to pipeline for cleanup
 _pipeline_instance = None
@@ -48,7 +50,7 @@ def main():
 
 
 @main.command()
-@click.argument('input_path', type=str, help='Input file or directory path (local or S3)')
+@click.argument('input_path', type=str)
 @click.option('--output', '-o', type=str, help='Output file or directory path (local or S3)')
 @click.option('--config', '-c', type=click.Path(exists=True), help='Configuration file path')
 @click.option('--extraction/--no-extraction', default=True, help='Enable/disable extraction stage')
@@ -107,6 +109,14 @@ def process(
         pipeline_config.storage.aws_region = aws_region
     if aws_session_token:
         pipeline_config.storage.aws_session_token = aws_session_token
+    
+    # Configure logging to show errors in terminal
+    log_level = logging.DEBUG if debug else logging.INFO
+    logging.basicConfig(
+        level=log_level,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        force=True  # Override any existing configuration
+    )
     
     # Initialize pipeline
     try:
@@ -177,6 +187,21 @@ def process(
             
             if stats.get('failed', 0) > 0:
                 click.echo("⚠ Some files failed to process. Check logs for details.")
+                
+                # Show details of failed files
+                failed_results = [r for r in results.get("results", []) if r.status == ProcessorStatus.FAILED]
+                if failed_results and len(failed_results) <= 10:  # Don't spam if too many failures
+                    click.echo("\n📋 Failed files details:")
+                    for i, result in enumerate(failed_results[:10], 1):
+                        click.echo(f"  {i}. {result.input_path}")
+                        click.echo(f"     Error: {result.error_message}")
+                elif len(failed_results) > 10:
+                    click.echo(f"\n📋 First 10 failed files (out of {len(failed_results)}):")
+                    for i, result in enumerate(failed_results[:10], 1):
+                        click.echo(f"  {i}. {result.input_path}")
+                        click.echo(f"     Error: {result.error_message}")
+                    click.echo(f"     ... and {len(failed_results) - 10} more failures")
+                    click.echo(f"     Use --save-results to see all details")
         else:
             click.echo(f"✗ Directory processing failed: {results.get('error_message', 'Unknown error')}", err=True)
             sys.exit(1)

@@ -151,20 +151,23 @@ class ExactDeduplicator(ProcessorBase):
         """Find exact duplicates in a directory.
         
         Args:
-            input_dir: Path to input directory.
+            input_dir: Path to input directory (local or S3).
             file_pattern: File pattern to match.
             
         Returns:
             Dictionary mapping hash to list of duplicate files.
         """
-        input_dir = Path(input_dir)
-        files = list(input_dir.rglob(file_pattern))
+        from eve_pipeline.storage.factory import StorageFactory
+        
+        input_dir_str = str(input_dir)
+        storage = StorageFactory.get_storage_for_path(input_dir_str, **self.storage_config)
+        files = storage.list_files(input_dir_str, file_pattern)
         
         hash_to_files: Dict[str, List[str]] = {}
         
         for file_path in files:
             try:
-                # Read file content
+                # Read file content (file_path is already a string from storage.list_files)
                 content = self._read_file(file_path)
                 
                 # Calculate hash
@@ -174,7 +177,7 @@ class ExactDeduplicator(ProcessorBase):
                 # Group files by hash
                 if content_hash not in hash_to_files:
                     hash_to_files[content_hash] = []
-                hash_to_files[content_hash].append(str(file_path))
+                hash_to_files[content_hash].append(file_path)
                 
             except Exception as e:
                 self.logger.warning(f"Failed to process {file_path}: {e}")
@@ -191,18 +194,7 @@ class ExactDeduplicator(ProcessorBase):
         
         return duplicates
     
-    def _read_file(self, file_path: Path) -> str:
-        """Read file with encoding detection."""
-        encodings = ["utf-8", "latin-1", "cp1252", "iso-8859-1"]
-        
-        for encoding in encodings:
-            try:
-                with open(file_path, "r", encoding=encoding) as f:
-                    return f.read()
-            except UnicodeDecodeError:
-                continue
-        
-        raise Exception(f"Cannot decode file {file_path} with any supported encoding")
+
     
     def reset(self) -> None:
         """Reset the deduplicator state."""

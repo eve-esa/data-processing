@@ -2,7 +2,7 @@
 
 import logging
 import time
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import as_completed
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
@@ -392,16 +392,20 @@ class Pipeline:
             if self.config.extraction.enabled:
                 file_patterns = [f"*.{fmt}" for fmt in self.config.extraction.supported_formats]
             else:
-                file_patterns = ["*.md"]  # Assume markdown if no extraction
+                file_patterns = ["*.md"]  # Process only markdown if no extraction
         
         # Find all matching files using storage backend
+        self.logger.info(f"Searching for files in {input_dir} with patterns: {file_patterns}")
         files = []
         for pattern in file_patterns:
-            files.extend(input_storage.list_files(input_dir_str, pattern))
+            pattern_files = input_storage.list_files(input_dir_str, pattern)
+            files.extend(pattern_files)
+            self.logger.debug(f"Found {len(pattern_files)} files matching pattern '{pattern}'")
         
         files = list(set(files))  # Remove duplicates
         
         if not files:
+            self.logger.warning(f"No files found matching patterns {file_patterns} in {input_dir}")
             return {
                 "success": True,
                 "message": f"No files found matching patterns {file_patterns}",
@@ -409,7 +413,13 @@ class Pipeline:
                 "results": [],
             }
         
-        self.logger.info(f"Processing {len(files)} files from {input_dir}")
+        self.logger.info(f"Found {len(files)} files to process from {input_dir}")
+        if self.config.debug:
+            self.logger.debug(f"Files to process: {files[:10]}{'...' if len(files) > 10 else ''}")
+        
+        # Log enabled stages
+        enabled_stages = self.config.enabled_stages
+        self.logger.info(f"Pipeline stages enabled: {enabled_stages}")
         
         # Process files
         if self.config.num_processes > 1:
@@ -468,8 +478,10 @@ class Pipeline:
         input_dir: str,
         output_dir: Optional[Union[str, Path]],
     ) -> List[ProcessorResult]:
-        """Process files in parallel."""
+        """Process files in parallel using thread-based parallelism to avoid pickle issues."""
         results = []
+        
+        from concurrent.futures import ThreadPoolExecutor
         
         def process_single_file(file_path: str) -> ProcessorResult:
             # Create output path if output directory provided
@@ -491,7 +503,7 @@ class Pipeline:
             
             return self.process_file(file_path, output_path)
         
-        with ProcessPoolExecutor(max_workers=self.config.num_processes) as executor:
+        with ThreadPoolExecutor(max_workers=self.config.num_processes) as executor:
             future_to_file = {executor.submit(process_single_file, file_path): file_path 
                             for file_path in files}
             

@@ -1,7 +1,7 @@
 """Text file extraction."""
 
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Union
 
 from eve_pipeline.extraction.base import ExtractorBase
 
@@ -27,11 +27,11 @@ class TextExtractor(ExtractorBase):
         )
         self.preserve_formatting = preserve_formatting
     
-    def extract_content(self, file_path: Path) -> str:
+    def extract_content(self, file_path: Union[str, Path]) -> str:
         """Extract content from text file.
         
         Args:
-            file_path: Path to text file.
+            file_path: Path to text file (local or S3).
             
         Returns:
             Text content as markdown.
@@ -43,8 +43,15 @@ class TextExtractor(ExtractorBase):
             if not content.strip():
                 raise RuntimeError("Empty text file")
             
+            # Get file extension safely for both S3 and local paths
+            if isinstance(file_path, str) and file_path.startswith('s3://'):
+                file_suffix = "." + file_path.split(".")[-1].lower() if "." in file_path else ""
+            else:
+                file_path_obj = Path(file_path) if isinstance(file_path, str) else file_path
+                file_suffix = file_path_obj.suffix.lower()
+            
             # Process based on file type
-            if file_path.suffix.lower() in [".md", ".markdown"]:
+            if file_suffix in [".md", ".markdown"]:
                 # Already markdown
                 processed_content = content
             else:
@@ -57,7 +64,7 @@ class TextExtractor(ExtractorBase):
             self.logger.error(f"Text extraction failed: {e}")
             raise
     
-    def _convert_to_markdown(self, content: str, file_path: Path) -> str:
+    def _convert_to_markdown(self, content: str, file_path: Union[str, Path]) -> str:
         """Convert plain text to markdown format.
         
         Args:
@@ -98,7 +105,7 @@ class TextExtractor(ExtractorBase):
         
         return markdown_content
     
-    def get_text_metadata(self, file_path: Path) -> Dict[str, Any]:
+    def get_text_metadata(self, file_path: Union[str, Path]) -> Dict[str, Any]:
         """Get text file metadata.
         
         Args:
@@ -113,8 +120,14 @@ class TextExtractor(ExtractorBase):
             lines = content.split("\n")
             words = content.split()
             
+            # For S3 files, we can't use stat(), so calculate file size from content
+            try:
+                file_size = file_path.stat().st_size if not str(file_path).startswith('s3://') else len(content.encode('utf-8'))
+            except (OSError, AttributeError):
+                file_size = len(content.encode('utf-8'))
+            
             metadata = {
-                "file_size": file_path.stat().st_size,
+                "file_size": file_size,
                 "content_length": len(content),
                 "line_count": len(lines),
                 "word_count": len(words),
@@ -123,7 +136,13 @@ class TextExtractor(ExtractorBase):
             }
             
             # Detect if it's already markdown
-            if file_path.suffix.lower() in [".md", ".markdown"]:
+            if isinstance(file_path, str) and file_path.startswith('s3://'):
+                file_suffix = "." + file_path.split(".")[-1].lower() if "." in file_path else ""
+            else:
+                file_path_obj = Path(file_path) if isinstance(file_path, str) else file_path
+                file_suffix = file_path_obj.suffix.lower()
+            
+            if file_suffix in [".md", ".markdown"]:
                 metadata["is_markdown"] = True
                 metadata["header_count"] = len([line for line in lines if line.strip().startswith("#")])
             
@@ -131,25 +150,19 @@ class TextExtractor(ExtractorBase):
             
         except Exception as e:
             self.logger.warning(f"Failed to extract text metadata: {e}")
-            return {"file_size": file_path.stat().st_size}
+            try:
+                file_size = file_path.stat().st_size if not str(file_path).startswith('s3://') else 0
+            except (OSError, AttributeError):
+                file_size = 0
+            return {"file_size": file_size}
     
-    def _detect_encoding(self, file_path: Path) -> str:
+    def _detect_encoding(self, file_path: Union[str, Path]) -> str:
         """Detect file encoding.
         
         Args:
-            file_path: Path to file.
+            file_path: Path to file (local or S3).
             
         Returns:
             Detected encoding.
         """
-        encodings = ["utf-8", "latin-1", "cp1252", "iso-8859-1"]
-        
-        for encoding in encodings:
-            try:
-                with open(file_path, "r", encoding=encoding) as f:
-                    f.read(1024)  # Try to read a small chunk
-                return encoding
-            except UnicodeDecodeError:
-                continue
-        
-        return "unknown"
+        return "utf-8"
