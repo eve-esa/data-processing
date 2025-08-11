@@ -22,7 +22,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Install the pipeline
 git clone <repository-url>
-cd eve-data-extraction
+cd eve-pipeline
 uv sync
 ```
 

@@ -44,6 +44,7 @@ dependencies = [
     "pypdf>=5.0.0",
     "pypdfium2>=4.20.0",
     "nougat-ocr[api]>=0.1.17",
+    "albumentations==1.0.0",
     
     # ML/NLP
     "torch>=2.0.0",
