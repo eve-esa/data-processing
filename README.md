@@ -32,6 +32,30 @@ uv sync
 uv sync --dev  # Installs dev dependencies including ruff, pytest, mypy
 ```
 
+### Troubleshooting Installation
+
+If you encounter `ModuleNotFoundError: No module named 'pip'`, run:
+```bash
+uv pip install pip
+```
+
+## 🔧 Setup
+
+### PII Removal Server
+
+For PII removal functionality, you need to run the PII removal server first:
+
+```bash
+# Navigate to the PII removal module
+cd eve_pipeline/pii_removal/
+
+# Run the server with desired number of workers
+python server.py --workers <number_of_workers>
+
+# Example: Run with 2 workers
+python server.py --workers 2
+```
+
 ## 🏃 Quick Start
 
 ### Command Line Interface
