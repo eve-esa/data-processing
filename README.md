@@ -1,4 +1,5 @@
 # Eve Data Processing Pipeline
+(Design Document - https://docs.google.com/document/d/13sbBslvo7HGYX7pooL8tkjwldvrkVOsFyIZRJVTWLZg/edit?usp=sharing)
 
 A scalable, modular, and production-ready data processing pipeline for document extraction, cleaning, PII removal, and deduplication.
 
