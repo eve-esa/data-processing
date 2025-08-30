@@ -1,7 +1,6 @@
 # Eve Data Processing Pipeline
 (Design Document - https://docs.google.com/document/d/13sbBslvo7HGYX7pooL8tkjwldvrkVOsFyIZRJVTWLZg/edit?usp=sharing)
 
-
 ## 🏗️ Architecture
 
 The pipeline consists of 5 main stages:
