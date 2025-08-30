@@ -1,5 +1,6 @@
 from eve.config import load_config
 
+
 def main():
     cfg = load_config("config.yaml")
 
