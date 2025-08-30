@@ -1,0 +1,25 @@
+pipeline:
+  inputs:
+    path: "files"
+  output_directory: "files/output"
+  output_format: "md"
+  stages:
+    - ingestion
+    - cleaning
+    - export
+
+
+# passing in files
+
+# pipeline:
+#   inputs:
+#     path:
+#       - "files/s44288-024-00042-0.pdf"
+#       - "files/mar-18-eos-magazine.pdf"
+#       - "files/ff36bbf0-e71c-493e-834d-94906b03d7cc.pdf"
+#   output_directory: "files/output"
+#   output_format: "md"
+#   stages:
+#     - ingestion
+#     - cleaning
+#     - export
