@@ -1,7 +1,6 @@
 import hashlib
 import os
 from collections import defaultdict
-from typing import Any
 
 
 class ExactDuplication:
@@ -16,7 +15,8 @@ class ExactDuplication:
 
     def __init__(self, input_data: list):
         self.input_data = input_data
-        self.duplicates = None
+        self.duplicates = []
+
         self._validate()
 
     @staticmethod
@@ -33,7 +33,7 @@ class ExactDuplication:
         """calculate file size"""
         return os.path.getsize(file)
 
-    def find_duplicates(self) -> Any:
+    def find_duplicates(self) -> list[list[str]]:
         """Find duplicate files based on size and SHA-256 checksum."""
 
         # stage 1: Group files by size
@@ -58,4 +58,4 @@ class ExactDuplication:
                 file_map[key].append(file)
 
         self.duplicates = {key: paths for key, paths in file_map.items() if len(paths) > 1}
-        return self.duplicates # {(file size, checksum) : [dup1 dup2 dup3]}
+        return list(self.duplicates.values())
