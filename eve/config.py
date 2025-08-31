@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Union
+from typing import Any, Union
 
 import yaml
 from pydantic import BaseModel, validator
@@ -11,7 +11,6 @@ class Inputs(BaseModel):
 
     def get_files(self) -> list[Path]:
         paths = [self.path] if isinstance(self.path, str) else self.path
-        #print(paths)
         files = []
 
         for p in paths:
@@ -27,24 +26,24 @@ class PipelineConfig(BaseModel):
     inputs: Inputs
     output_directory: Path
     output_format: str
-    stages: list[str]
+    stages: list[dict[str, Any]]  # list of dict since we have stage name + stage configs
 
     @validator("output_format")
     def check_format(cls, v):
-        allowed = {"md"} # add if missing
+        allowed = {"md"}  # add if missing
         if v not in allowed:
             raise ValueError(f"Unsupported output_format: {v}. Allowed: {allowed}")
         return v
 
     @validator("stages")
     def check_stages(cls, v):
-        allowed = {"ingestion", "cleaning", "export"} # add as when we expand
+        allowed = {"ingestion", "cleaning", "export", "duplication", "extraction"}
         for stage in v:
-            if stage not in allowed:
-                raise ValueError(f"Unsupported stage: {stage}. Allowed: {allowed}")
+            if stage["name"] not in allowed:
+                raise ValueError(f"Unsupported stage: {stage['name']}. Allowed: {allowed}")
         return v
 
 def load_config(path: str) -> PipelineConfig:
     with open(path) as f:
         raw = yaml.safe_load(f)
-    return PipelineConfig(**raw["pipeline"]) # unpack
+    return PipelineConfig(**raw["pipeline"])  # unpack

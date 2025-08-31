@@ -4,9 +4,16 @@ pipeline:
   output_directory: "files/output"
   output_format: "md"
   stages:
-    - ingestion
-    - cleaning
-    - export
+    - name: ingestion
+      config: {}
+    - name: duplication
+      config: {}
+    - name: extraction
+      config: {}
+    - name: cleaning
+      config: {}
+    - name: export
+      config: {}
 
 
 # passing in files
