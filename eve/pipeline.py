@@ -1,6 +1,7 @@
 from eve.base_step import PipelineStep
 from eve.config import load_config
 from eve.logging import get_logger
+from eve.steps.dedup.dedup_step import DuplicationStep
 
 
 class IngestionStep(PipelineStep):
@@ -20,11 +21,6 @@ class CleaningStep(PipelineStep):
 class ExportStep(PipelineStep):
     def execute(self, input_data: list) -> list:
         self.logger.info(f"Executing export step to {self.output_dir}")
-        return input_data
-
-class DuplicationStep(PipelineStep):
-    def execute(self, input_data: list) -> list:
-        self.logger.info("Executing duplication step")
         return input_data
 
 class ExtractionStep(PipelineStep):
@@ -56,7 +52,7 @@ def main():
         step_name = stage["name"]
         step_config = stage.get("config", {})
         if step_name in step_mapping:
-            step = step_mapping[step_name](config=step_config, output_dir=cfg.output_directory)
+            step = step_mapping[step_name](config = step_config, output_dir = cfg.output_directory)
             logger.info(f"Running step: {step_name}")
             data = step(data)
         else:

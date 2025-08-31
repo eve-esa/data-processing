@@ -1,13 +1,14 @@
 pipeline:
   inputs:
-    path: "files"
+    path: "txts"
   output_directory: "files/output"
   output_format: "md"
   stages:
     - name: ingestion
       config: {}
     - name: duplication
-      config: {}
+      # config: { method: "lsh", shingle_size: 3, num_perm: 128, threshold: 0.8 }
+      config: {} # defaults to exact
     - name: extraction
       config: {}
     - name: cleaning
