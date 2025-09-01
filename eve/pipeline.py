@@ -2,16 +2,7 @@ from eve.base_step import PipelineStep
 from eve.config import load_config
 from eve.logging import get_logger
 from eve.steps.dedup.dedup_step import DuplicationStep
-
-
-class IngestionStep(PipelineStep):
-    def execute(self, input_data: list) -> list:
-        self.logger.info("Executing ingestion step")
-        files = []
-        for path in input_data:
-            self.logger.debug(f"Processing file: {path}")
-            files.append(path)
-        return files
+from eve.steps.extraction.extract_step import ExtractionStep
 
 class CleaningStep(PipelineStep):
     def execute(self, input_data: list) -> list:
@@ -23,10 +14,6 @@ class ExportStep(PipelineStep):
         self.logger.info(f"Executing export step to {self.output_dir}")
         return input_data
 
-class ExtractionStep(PipelineStep):
-    def execute(self, input_data: list) -> list:
-        self.logger.info("Executing extraction step")
-        return input_data
 
 def main():
     logger = get_logger("pipeline")
@@ -41,7 +28,6 @@ def main():
 
     data = input_files
     step_mapping = {
-        "ingestion": IngestionStep,
         "cleaning": CleaningStep,
         "export": ExportStep,
         "duplication": DuplicationStep,
