@@ -4,8 +4,6 @@ pipeline:
   output_directory: "files/output"
   output_format: "md"
   stages:
-    - name: ingestion
-      config: {}
     - name: duplication
       # config: { method: "lsh", shingle_size: 3, num_perm: 128, threshold: 0.8 }
       config: {} # defaults to exact
@@ -28,6 +26,5 @@ pipeline:
 #   output_directory: "files/output"
 #   output_format: "md"
 #   stages:
-#     - ingestion
 #     - cleaning
 #     - export
