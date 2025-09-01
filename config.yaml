@@ -1,14 +1,14 @@
 pipeline:
   inputs:
-    path: "txts"
-  output_directory: "files/output"
+    path: "pdfs"
+  output_directory: "output"
   output_format: "md"
   stages:
     - name: duplication
       # config: { method: "lsh", shingle_size: 3, num_perm: 128, threshold: 0.8 }
       config: {} # defaults to exact
     - name: extraction
-      config: {}
+      config: { format: "pdf", url: "http://127.0.0.1:8001"}
     - name: cleaning
       config: {}
     - name: export
