@@ -7,3 +7,5 @@
 1. pipeline parallelism - files flow as and when completed instead of halting (check how this applies to the data duplication phase)
 2. cleaning pipeline
 4. pii extraction
+5. i think metadata extraction also part of this pipeline?
+6. implement edge cases where multiple data formats is passed to the duplication stage and other stages, currently it assumes a particular format.
