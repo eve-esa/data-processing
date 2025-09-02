@@ -1,10 +1,10 @@
 from pathlib import Path
 from typing import Optional
-import aiofiles
 import asyncio
 import re
 import xml.etree.ElementTree as ET
 
+from eve.utils import read_file
 from eve.logging import logger
 class XmlExtractor:
     def __init__(self, input_data: list):
@@ -14,8 +14,7 @@ class XmlExtractor:
     async def _extract_single_file(self, file_path: Path) -> Optional[str]:
         """extract text from a single XML file."""
         try:
-            async with aiofiles.open(file_path, 'r', encoding='utf-8') as f:
-                content = await f.read()
+            content = await read_file(file_path, 'r')
             
             def parse_and_extract():
                 

@@ -1,10 +1,10 @@
 import aiohttp
-import aiofiles
 import asyncio
 
 from pathlib import Path
 from typing import Optional
 
+from eve.utils import read_file
 from eve.logging import logger
 
 class PdfExtractor:
@@ -16,8 +16,7 @@ class PdfExtractor:
     async def _call_nougat(self, session: aiohttp.ClientSession, file_path: Path) -> Optional[str]:
         """internal method to call the Nougat API."""
         try:
-            async with aiofiles.open(file_path, "rb") as f:
-                file_content = await f.read()
+            file_content = await read_file(file_path, 'rb')
                 
             data = aiohttp.FormData()
             data.add_field('file', file_content, filename = file_path.name, content_type = 'application/pdf')

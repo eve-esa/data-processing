@@ -4,6 +4,7 @@ import hashlib
 from pathlib import Path
 from collections import defaultdict
 
+from eve.utils import read_in_chunks
 
 class ExactDuplication:
     """this class does exact duplication by -
@@ -25,15 +26,14 @@ class ExactDuplication:
     async def _calculate_sha256(file: str) -> str:
         """calculate SHA-256 checksum of a file."""
         sha256 = hashlib.sha256()
-        async with aiofiles.open(file, 'rb') as f:
-            while chunk := await f.read(4096):
-                sha256.update(chunk)
+        async for chunk in read_in_chunks(file, 'rb'):
+            sha256.update(chunk)
         return sha256.hexdigest()
 
     @staticmethod
     async def _calculate_size(file: str) -> int:
         """calculate file size"""
-        stat = await asyncio.to_thread(lambda: Path(file).stat())
+        stat = await asyncio.to_thread(lambda: Path(file).stat()) # the stat() is blocking so run on a different thread
         return stat.st_size
 
     async def find_duplicates(self) -> list[list[str]]:
