@@ -1,23 +1,20 @@
 __pycache__/
 
-*.ipynb
+.env
 
 .venv/
-.env
-sql_queries/
+output/
 pdfs/
 txts/
 xmls/
 htmls/
-logs.txt
-
-fastapi_expts/
 data/
 logs/
-*.log
-cleaned_data/
-files/
 eve.egg-info/
+
+
 test.py
 reqs.txt
 app.py
+*.ipynb
+*.log

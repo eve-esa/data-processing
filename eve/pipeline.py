@@ -5,19 +5,12 @@ from eve.config import load_config
 from eve.logging import get_logger
 from eve.steps.dedup.dedup_step import DuplicationStep
 from eve.steps.extraction.extract_step import ExtractionStep
-
+from eve.steps.export.export_step import ExportStep
 class CleaningStep(PipelineStep):
     async def execute(self, input_data: list) -> list:
         self.logger.info("Executing cleaning step")
         await asyncio.sleep(0)
         return input_data
-
-class ExportStep(PipelineStep):
-    async def execute(self, input_data: list) -> list:
-        self.logger.info(f"Executing export step to {self.output_dir}")
-        await asyncio.sleep(0)
-        return input_data
-
 
 async def pipeline():
     logger = get_logger("pipeline")
@@ -26,11 +19,11 @@ async def pipeline():
     logger.info("Starting pipeline execution")
 
     logger.info(f"Stages: {[stage['name'] for stage in cfg.stages]}")
-    logger.info(f"Output format: {cfg.output_format}")
     logger.info("Files to process:")
     input_files = cfg.inputs.get_files()
 
     data = input_files
+            
     step_mapping = {
         "cleaning": CleaningStep,
         "export": ExportStep,
@@ -42,7 +35,7 @@ async def pipeline():
         step_name = stage["name"]
         step_config = stage.get("config", {})
         if step_name in step_mapping:
-            step = step_mapping[step_name](config = step_config, output_dir = cfg.output_directory)
+            step = step_mapping[step_name](config = step_config)
             logger.info(f"Running step: {step_name}")
             data = await step(data)
         else:

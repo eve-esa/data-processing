@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from pathlib import Path
 from typing import Any, Optional
 
 from eve.logging import get_logger
@@ -8,7 +7,7 @@ from eve.logging import get_logger
 class PipelineStep(ABC):
     """abstract base class for all pipeline steps."""
 
-    def __init__(self, config: Any, output_dir: Path, name: Optional[str] = None):
+    def __init__(self, config: Any, name: Optional[str] = None):
         """initialize the pipeline step.
 
         Args:
@@ -17,7 +16,6 @@ class PipelineStep(ABC):
             name: Optional name for the step (used for logging).
         """
         self.config = config
-        self.output_dir = output_dir
         self.logger = get_logger(name or self.__class__.__name__)
 
     @abstractmethod
