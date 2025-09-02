@@ -1,3 +1,5 @@
+import asyncio
+
 from eve.base_step import PipelineStep
 from eve.config import load_config
 from eve.logging import get_logger
@@ -5,17 +7,19 @@ from eve.steps.dedup.dedup_step import DuplicationStep
 from eve.steps.extraction.extract_step import ExtractionStep
 
 class CleaningStep(PipelineStep):
-    def execute(self, input_data: list) -> list:
+    async def execute(self, input_data: list) -> list:
         self.logger.info("Executing cleaning step")
+        await asyncio.sleep(0)
         return input_data
 
 class ExportStep(PipelineStep):
-    def execute(self, input_data: list) -> list:
+    async def execute(self, input_data: list) -> list:
         self.logger.info(f"Executing export step to {self.output_dir}")
+        await asyncio.sleep(0)
         return input_data
 
 
-def main():
+async def pipeline():
     logger = get_logger("pipeline")
     cfg = load_config("config.yaml")
 
@@ -40,9 +44,13 @@ def main():
         if step_name in step_mapping:
             step = step_mapping[step_name](config = step_config, output_dir = cfg.output_directory)
             logger.info(f"Running step: {step_name}")
-            data = step(data)
+            data = await step(data)
         else:
             logger.error(f"No implementation found for step: {step_name}")
+
+def main():
+    """entry point for the pipeline"""
+    return asyncio.run(pipeline())
 
 if __name__ == "__main__":
     main()

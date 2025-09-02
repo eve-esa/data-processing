@@ -1,5 +1,7 @@
+import aiofiles
+import asyncio
 import hashlib
-import os
+from pathlib import Path
 from collections import defaultdict
 
 
@@ -20,42 +22,50 @@ class ExactDuplication:
         self._validate()
 
     @staticmethod
-    def _calculate_sha256(file: str) -> str:
+    async def _calculate_sha256(file: str) -> str:
         """calculate SHA-256 checksum of a file."""
         sha256 = hashlib.sha256()
-        with open(file, 'rb') as f:
-            for chunk in iter(lambda: f.read(4096), b''):
+        async with aiofiles.open(file, 'rb') as f:
+            while chunk := await f.read(4096):
                 sha256.update(chunk)
         return sha256.hexdigest()
 
     @staticmethod
-    def _calculate_size(file: str) -> int:
+    async def _calculate_size(file: str) -> int:
         """calculate file size"""
-        return os.path.getsize(file)
+        stat = await asyncio.to_thread(lambda: Path(file).stat())
+        return stat.st_size
 
-    def find_duplicates(self) -> list[list[str]]:
+    async def find_duplicates(self) -> list[list[str]]:
         """Find duplicate files based on size and SHA-256 checksum."""
 
-        # stage 1: Group files by size
+        # stage 1: group files by size 
+        size_tasks = [self._calculate_size(file) for file in self.input_data]
+        sizes = await asyncio.gather(*size_tasks)
+        
         size_groups = defaultdict(list)
+        for file, size in zip(self.input_data, sizes):
+            size_groups[size].append(file)
 
-        for file in self.input_data:
-            file_size = self._calculate_size(file)
-            size_groups[file_size].append(file)
-
-        # stage 2: only calculate checksum for files with matching sizes
-        file_map = defaultdict(list)
-
+        # stage 2: calculate checksums for potential duplicates
+        checksum_tasks = []
+        file_info = []
+        
         for size, files in size_groups.items():
-            if len(files) < 2:
-                # skip files with unique sizes they can't be duplicates
-                continue
+            if len(files) >= 2:  # Only files with matching sizes
+                for file in files:
+                    checksum_tasks.append(self._calculate_sha256(file))
+                    file_info.append((file, size))
 
-            # only calculate SHA-256 for files that might be duplicates
-            for file in files:
-                checksum = self._calculate_sha256(file)
-                key = (size, checksum)
-                file_map[key].append(file)
+        if not checksum_tasks:
+            return []
+
+        checksums = await asyncio.gather(*checksum_tasks)
+        
+        file_map = defaultdict(list)
+        for (file, size), checksum in zip(file_info, checksums):
+            key = (size, checksum)
+            file_map[key].append(file)
 
         self.duplicates = {key: paths for key, paths in file_map.items() if len(paths) > 1}
         return list(self.duplicates.values())
