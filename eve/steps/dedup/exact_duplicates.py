@@ -1,4 +1,3 @@
-import aiofiles
 import asyncio
 import hashlib
 from pathlib import Path

@@ -24,16 +24,7 @@ class Inputs(BaseModel):
 
 class PipelineConfig(BaseModel):
     inputs: Inputs
-    output_directory: Path
-    output_format: str
     stages: list[dict[str, Any]]  # list of dict since we have stage name + stage configs
-
-    @validator("output_format")
-    def check_format(cls, v):
-        allowed = {"md"}  # add if missing
-        if v not in allowed:
-            raise ValueError(f"Unsupported output_format: {v}. Allowed: {allowed}")
-        return v
 
     @validator("stages")
     def check_stages(cls, v):
