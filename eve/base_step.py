@@ -21,7 +21,7 @@ class PipelineStep(ABC):
         self.logger = get_logger(name or self.__class__.__name__)
 
     @abstractmethod
-    def execute(self, input_data: Any) -> Any: # TBD
+    async def execute(self, input_data: Any) -> Any: # TBD
         """Execute the pipeline step.
 
         Args:
@@ -32,7 +32,7 @@ class PipelineStep(ABC):
         """
         pass
 
-    def __call__(self, input_data: Any) -> Any:
+    async def __call__(self, input_data: Any) -> Any:
         """shortway of calling `execute` method.
 
         Args:
@@ -41,4 +41,4 @@ class PipelineStep(ABC):
         Returns:
             Processed data or result of the step.
         """
-        return self.execute(input_data)
+        return await self.execute(input_data)

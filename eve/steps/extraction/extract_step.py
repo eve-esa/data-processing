@@ -22,17 +22,17 @@ class ExtractionStep(PipelineStep):
         text = xml_extractor.extract_text()
         return text
 
-    def execute(self, input_data) -> list:
+    async def execute(self, input_data) -> list:
         format = self.config.get("format") # else write a wrapper to find out extensions
         url = self.config.get("url", None)
         self.logger.info(f"extracting text from : {format} files. file count: {len(input_data)}")
 
         if format == "html":
-            text = self._html_extraction(input_data)
+            text = await self._html_extraction(input_data)
         elif format == "pdf":
-            text = self._pdf_extraction(input_data, url)
+            text = await self._pdf_extraction(input_data, url)
         elif format == "xml":
-            text = self._xml_extraction(input_data)
+            text = await self._xml_extraction(input_data)
         else:
             self.logger.error(f"unsupported format: {format}")
             raise ValueError(f"unsupported format: {format}")

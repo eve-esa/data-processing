@@ -1,36 +1,52 @@
+from pathlib import Path
+from typing import Optional
+import asyncio
 import re
 import xml.etree.ElementTree as ET
 
+from eve.utils import read_file
+from eve.logging import logger
 class XmlExtractor:
     def __init__(self, input_data: list):
         self.input_data = input_data
         self.outputs = []
 
-    def _extract_text_from_tree(self, element):
-        """recursively extract text from the XML tree."""
-        texts = []
-        if element.text:
-            texts.append(element.text)
-        for child in element:
-            texts.extend(self._extract_text_from_tree(child))
-        if element.tail:
-            texts.append(element.tail)
-        return texts
-    
-    def _clean_newlines(self, text: str) -> str:
-        """clean excessive newlines and strip whitespace."""
-        cleaned_text = re.sub(r'\n{3,}', '\n\n', text)
-        cleaned_text = cleaned_text.strip()
-        return cleaned_text
+    async def _extract_single_file(self, file_path: Path) -> Optional[str]:
+        """extract text from a single XML file."""
+        try:
+            content = await read_file(file_path, 'r')
+            
+            def parse_and_extract():
+                
+                root = ET.fromstring(content)
+                
+                def extract_text_from_tree(element):
+                    texts = []
+                    if element.text:
+                        texts.append(element.text)
+                    for child in element:
+                        texts.extend(extract_text_from_tree(child))
+                    if element.tail:
+                        texts.append(element.tail)
+                    return texts
+                
+                extracted_texts = extract_text_from_tree(root)
+                full_text = ''.join(extracted_texts)
 
-    def extract_text(self) -> list:
+                cleaned_text = re.sub(r'\n{3,}', '\n\n', full_text)
+                return cleaned_text.strip()
+            
+            return await asyncio.to_thread(parse_and_extract)
+            
+        except Exception as e:
+            logger.error(f"Error processing XML file {file_path}: {e}")
+            return None
+
+    async def extract_text(self) -> list:
+        """extract text from all XML files concurrently."""
+        tasks = [self._extract_single_file(file_path) for file_path in self.input_data]
+        results = await asyncio.gather(*tasks, return_exceptions = True)
         
-        for file_path in self.input_data:
-            tree = ET.parse(file_path)
-            root = tree.getroot()
-            extracted_texts = self._extract_text_from_tree(root)
-            full_text = ''.join(extracted_texts)
-            cleaned_text = self._clean_newlines(full_text)
-            self.outputs.append(cleaned_text)
-        
+        self.outputs = [result for result in results 
+                       if result is not None and not isinstance(result, Exception)]
         return self.outputs

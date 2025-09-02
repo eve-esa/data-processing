@@ -1,19 +1,25 @@
+from pathlib import Path
+from typing import Optional
+import aiofiles
+import asyncio
 from trafilatura import extract
 
+from eve.utils import read_file
+from eve.logging import logger
 class HtmlExtractor:
     def __init__(self, input_data: list):
         self.input_data = input_data
         self.extractions = []
     
-    def extract_text(self) -> list:
-        encodings_to_try = ['utf-8', 'latin-1', 'cp1252', 'iso-8859-1']
-        text = None
+    async def _extract_single_file(self, file_path: Path) -> Optional[str]:
+        text = await read_file(file_path, 'r')
+        return text
 
-        for encoding in encodings_to_try:
-            for file in self.input_data:
-                with open(file, 'r', encoding = encoding) as file:
-                    data = file.read()
-                    text = extract(data)
-                    self.extractions.append(text)
-
+    async def extract_text(self) -> list:
+        """extract text from all HTML files concurrently."""
+        tasks = [self._extract_single_file(file_path) for file_path in self.input_data]
+        results = await asyncio.gather(*tasks, return_exceptions = True)
+        
+        self.extractions = [result for result in results 
+                          if result is not None and not isinstance(result, Exception)]
         return self.extractions
