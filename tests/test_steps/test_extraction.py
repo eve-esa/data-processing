@@ -9,7 +9,7 @@ from eve.steps.extraction.extract_step import ExtractionStep
 def temp_html_file():
     with tempfile.NamedTemporaryFile(mode = "w", delete = False, suffix = ".html") as f:
         f.write("<html><body><p>This is a HTML document</p></body></html>")
-        f.flush()
+        f.close()
         yield f.name
 
 
@@ -17,7 +17,7 @@ def temp_html_file():
 def temp_xml_file():
     with tempfile.NamedTemporaryFile(mode = "w", delete = False, suffix = ".xml") as f:
         f.write("<root><child>This is a XML document</child></root>")
-        f.flush()
+        f.close()
         yield f.name
 
 
@@ -25,7 +25,7 @@ def temp_xml_file():
 def temp_pdf_file():
     with tempfile.NamedTemporaryFile(mode = "wb", delete = False, suffix = ".pdf") as f:
         f.write(b"%PDF-1.4\n%Fake PDF content")
-        f.flush()
+        f.close()
         yield f.name
 
 @pytest.fixture
