@@ -9,3 +9,4 @@
 4. pii extraction
 5. i think metadata extraction also part of this pipeline?
 6. implement edge cases where multiple data formats is passed to the duplication stage and other stages, currently it assumes a particular format.
+7. see if it makes sense to convert all the data extracted to a custom Document unified object and add filename as metadata so we dont have to pass filenames and content seperately anymore.
