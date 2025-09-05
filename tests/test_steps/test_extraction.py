@@ -35,7 +35,7 @@ def temp_dir():
         yield temp_dir
 
 def test_html_extraction(temp_html_file):
-    step = ExtractionStep(config={"format": "html"}, output_dir = temp_dir)
+    step = ExtractionStep(config={"format": "html"})
     # patch HtmlExtractor to avoid calling trafilatura
     with patch("eve.steps.extraction.extract_step.HtmlExtractor") as MockHtmlExtractor:
         instance = MockHtmlExtractor.return_value
@@ -45,13 +45,13 @@ def test_html_extraction(temp_html_file):
 
 
 def test_xml_extraction(temp_xml_file):
-    step = ExtractionStep(config = {"format": "xml"}, output_dir = temp_dir)
+    step = ExtractionStep(config = {"format": "xml"})
     result = step.execute([temp_xml_file])
     assert any("This is a XML document" in r for r in result)
 
 
 def test_pdf_extraction(temp_pdf_file):
-    step = ExtractionStep(config={"format": "pdf", "url": "http://fake-endpoint"}, output_dir=temp_dir)
+    step = ExtractionStep(config={"format": "pdf", "url": "http://fake-endpoint"})
 
     with patch("eve.steps.extraction.pdfs.requests.post") as mock_post:
         mock_response = MagicMock()
@@ -65,7 +65,7 @@ def test_pdf_extraction(temp_pdf_file):
 
 
 def test_pdf_extraction_failure(temp_pdf_file):
-    step = ExtractionStep(config = {"format": "pdf", "url": "http://fake-endpoint"}, output_dir = temp_dir)
+    step = ExtractionStep(config = {"format": "pdf", "url": "http://fake-endpoint"})
     with patch("eve.steps.extraction.pdfs.requests.post") as mock_post:
         mock_post.return_value.status_code = 500
         result = step.execute([temp_pdf_file])
@@ -73,6 +73,6 @@ def test_pdf_extraction_failure(temp_pdf_file):
 
 
 def test_invalid_format(temp_html_file):
-    step = ExtractionStep(config = {"format": "invalid"}, output_dir = temp_dir)
+    step = ExtractionStep(config = {"format": "invalid"})
     with pytest.raises(ValueError, match = "unsupported format: invalid"):
         step.execute([temp_html_file])

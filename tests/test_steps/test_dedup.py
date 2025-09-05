@@ -28,8 +28,8 @@ def temp_dir():
         yield temp_dir
 
 @pytest.fixture
-def duplication_step(temp_dir):
-    step = DuplicationStep(config = {"method": "exact"}, output_dir = temp_dir)
+def duplication_step():
+    step = DuplicationStep(config = {"method": "exact"})
     return step
 
 def test_exact_deduplication(temp_files, duplication_step):
