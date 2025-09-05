@@ -15,6 +15,7 @@ setup(
         "nltk>=3.8",
         "datasketch>=1.6.0",
         "pdflatex>=0.1.3",
+        "pytest-asyncio==1.1.0",
     ],
     python_requires = ">=3.9",
 )
