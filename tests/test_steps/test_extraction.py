@@ -3,6 +3,7 @@ import pytest
 from unittest.mock import patch, MagicMock, AsyncMock
 from pathlib import Path
 from eve.steps.extraction.extract_step import ExtractionStep
+from eve.model.document import Document
 
 
 @pytest.fixture
@@ -43,7 +44,8 @@ async def test_html_extraction(temp_html_file):
         instance.extract_text = AsyncMock(return_value="Hello World")
         result = await step.execute([Path(temp_html_file)])
         assert len(result) == 1
-        assert result[0][1] == "Hello World"
+        assert isinstance(result[0], Document)
+        assert result[0].content == "Hello World"
 
 
 @pytest.mark.asyncio
@@ -51,7 +53,8 @@ async def test_xml_extraction(temp_xml_file):
     step = ExtractionStep(config = {"format": "xml"})
     result = await step.execute([Path(temp_xml_file)])
     assert len(result) == 1
-    assert "This is a XML document" in result[0][1]
+    assert isinstance(result[0], Document)
+    assert "This is a XML document" in result[0].content
 
 
 @pytest.mark.asyncio
@@ -65,7 +68,8 @@ async def test_pdf_extraction(temp_pdf_file):
         result = await step.execute([Path(temp_pdf_file)])
         
         assert len(result) == 1
-        assert result[0][1] == "PDF Extracted Text"
+        assert isinstance(result[0], Document)
+        assert result[0].content == "PDF Extracted Text"
 
 
 @pytest.mark.asyncio

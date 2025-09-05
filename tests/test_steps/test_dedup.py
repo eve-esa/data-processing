@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from eve.steps.dedup.dedup_step import DuplicationStep
+from eve.model.document import Document
 
 
 @pytest.fixture
@@ -38,6 +39,9 @@ async def test_exact_deduplication(temp_files, duplication_step):
     duplication_step.config = {"method": "exact"}
     result = await duplication_step.execute(temp_files)
     assert len(result) == 2  # 3 files - 1 duplicate = 2 remaining
+    assert all(isinstance(doc, Document) for doc in result)
+    assert all(doc.get_metadata('deduplication_method') == 'exact' for doc in result)
+    assert all(doc.get_metadata('is_duplicate') == False for doc in result)
 
 @pytest.mark.asyncio
 async def test_lsh_deduplication(temp_files, duplication_step):
@@ -49,6 +53,9 @@ async def test_lsh_deduplication(temp_files, duplication_step):
         MockLSH.return_value = mock_lsh_instance
         result = await duplication_step.execute(temp_files)
         assert len(result) == 2  # 3 files - 1 duplicate = 2 remaining 
+        assert all(isinstance(doc, Document) for doc in result)
+        assert all(doc.get_metadata('deduplication_method') == 'lsh' for doc in result)
+        assert all(doc.get_metadata('is_duplicate') == False for doc in result) 
 
 @pytest.mark.asyncio
 async def test_invalid_method(temp_files, duplication_step):
