@@ -1,15 +1,17 @@
 """Comprehensive cleaning step that applies all data cleaning components."""
 
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Union, Tuple
 
 from eve.base_step import PipelineStep
-from eve.steps.cleaning.ocr_corrections import OCRCorrections
-from eve.steps.cleaning.ocr_duplicate_remover import OCRDuplicateRemover
-from eve.steps.cleaning.nougat_correction import NougatCorrection
-from eve.steps.cleaning.rule_based_corrections import RuleBasedCorrections
-from eve.steps.cleaning.nougat_artifact_removal import NougatArtifactRemovalComponent
-from eve.steps.cleaning.latex_correction import LatexCorrectionComponent
+from eve.model.document import Document
+from eve.steps.cleaning.processors import (
+    OCRProcessor,
+    DuplicateRemovalProcessor,
+    NougatProcessor,
+    RuleBasedProcessor,
+    LaTeXProcessor,
+)
 
 
 class CleaningStep(PipelineStep):
@@ -40,42 +42,47 @@ class CleaningStep(PipelineStep):
         """
         super().__init__(config, name="CleaningStep")
         
-        self.debug = config.get("debug", False)
         ocr_threshold = config.get("ocr_threshold", 0.99)
         min_words = config.get("min_words", 2)
         enable_latex = config.get("enable_latex_correction", False)
         openrouter_key = config.get("openrouter_api_key")
         openrouter_model = config.get("openrouter_model", "anthropic/claude-3-haiku")
         
-        self.components = [
-            OCRCorrections(debug=self.debug),
-            OCRDuplicateRemover(threshold=ocr_threshold, min_words=min_words, debug=self.debug),
-            NougatCorrection(debug=self.debug),
-            RuleBasedCorrections(debug=self.debug),
-            NougatArtifactRemovalComponent(debug=self.debug),
+        self.processors = [
+            OCRProcessor(debug=self.debug),
+            DuplicateRemovalProcessor(threshold=ocr_threshold, min_words=min_words, debug=self.debug),
+            NougatProcessor(debug=self.debug),
+            RuleBasedProcessor(debug=self.debug),
         ]
         
         if enable_latex:
-            self.components.append(
-                LatexCorrectionComponent(
+            self.processors.append(
+                LaTeXProcessor(
                     debug=self.debug,
                     api_key=openrouter_key,
                     model=openrouter_model
                 )
             )
 
-    async def execute(self, input_data: List[Tuple[Path, str]]) -> List[Tuple[Path, str]]:
-        """Execute the cleaning step on extracted text data.
+    async def execute(self, input_data: Union[List[Document], List[Tuple[Path, str]]]) -> List[Document]:
+        """Execute the cleaning step on input data.
         
         Args:
-            input_data: List of tuples containing (file_path, extracted_text).
+            input_data: List of Documents or list of tuples containing (file_path, extracted_text).
             
         Returns:
-            List of tuples containing (file_path, cleaned_text).
+            List of cleaned Documents.
         """
-        self.logger.info(f"Executing cleaning step on {len(input_data)} files")
+        # Convert tuple format to Document objects if needed
+        documents = []
+        if input_data and isinstance(input_data[0], tuple):
+            documents = [Document.from_tuple(item) for item in input_data]
+        else:
+            documents = input_data
         
-        if not input_data:
+        self.logger.info(f"Executing cleaning step on {len(documents)} documents")
+        
+        if not documents:
             self.logger.warning("No input data provided to cleaning step")
             return []
         
@@ -83,47 +90,44 @@ class CleaningStep(PipelineStep):
         processed_count = 0
         failed_count = 0
         
-        for file_path, content in input_data:
-            filename = file_path.name
-            
-            if not content:
-                self.logger.warning(f"{filename} - Empty content, skipping cleaning")
-                result.append((file_path, content))
+        for document in documents:
+            if document.is_empty():
+                self.logger.warning(f"{document.filename} - Empty content, skipping cleaning")
+                result.append(document)
                 failed_count += 1
                 continue
             
             try:
-                cleaned_content = content
+                processed_document = document
+                original_length = document.content_length
                 
-                for component in self.components:
+                for processor in self.processors:
                     try:
-                        cleaned_content = await component.process(cleaned_content, filename)
+                        processed_document = await processor.process(processed_document)
                         
-                        if cleaned_content is None:
-                            self.logger.error(f"{filename} - Component {component.__class__.__name__} returned None")
-                            cleaned_content = content
+                        if processed_document is None:
+                            self.logger.error(f"{document.filename} - Processor {processor.__class__.__name__} returned None")
+                            processed_document = document
                             break
                             
                     except Exception as e:
-                        self.logger.error(f"{filename} - Component {component.__class__.__name__} failed: {str(e)}")
+                        self.logger.error(f"{document.filename} - Processor {processor.__class__.__name__} failed: {str(e)}")
                         continue
                 
-                if content and cleaned_content:
-                    original_length = len(content)
-                    cleaned_length = len(cleaned_content)
-                    reduction_percent = ((original_length - cleaned_length) / original_length) * 100
+                if original_length > 0 and processed_document.content_length != original_length:
+                    reduction_percent = ((original_length - processed_document.content_length) / original_length) * 100
                     
                     if reduction_percent > 0:
-                        self.logger.info(f"{filename} - Cleaned: {reduction_percent:.2f}% text removed ({original_length} -> {cleaned_length} chars)")
+                        self.logger.info(f"{document.filename} - Cleaned: {reduction_percent:.2f}% text removed ({original_length} -> {processed_document.content_length} chars)")
                     else:
-                        self.logger.info(f"{filename} - Cleaned: No significant changes")
+                        self.logger.info(f"{document.filename} - Cleaned: No significant changes")
                 
-                result.append((file_path, cleaned_content))
+                result.append(processed_document)
                 processed_count += 1
                 
             except Exception as e:
-                self.logger.error(f"{filename} - Cleaning failed: {str(e)}")
-                result.append((file_path, content))
+                self.logger.error(f"{document.filename} - Cleaning failed: {str(e)}")
+                result.append(document)
                 failed_count += 1
         
         self.logger.info(f"Cleaning step completed: {processed_count} processed, {failed_count} failed")
@@ -144,19 +148,19 @@ class CleaningStep(PipelineStep):
         ]
 
     def get_component_info(self) -> dict:
-        """Get information about enabled cleaning components.
+        """Get information about enabled cleaning processors.
         
         Returns:
-            Dictionary with component information.
+            Dictionary with processor information.
         """
         component_info = {
-            "total_components": len(self.components),
-            "components": [component.__class__.__name__ for component in self.components],
+            "total_processors": len(self.processors),
+            "processors": [processor.__class__.__name__ for processor in self.processors],
             "applicable_formats": self._get_applicable_formats(),
             "debug_enabled": self.debug
         }
         
-        latex_enabled = any(isinstance(comp, LatexCorrectionComponent) for comp in self.components)
+        latex_enabled = any(isinstance(proc, LaTeXProcessor) for proc in self.processors)
         component_info["latex_correction_enabled"] = latex_enabled
         
         return component_info
