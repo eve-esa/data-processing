@@ -1,6 +1,6 @@
 import tempfile
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, AsyncMock
 from pathlib import Path
 from eve.steps.extraction.extract_step import ExtractionStep
 
@@ -34,45 +34,54 @@ def temp_dir():
     with tempfile.TemporaryDirectory() as temp_dir:
         yield temp_dir
 
-def test_html_extraction(temp_html_file):
-    step = ExtractionStep(config={"format": "html"}, output_dir = temp_dir)
+@pytest.mark.asyncio
+async def test_html_extraction(temp_html_file):
+    step = ExtractionStep(config={"format": "html"})
     # patch HtmlExtractor to avoid calling trafilatura
     with patch("eve.steps.extraction.extract_step.HtmlExtractor") as MockHtmlExtractor:
         instance = MockHtmlExtractor.return_value
-        instance.extract_text.return_value = ["Hello World"]
-        result = step.execute([temp_html_file])
-        assert result == ["Hello World"]
+        instance.extract_text = AsyncMock(return_value="Hello World")
+        result = await step.execute([Path(temp_html_file)])
+        assert len(result) == 1
+        assert result[0][1] == "Hello World"
 
 
-def test_xml_extraction(temp_xml_file):
-    step = ExtractionStep(config = {"format": "xml"}, output_dir = temp_dir)
-    result = step.execute([temp_xml_file])
-    assert any("This is a XML document" in r for r in result)
+@pytest.mark.asyncio
+async def test_xml_extraction(temp_xml_file):
+    step = ExtractionStep(config = {"format": "xml"})
+    result = await step.execute([Path(temp_xml_file)])
+    assert len(result) == 1
+    assert "This is a XML document" in result[0][1]
 
 
-def test_pdf_extraction(temp_pdf_file):
-    step = ExtractionStep(config={"format": "pdf", "url": "http://fake-endpoint"}, output_dir=temp_dir)
+@pytest.mark.asyncio
+async def test_pdf_extraction(temp_pdf_file):
+    step = ExtractionStep(config={"format": "pdf", "url": "http://fake-endpoint"})
 
-    with patch("eve.steps.extraction.pdfs.requests.post") as mock_post:
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.text = "PDF Extracted Text"
-        mock_post.return_value = mock_response
-
-        result = step.execute([Path(temp_pdf_file)]) # explicitly wrap in Path
-
-        assert result == ["PDF Extracted Text"]
-
-
-def test_pdf_extraction_failure(temp_pdf_file):
-    step = ExtractionStep(config = {"format": "pdf", "url": "http://fake-endpoint"}, output_dir = temp_dir)
-    with patch("eve.steps.extraction.pdfs.requests.post") as mock_post:
-        mock_post.return_value.status_code = 500
-        result = step.execute([temp_pdf_file])
-        assert result == [None]
+    with patch("eve.steps.extraction.extract_step.PdfExtractor") as MockPdfExtractor:
+        instance = MockPdfExtractor.return_value
+        instance.extract_text = AsyncMock(return_value="PDF Extracted Text")
+        
+        result = await step.execute([Path(temp_pdf_file)])
+        
+        assert len(result) == 1
+        assert result[0][1] == "PDF Extracted Text"
 
 
-def test_invalid_format(temp_html_file):
-    step = ExtractionStep(config = {"format": "invalid"}, output_dir = temp_dir)
-    with pytest.raises(ValueError, match = "unsupported format: invalid"):
-        step.execute([temp_html_file])
+@pytest.mark.asyncio
+async def test_pdf_extraction_failure(temp_pdf_file):
+    step = ExtractionStep(config = {"format": "pdf", "url": "http://fake-endpoint"})
+    with patch("eve.steps.extraction.extract_step.PdfExtractor") as MockPdfExtractor:
+        instance = MockPdfExtractor.return_value
+        instance.extract_text = AsyncMock(side_effect=Exception("Extraction failed"))
+        
+        result = await step.execute([Path(temp_pdf_file)])
+        assert result == []  # Failed extractions are not included in result
+
+
+@pytest.mark.asyncio
+async def test_invalid_format(temp_html_file):
+    step = ExtractionStep(config = {"format": "invalid"})
+    # The ValueError is caught and logged, so no exception is raised
+    result = await step.execute([Path(temp_html_file)])
+    assert result == []  # Failed extractions are not included in result

@@ -18,3 +18,5 @@ reqs.txt
 app.py
 *.ipynb
 *.log
+build/
+.pytest_cache/

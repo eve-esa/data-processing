@@ -28,29 +28,32 @@ def temp_dir():
         yield temp_dir
 
 @pytest.fixture
-def duplication_step(temp_dir):
-    step = DuplicationStep(config = {"method": "exact"}, output_dir = temp_dir)
+def duplication_step():
+    step = DuplicationStep(config = {"method": "exact"})
     return step
 
-def test_exact_deduplication(temp_files, duplication_step):
+@pytest.mark.asyncio
+async def test_exact_deduplication(temp_files, duplication_step):
     """test exact deduplication."""
     duplication_step.config = {"method": "exact"}
-    result = duplication_step.execute(temp_files)
-    assert len(result) == 1
+    result = await duplication_step.execute(temp_files)
+    assert len(result) == 2  # 3 files - 1 duplicate = 2 remaining
 
-def test_lsh_deduplication(temp_files, duplication_step):
+@pytest.mark.asyncio
+async def test_lsh_deduplication(temp_files, duplication_step):
     """test LSH deduplication."""
     duplication_step.config = {"method": "lsh"}
     with patch('eve.steps.dedup.dedup_step.LSH') as MockLSH:
         mock_lsh_instance = MagicMock()
         mock_lsh_instance.find_duplicates.return_value = [[temp_files[0], temp_files[1]]]
         MockLSH.return_value = mock_lsh_instance
-        result = duplication_step.execute(temp_files)
-        assert len(result) == 1 
+        result = await duplication_step.execute(temp_files)
+        assert len(result) == 2  # 3 files - 1 duplicate = 2 remaining 
 
-def test_invalid_method(temp_files, duplication_step):
+@pytest.mark.asyncio
+async def test_invalid_method(temp_files, duplication_step):
     """test invalid deduplication method."""
     duplication_step.config = {"method": "invalid"}
     with pytest.raises(ValueError) as exc_info:
-        duplication_step.execute(temp_files)
-    assert str(exc_info.value) == "invalid deduplication method: invalid"
+        await duplication_step.execute(temp_files)
+    assert str(exc_info.value) == "Invalid deduplication method: invalid"

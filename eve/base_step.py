@@ -12,10 +12,10 @@ class PipelineStep(ABC):
 
         Args:
             config: Configuration specific to the step.
-            output_dir: Directory where output files will be saved.
             name: Optional name for the step (used for logging).
         """
         self.config = config
+        self.debug = config.get("debug", False) if isinstance(config, dict) else False
         self.logger = get_logger(name or self.__class__.__name__)
 
     @abstractmethod

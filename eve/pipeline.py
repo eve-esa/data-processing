@@ -1,16 +1,11 @@
 import asyncio
 
-from eve.base_step import PipelineStep
 from eve.config import load_config
 from eve.logging import get_logger
 from eve.steps.dedup.dedup_step import DuplicationStep
 from eve.steps.extraction.extract_step import ExtractionStep
 from eve.steps.export.export_step import ExportStep
-class CleaningStep(PipelineStep):
-    async def execute(self, input_data: list) -> list:
-        self.logger.info("Executing cleaning step")
-        await asyncio.sleep(0)
-        return input_data
+from eve.steps.cleaning.cleaning_step import CleaningStep
 
 async def pipeline():
     logger = get_logger("pipeline")
