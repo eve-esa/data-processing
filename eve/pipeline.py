@@ -1,6 +1,5 @@
 import asyncio
 
-from eve.base_step import PipelineStep
 from eve.config import load_config
 from eve.logging import get_logger
 from eve.steps.dedup.dedup_step import DuplicationStep
