@@ -33,6 +33,10 @@ async def pipeline():
         if not any(stage["name"] == "extraction" for stage in cfg.stages):
             cfg.stages.insert(0, {"name": "extraction"})
     
+    # enable export by default
+    if not any(stage["name"] == "export" for stage in cfg.stages):
+        cfg.stages.append({"name": "export"})
+    
     logger.info(f"Stages: {[stage['name'] for stage in cfg.stages]}")
 
     step_mapping = {
