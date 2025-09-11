@@ -70,9 +70,11 @@ class Document:
     @classmethod
     def from_path_and_content(cls, file_path: Path, content: str, **metadata) -> 'Document':
         """Create a Document from a file path and content string."""
+        file_format = file_path.suffix.lstrip('.') if file_path.suffix else 'txt'
         return cls(
             content=content,
             file_path=file_path,
+            file_format=file_format,
             metadata=metadata
         )
     

@@ -37,8 +37,8 @@ class XmlExtractor:
                 cleaned_text = re.sub(r'\n{3,}', '\n\n', full_text)
                 return cleaned_text.strip()
             
-            self.document.content = await asyncio.to_thread(parse_and_extract)
-            return self.document
+            extracted_text = await asyncio.to_thread(parse_and_extract)
+            return extracted_text
         except Exception as e:
             logger.error(f"Error processing XML file {self.document.file_path}: {e}")
             return None

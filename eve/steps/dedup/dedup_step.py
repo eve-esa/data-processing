@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Union
+from typing import List, Union, Tuple
 
 from eve.base_step import PipelineStep
 from eve.model.document import Document
@@ -20,15 +20,30 @@ class DuplicationStep(PipelineStep):
         duplicates = lsh.find_duplicates() 
         return duplicates
 
-    async def execute(self, documents: List[Document]) -> List[Document]:
+    async def execute(self, input_data: Union[List[Document], List[str], List[Path], List[Tuple[Path, str]]]) -> List[Document]:
         """Execute deduplication on input files or documents.
         
         Args:
-            input_data: List of file paths or Document objects to deduplicate
+            input_data: List of file paths, Document objects, or tuples to deduplicate
             
         Returns:
             List of Document objects with duplicates removed
         """
+        # Convert input to Document objects if needed
+        documents = []
+        if input_data and isinstance(input_data[0], str):
+            # Convert string paths to Documents
+            documents = [Document.from_path_and_content(Path(item), "") for item in input_data]
+        elif input_data and isinstance(input_data[0], Path):
+            # Convert Path objects to Documents
+            documents = [Document.from_path_and_content(item, "") for item in input_data]
+        elif input_data and isinstance(input_data[0], tuple):
+            # Convert tuples to Documents  
+            documents = [Document.from_tuple(item) for item in input_data]
+        else:
+            # Already Document objects
+            documents = input_data or []
+        
         method = self.config.get("method", "exact")  # default to exact
         
         self.logger.info(f"Executing duplication step with method: {method} file count: {len(documents)}")
@@ -50,11 +65,18 @@ class DuplicationStep(PipelineStep):
                 duplicate_docs.add(doc)
                 duplicates_removed += 1
 
-        # Filter out duplicates, keeping the first occurrence
+        # Filter out duplicates, keeping the first occurrence and add metadata
         result_documents = []
         for doc in documents:
             if doc not in duplicate_docs:
+                # Add metadata to non-duplicate documents
+                doc.add_metadata('deduplication_method', method)
+                doc.add_metadata('is_duplicate', False)
                 result_documents.append(doc)
+            else:
+                # Add metadata to duplicate documents (though they won't be in final result)
+                doc.add_metadata('deduplication_method', method)
+                doc.add_metadata('is_duplicate', True)
 
         self.logger.info(
             f"Deduplication complete: {len(result_documents)} files remaining, {duplicates_removed} duplicates removed"

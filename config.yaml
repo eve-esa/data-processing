@@ -18,6 +18,18 @@ pipeline:
     #     # openrouter_model: "anthropic/claude-3-haiku",
     #     debug: false 
     #   }
+    # - name: pii
+    #   config: {
+    #     method: "local_presidio",  # Options: "local_presidio", "remote_server"
+    #     entities: ["PERSON", "EMAIL_ADDRESS", "PHONE_NUMBER"],
+    #     score_threshold: 0.35,
+    #     # For remote_server method:
+    #     # server_url: "http://localhost:8000",
+    #     # timeout: 120,
+    #     # For local_presidio method:
+    #     # model_name: "flair/ner-english-large",
+    #     debug: false
+    #   }
     - name: export
       config: { format: "md", destination: "output"}
 

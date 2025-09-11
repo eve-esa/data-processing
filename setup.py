@@ -17,5 +17,21 @@ setup(
         "pdflatex>=0.1.3",
         "pytest-asyncio==1.1.0",
     ],
+    extras_require={
+        "pii": [
+            "presidio-analyzer>=2.2.0",
+            "presidio-anonymizer>=2.2.0",
+            "flair>=0.15.0", 
+            "spacy>=3.8.0",
+            "litserve",
+        ],
+        "all": [
+            "presidio-analyzer>=2.2.0",
+            "presidio-anonymizer>=2.2.0",
+            "flair>=0.15.0",
+            "spacy>=3.8.0",
+            "litserve",
+        ]
+    },
     python_requires = ">=3.9",
 )

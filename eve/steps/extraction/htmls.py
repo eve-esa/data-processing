@@ -10,7 +10,7 @@ class HtmlExtractor:
     def __init__(self, document: Document):
         self.document = document
     
-    async def extract_text(self) -> Document:
+    async def extract_text(self) -> Optional[str]:
         """Extract text from a single HTML file."""
         try:
             content = await read_file(self.document.file_path, 'r')
@@ -21,8 +21,8 @@ class HtmlExtractor:
             def parse_html():
                 return extract(content, include_comments = False, include_tables = True)
             
-            self.document.content = await asyncio.to_thread(parse_html)
-            return self.document
+            extracted_text = await asyncio.to_thread(parse_html)
+            return extracted_text
         except Exception as e:
             logger.error(f"Error processing HTML file {self.document.file_path}: {e}")
             return None
