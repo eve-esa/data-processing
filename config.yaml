@@ -30,6 +30,11 @@ pipeline:
     #     # model_name: "flair/ner-english-large",
     #     debug: false
     #   }
+    # - name: metadata
+    #   config: {
+    #     json_output_path: "metadata_results.json",
+    #     debug: false
+    #   }
     - name: export
       config: { format: "md", destination: "output"}
 

@@ -1,4 +1,5 @@
 import tempfile
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -47,20 +48,25 @@ async def test_exact_deduplication(temp_files, duplication_step):
 async def test_lsh_deduplication(temp_files, duplication_step):
     """test LSH deduplication."""
     duplication_step.config = {"method": "lsh"}
+    
+    documents = []
+    for file_path in temp_files:
+        with open(file_path, 'r') as f:
+            content = f.read()
+        documents.append(Document.from_path_and_content(Path(file_path), content))
+    
     with patch('eve.steps.dedup.dedup_step.LSH') as MockLSH:
         mock_lsh_instance = MagicMock()
-        # Create Document objects for the mock return value
-        # The LSH should return groups of Documents, not file paths
-        # We need to return the actual Document objects that will be created during conversion
-        def mock_find_duplicates():
-            # Since we can't predict the exact Document objects, we'll return an empty list
-            # meaning no duplicates found, so all 3 documents should remain
-            return []
         
-        mock_lsh_instance.find_duplicates.return_value = []
+        def mock_find_duplicates():
+            return [[documents[0], documents[1]]]
+        
+        mock_lsh_instance.find_duplicates.return_value = [[documents[0], documents[1]]]
         MockLSH.return_value = mock_lsh_instance
-        result = await duplication_step.execute(temp_files)
-        assert len(result) == 3  # 3 files - 0 duplicates = 3 remaining 
+        
+        result = await duplication_step.execute(documents)
+        
+        assert len(result) == 2  # 3 files - 1 duplicate = 2 remaining 
         assert all(isinstance(doc, Document) for doc in result)
         assert all(doc.get_metadata('deduplication_method') == 'lsh' for doc in result)
         assert all(doc.get_metadata('is_duplicate') == False for doc in result) 

@@ -28,7 +28,7 @@ class PipelineConfig(BaseModel):
 
     @validator("stages")
     def check_stages(cls, v):
-        allowed = {"ingestion", "cleaning", "export", "duplication", "extraction", "pii"}
+        allowed = {"ingestion", "cleaning", "export", "duplication", "extraction", "pii", "metadata"}
         for stage in v:
             if stage["name"] not in allowed:
                 raise ValueError(f"Unsupported stage: {stage['name']}. Allowed: {allowed}")

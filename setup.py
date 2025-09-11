@@ -25,12 +25,20 @@ setup(
             "spacy>=3.8.0",
             "litserve",
         ],
+        "metadata": [
+            "pdf2bib",
+            "pony",
+            "python-dotenv",
+        ],
         "all": [
             "presidio-analyzer>=2.2.0",
             "presidio-anonymizer>=2.2.0",
             "flair>=0.15.0",
             "spacy>=3.8.0",
             "litserve",
+            "pdf2bib",
+            "pony",
+            "python-dotenv",
         ]
     },
     python_requires = ">=3.9",
