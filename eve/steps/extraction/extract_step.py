@@ -31,7 +31,6 @@ class ExtractionStep(PipelineStep):
         Returns:
             List of Document objects with extracted text
         """
-        print(documents)
         format = self.config.get("format", None)  # write a wrapper to find out the extension
         if not format:
             unique_formats = set()
@@ -54,6 +53,7 @@ class ExtractionStep(PipelineStep):
                     self.logger.error(f"Unsupported format: {format}")
                     raise ValueError(f"Unsupported format: {format}")
                 
+                result.append(document_with_text)
                 if document_with_text.content_length > 1:
                     self.logger.info(f"Successfully extracted {document_with_text.content_length} characters from {document_with_text.filename}")
                 else:
