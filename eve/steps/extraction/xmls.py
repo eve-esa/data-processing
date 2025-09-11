@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import Optional
 import asyncio
 import re
@@ -6,18 +5,18 @@ import xml.etree.ElementTree as ET
 
 from eve.utils import read_file
 from eve.logging import logger
+from eve.model.document import Document
 
 class XmlExtractor:
-    def __init__(self, file_path: Path):
-        self.file_path = file_path
-        self.output = None
+    def __init__(self, document: Document):
+        self.document = document
 
     async def extract_text(self) -> Optional[str]:
         """Extract text from a single XML file."""
         try:
-            content = await read_file(self.file_path, 'r')
+            content = await read_file(self.document.file_path, 'r')
             if not content:
-                logger.error(f"Failed to read file: {self.file_path}")
+                logger.error(f"Failed to read file: {self.document.file_path}")
                 return None
             
             def parse_and_extract():
@@ -38,8 +37,8 @@ class XmlExtractor:
                 cleaned_text = re.sub(r'\n{3,}', '\n\n', full_text)
                 return cleaned_text.strip()
             
-            self.output = await asyncio.to_thread(parse_and_extract)
-            return self.output if self.output else None
+            self.document.content = await asyncio.to_thread(parse_and_extract)
+            return self.document
         except Exception as e:
-            logger.error(f"Error processing XML file {self.file_path}: {e}")
+            logger.error(f"Error processing XML file {self.document.file_path}: {e}")
             return None

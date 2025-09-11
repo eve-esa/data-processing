@@ -1,6 +1,10 @@
-from pathlib import Path
 import aiofiles
 from typing import Optional, AsyncGenerator
+from pathlib import Path
+
+
+def find_format(file_path: Path):
+    return file_path.suffix.lstrip('.').lower()
 
 async def read_file(file_path: Path, mode: str, encodings=None) -> Optional[str]:
     if "b" in mode: # binary mode doesnt take encoding
