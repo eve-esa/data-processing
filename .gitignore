@@ -9,6 +9,7 @@ txts/
 xmls/
 htmls/
 data/
+mix/
 logs/
 eve.egg-info/
 .coverage

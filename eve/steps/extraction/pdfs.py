@@ -1,21 +1,20 @@
 import aiohttp
-import asyncio
-from pathlib import Path
 from typing import Optional
 
+from eve.model.document import Document
 from eve.utils import read_file
 from eve.logging import logger
 
 class PdfExtractor:
-    def __init__(self, file_path: Path, endpoint: str):
-        self.file_path = file_path
+    def __init__(self, document: Document, endpoint: str):
+        self.document = document
         self.endpoint = f"{endpoint}/predict"
         self.extraction = None
 
     async def _call_nougat(self, session: aiohttp.ClientSession) -> Optional[str]:
         """internal method to call the Nougat API."""
         try:
-            file_content = await read_file(self.file_path, 'rb')
+            file_content = await read_file(self.document.file_path, 'rb')
             if not file_content:
                 logger.error(f"Failed to read file: {self.file_path}")
                 return None
@@ -30,7 +29,7 @@ class PdfExtractor:
                     logger.error(f"Nougat API request for {self.file_path} failed with status {response.status}")
                     return None
         except Exception as e:
-            logger.error(f"Failed to process {self.file_path}: {str(e)}")
+            logger.error(f"Failed to process {self.document.file_path}: {str(e)}")
             return None
 
     async def extract_text(self) -> Optional[str]:

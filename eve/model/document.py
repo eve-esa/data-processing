@@ -16,6 +16,7 @@ class Document:
     
     content: str
     file_path: Path
+    file_format: str
     metadata: Dict[str, Any] = field(default_factory=dict)
     
     @property
@@ -81,8 +82,8 @@ class Document:
     
     def __str__(self) -> str:
         """String representation showing filename and content length."""
-        return f"Document({self.filename}, {self.content_length} chars)"
+        return f"Document({self.filename}, {self.file_format} format)"
     
     def __repr__(self) -> str:
         """Detailed representation."""
-        return f"Document(file_path={self.file_path}, content_length={self.content_length}, metadata_keys={list(self.metadata.keys())})"
+        return f"Document(file_path={self.file_path}, format={self.file_format}, metadata_keys={list(self.metadata.keys())})"
