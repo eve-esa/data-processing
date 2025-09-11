@@ -11,7 +11,7 @@ htmls/
 data/
 logs/
 eve.egg-info/
-
+.coverage
 
 test.py
 reqs.txt

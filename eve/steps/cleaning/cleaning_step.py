@@ -77,6 +77,8 @@ class CleaningStep(PipelineStep):
         documents = []
         if input_data and isinstance(input_data[0], tuple):
             documents = [Document.from_tuple(item) for item in input_data]
+        elif input_data and isinstance(input_data[0], Path):
+            documents = [Document.from_path_and_content(item, "") for item in input_data] #TO-DO handle to trigger extraction
         else:
             documents = input_data
         
