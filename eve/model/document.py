@@ -19,6 +19,12 @@ class Document:
     file_format: str
     metadata: Dict[str, Any] = field(default_factory=dict)
     
+    def __hash__(self):
+        return hash(self.file_path)
+
+    def __eq__(self, other):
+        return isinstance(other, Document) and self.file_path == other.file_path
+    
     @property
     def filename(self) -> str:
         """Get the filename without path."""
