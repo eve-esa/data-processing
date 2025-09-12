@@ -10,8 +10,8 @@ from pathlib import Path
 
 from eve.base_step import PipelineStep
 from eve.model.document import Document
+from eve.utils import normalize_to_documents
 from eve.steps.pii.pii_processors import (
-    PIIProcessor,
     LocalPresidioProcessor,
     RemoteServerProcessor
 )
@@ -63,7 +63,7 @@ class PIIStep(PipelineStep):
         # Initialize processor based on method
         self.processor = self._create_processor()
 
-    def _create_processor(self) -> PIIProcessor:
+    def _create_processor(self):
         """Create the appropriate PII processor based on configuration."""
         if self.method == "local_presidio":
             return LocalPresidioProcessor(
@@ -95,14 +95,8 @@ class PIIStep(PipelineStep):
         Returns:
             List of Documents with PII removed.
         """
-        # Convert input to Document objects if needed
-        documents = []
-        if input_data and isinstance(input_data[0], tuple):
-            documents = [Document.from_tuple(item) for item in input_data]
-        elif input_data and isinstance(input_data[0], Path):
-            documents = [Document.from_path_and_content(item, "") for item in input_data]
-        else:
-            documents = input_data or []
+        # Convert input to Document objects using utility function
+        documents = normalize_to_documents(input_data)
         
         self.logger.info(f"Executing PII removal step on {len(documents)} documents using method: {self.method}")
         

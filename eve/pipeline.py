@@ -8,7 +8,6 @@ from eve.steps.extraction.extract_step import ExtractionStep
 from eve.steps.export.export_step import ExportStep
 from eve.steps.cleaning.cleaning_step import CleaningStep
 from eve.steps.pii.pii_step import PIIStep
-from eve.steps.metadata.metadata_step import MetadataExtractionStep
 from eve.utils import find_format
 
 async def pipeline():
@@ -47,7 +46,6 @@ async def pipeline():
         "duplication": DuplicationStep,
         "extraction": ExtractionStep,
         "pii": PIIStep,
-        "metadata": MetadataExtractionStep,
     }
 
     for stage in cfg.stages:

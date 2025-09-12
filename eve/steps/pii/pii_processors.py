@@ -5,70 +5,44 @@ This module provides PII removal using Microsoft Presidio with support for both
 local processing and remote server-based processing.
 """
 
-import re
 import time
-import asyncio
 import aiohttp
-from typing import Optional, List, Dict, Any, Union
-from abc import ABC, abstractmethod
+from typing import Optional, List, Dict, Any
 
 from eve.logging import get_logger
 from eve.model.document import Document
+from eve.common.regex_patterns import EMAIL_PATTERN
 
 
-class PIIProcessor(ABC):
-    """Abstract base class for PII processing components."""
-
-    def __init__(self, debug: bool = False):
-        """Initialize the PII processor.
+def anonymize_text(text: str, entities: List[Dict[str, Any]]) -> str:
+    """Apply anonymization to text based on detected entities.
+    
+    Args:
+        text: Original text
+        entities: List of detected PII entities
         
-        Args:
-            debug: Enable debug output.
-        """
-        self.debug = debug
-        self.logger = get_logger(self.__class__.__name__)
-
-    @abstractmethod
-    async def process(self, document: Document) -> Document:
-        """Process a document and return the anonymized result.
+    Returns:
+        Anonymized text
+    """
+    # Sort entities by start position in reverse order to avoid index shifting
+    sorted_entities = sorted(entities, key=lambda x: x.get('start', 0), reverse=True)
+    
+    anonymized_text = text
+    for entity in sorted_entities:
+        start = entity.get('start', 0)
+        end = entity.get('end', 0)
+        entity_type = entity.get('entity_type', entity.get('label', 'PII'))
         
-        Args:
-            document: The document to process.
-            
-        Returns:
-            Processed document with PII removed.
-        """
-        pass
-
-    def _anonymize_text(self, text: str, entities: List[Dict[str, Any]]) -> str:
-        """Apply anonymization to text based on detected entities.
+        # Create placeholder
+        placeholder = f"[{entity_type.upper()}]"
         
-        Args:
-            text: Original text
-            entities: List of detected PII entities
-            
-        Returns:
-            Anonymized text
-        """
-        # Sort entities by start position in reverse order to avoid index shifting
-        sorted_entities = sorted(entities, key=lambda x: x.get('start', 0), reverse=True)
-        
-        anonymized_text = text
-        for entity in sorted_entities:
-            start = entity.get('start', 0)
-            end = entity.get('end', 0)
-            entity_type = entity.get('entity_type', entity.get('label', 'PII'))
-            
-            # Create placeholder
-            placeholder = f"[{entity_type.upper()}]"
-            
-            # Replace the entity text with placeholder
-            anonymized_text = anonymized_text[:start] + placeholder + anonymized_text[end:]
-        
-        return anonymized_text
+        # Replace the entity text with placeholder
+        anonymized_text = anonymized_text[:start] + placeholder + anonymized_text[end:]
+    
+    return anonymized_text
 
 
-class LocalPresidioProcessor(PIIProcessor):
+class LocalPresidioProcessor:
     """Local PII processor using Presidio with Flair models."""
     
     def __init__(self, 
@@ -84,12 +58,12 @@ class LocalPresidioProcessor(PIIProcessor):
             model_name: Flair model to use for NER
             debug: Enable debug output
         """
-        super().__init__(debug=debug)
+        self.debug = debug
+        self.logger = get_logger(self.__class__.__name__)
         self.entities = entities or ["PERSON", "EMAIL_ADDRESS"]
         self.score_threshold = score_threshold
         self.model_name = model_name
         self._analyzer = None
-        self._email_pattern = re.compile(r'([-a-zA-Z0-9.`?{}]+@\w+(?:\.\w+)+)')
         
     async def _initialize_analyzer(self):
         """Lazy initialization of Presidio analyzer."""
@@ -180,6 +154,65 @@ class LocalPresidioProcessor(PIIProcessor):
             self.logger.error(f"Failed to initialize Presidio analyzer: {e}")
             raise
 
+    def _analyze_with_presidio(self, text: str) -> List[Dict[str, Any]]:
+        """Analyze text using Presidio and return detected entities."""
+        analyze_results = self._analyzer.analyze(
+            text=text,
+            entities=self.entities,
+            language="en",
+            score_threshold=self.score_threshold,
+            return_decision_process=False
+        )
+        
+        entities_found = []
+        for result in analyze_results:
+            entities_found.append({
+                "entity_type": result.entity_type,
+                "start": result.start,
+                "end": result.end,
+                "score": result.score,
+                "text": text[result.start:result.end]
+            })
+        
+        return entities_found
+    
+    def _detect_emails_with_regex(self, text: str, existing_entities: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Detect additional emails using regex pattern."""
+        additional_emails = []
+        
+        for match in EMAIL_PATTERN.finditer(text):
+            start, end = match.span()
+            # Check if this email is already detected
+            if not any(e['start'] <= start < e['end'] or e['start'] < end <= e['end'] 
+                      for e in existing_entities):
+                additional_emails.append({
+                    "entity_type": "EMAIL_ADDRESS",
+                    "start": start,
+                    "end": end,
+                    "score": 1.0,
+                    "text": match.group()
+                })
+        
+        return additional_emails
+    
+    def _update_document_with_results(self, document: Document, anonymized_text: str, 
+                                    entities_found: List[Dict[str, Any]], processing_time: float) -> None:
+        """Update document with PII processing results."""
+        document.update_content(anonymized_text)
+        document.add_metadata('pii_processed', True)
+        document.add_metadata('pii_entities_found', len(entities_found))
+        document.add_metadata('pii_processing_time', processing_time)
+        document.add_metadata('pii_method', 'local_presidio')
+    
+    def _log_debug_info(self, document: Document, entities_found: List[Dict[str, Any]], processing_time: float) -> None:
+        """Log debug information about PII processing."""
+        if self.debug:
+            self.logger.info(f"Found {len(entities_found)} PII entities in {document.filename}")
+            for entity in entities_found:
+                self.logger.debug(f"  {entity['entity_type']}: {entity['text']} (score: {entity['score']:.2f})")
+        
+        self.logger.info(f"{document.filename} - PII processing completed in {processing_time:.2f}s")
+
     async def process(self, document: Document) -> Document:
         """Process document for PII removal using local Presidio."""
         if self.debug:
@@ -195,56 +228,23 @@ class LocalPresidioProcessor(PIIProcessor):
             # Ensure analyzer is initialized
             await self._initialize_analyzer()
             
-            # Analyze text for PII
-            analyze_results = self._analyzer.analyze(
-                text=document.content,
-                entities=self.entities,
-                language="en",
-                score_threshold=self.score_threshold,
-                return_decision_process=False
-            )
+            # Analyze text for PII using Presidio
+            entities_found = self._analyze_with_presidio(document.content)
             
-            # Convert results to our format
-            entities_found = []
-            for result in analyze_results:
-                entities_found.append({
-                    "entity_type": result.entity_type,
-                    "start": result.start,
-                    "end": result.end,
-                    "score": result.score,
-                    "text": document.content[result.start:result.end]
-                })
-            
-            # Apply additional email detection with regex
-            for match in self._email_pattern.finditer(document.content):
-                start, end = match.span()
-                # Check if this email is already detected
-                if not any(e['start'] <= start < e['end'] or e['start'] < end <= e['end'] 
-                          for e in entities_found):
-                    entities_found.append({
-                        "entity_type": "EMAIL_ADDRESS",
-                        "start": start,
-                        "end": end,
-                        "score": 1.0,
-                        "text": match.group()
-                    })
+            # Detect additional emails with regex
+            additional_emails = self._detect_emails_with_regex(document.content, entities_found)
+            entities_found.extend(additional_emails)
             
             # Anonymize the text
-            anonymized_text = self._anonymize_text(document.content, entities_found)
+            anonymized_text = anonymize_text(document.content, entities_found)
             
-            # Update document
-            document.update_content(anonymized_text)
-            document.add_metadata('pii_processed', True)
-            document.add_metadata('pii_entities_found', len(entities_found))
-            document.add_metadata('pii_processing_time', time.time() - start_time)
-            document.add_metadata('pii_method', 'local_presidio')
+            # Calculate processing time and update document
+            processing_time = time.time() - start_time
+            self._update_document_with_results(document, anonymized_text, entities_found, processing_time)
             
-            if self.debug:
-                self.logger.info(f"Found {len(entities_found)} PII entities in {document.filename}")
-                for entity in entities_found:
-                    self.logger.debug(f"  {entity['entity_type']}: {entity['text']} (score: {entity['score']:.2f})")
+            # Log debug information
+            self._log_debug_info(document, entities_found, processing_time)
             
-            self.logger.info(f"{document.filename} - PII processing completed in {time.time() - start_time:.2f}s")
             return document
             
         except Exception as e:
@@ -252,7 +252,7 @@ class LocalPresidioProcessor(PIIProcessor):
             return document
 
 
-class RemoteServerProcessor(PIIProcessor):
+class RemoteServerProcessor:
     """Remote PII processor using a server-based API (LitServe)."""
     
     def __init__(self,
@@ -270,7 +270,8 @@ class RemoteServerProcessor(PIIProcessor):
             timeout: Request timeout in seconds
             debug: Enable debug output
         """
-        super().__init__(debug=debug)
+        self.debug = debug
+        self.logger = get_logger(self.__class__.__name__)
         self.server_url = server_url.rstrip('/')
         self.predict_url = f"{self.server_url}/predict"
         self.entities = entities or ["PERSON", "EMAIL_ADDRESS"]
@@ -299,6 +300,31 @@ class RemoteServerProcessor(PIIProcessor):
                     error_text = await response.text()
                     raise Exception(f"Server request failed with status {response.status}: {error_text}")
 
+    def _validate_server_response(self, result: Dict[str, Any]) -> None:
+        """Validate server response and raise exception if invalid."""
+        if not result.get('success', False):
+            error_msg = result.get('error_message', 'Unknown error')
+            raise Exception(f"Server processing failed: {error_msg}")
+    
+    def _update_document_with_remote_results(self, document: Document, anonymized_text: str, 
+                                           entities_found: List[Dict[str, Any]], processing_time: float) -> None:
+        """Update document with remote PII processing results."""
+        document.update_content(anonymized_text)
+        document.add_metadata('pii_processed', True)
+        document.add_metadata('pii_entities_found', len(entities_found))
+        document.add_metadata('pii_processing_time', processing_time)
+        document.add_metadata('pii_method', 'remote_server')
+        document.add_metadata('pii_server_url', self.server_url)
+    
+    def _log_remote_debug_info(self, document: Document, entities_found: List[Dict[str, Any]], processing_time: float) -> None:
+        """Log debug information about remote PII processing."""
+        if self.debug:
+            self.logger.info(f"Found {len(entities_found)} PII entities in {document.filename}")
+            for entity in entities_found:
+                self.logger.debug(f"  {entity['entity_type']}: {entity['text']} (score: {entity['score']:.2f})")
+        
+        self.logger.info(f"{document.filename} - PII processing completed in {processing_time:.2f}s")
+
     async def process(self, document: Document) -> Document:
         """Process document for PII removal using remote server."""
         if self.debug:
@@ -314,28 +340,20 @@ class RemoteServerProcessor(PIIProcessor):
             # Make request to server
             result = await self._make_request(document.content)
             
-            if not result.get('success', False):
-                error_msg = result.get('error_message', 'Unknown error')
-                raise Exception(f"Server processing failed: {error_msg}")
+            # Validate response
+            self._validate_server_response(result)
             
-            # Extract anonymized text and entities
+            # Extract results
             anonymized_text = result.get('anonymized_text', document.content)
             entities_found = result.get('entities_found', [])
             
-            # Update document
-            document.update_content(anonymized_text)
-            document.add_metadata('pii_processed', True)
-            document.add_metadata('pii_entities_found', len(entities_found))
-            document.add_metadata('pii_processing_time', time.time() - start_time)
-            document.add_metadata('pii_method', 'remote_server')
-            document.add_metadata('pii_server_url', self.server_url)
+            # Calculate processing time and update document
+            processing_time = time.time() - start_time
+            self._update_document_with_remote_results(document, anonymized_text, entities_found, processing_time)
             
-            if self.debug:
-                self.logger.info(f"Found {len(entities_found)} PII entities in {document.filename}")
-                for entity in entities_found:
-                    self.logger.debug(f"  {entity['entity_type']}: {entity['text']} (score: {entity['score']:.2f})")
+            # Log debug information
+            self._log_remote_debug_info(document, entities_found, processing_time)
             
-            self.logger.info(f"{document.filename} - PII processing completed in {time.time() - start_time:.2f}s")
             return document
             
         except Exception as e:

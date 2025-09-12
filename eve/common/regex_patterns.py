@@ -29,6 +29,9 @@ EXCESSIVE_NEWLINES_PATTERN: Pattern[str] = re.compile(r'\n{3,}')
 SINGLE_SYMBOL_LINE_PATTERN: Pattern[str] = re.compile(r'^\s*[^\w\s]\s*$', re.MULTILINE)
 REFERENCE_PATTERN: Pattern[str] = re.compile(r"^\* \[\d+\]", flags=re.MULTILINE)
 
+# PII detection patterns
+EMAIL_PATTERN: Pattern[str] = re.compile(r'([-a-zA-Z0-9.`?{}]+@\w+(?:\.\w+)+)')
+
 # LaTeX table cleaning patterns
 DOUBLED_BACKSLASH_PATTERN: Pattern[str] = re.compile(r'\\{2,}')
 

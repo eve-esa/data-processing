@@ -5,6 +5,7 @@ from eve.base_step import PipelineStep
 from eve.model.document import Document
 from eve.steps.dedup.exact_duplicates import ExactDuplication
 from eve.steps.dedup.minhash import LSH
+from eve.utils import normalize_to_documents
 
 class DuplicationStep(PipelineStep):
     async def _exact_deduplication(self, documents: List[Document]) -> List[Document]:
@@ -29,20 +30,8 @@ class DuplicationStep(PipelineStep):
         Returns:
             List of Document objects with duplicates removed
         """
-        # Convert input to Document objects if needed
-        documents = []
-        if input_data and isinstance(input_data[0], str):
-            # Convert string paths to Documents
-            documents = [Document.from_path_and_content(Path(item), "") for item in input_data]
-        elif input_data and isinstance(input_data[0], Path):
-            # Convert Path objects to Documents
-            documents = [Document.from_path_and_content(item, "") for item in input_data]
-        elif input_data and isinstance(input_data[0], tuple):
-            # Convert tuples to Documents  
-            documents = [Document.from_tuple(item) for item in input_data]
-        else:
-            # Already Document objects
-            documents = input_data or []
+        # Convert input to Document objects using utility function
+        documents = normalize_to_documents(input_data)
         
         method = self.config.get("method", "exact")  # default to exact
         
@@ -69,14 +58,10 @@ class DuplicationStep(PipelineStep):
         result_documents = []
         for doc in documents:
             if doc not in duplicate_docs:
-                # Add metadata to non-duplicate documents
+                # Add metadata only to non-duplicate documents that will be kept
                 doc.add_metadata('deduplication_method', method)
                 doc.add_metadata('is_duplicate', False)
                 result_documents.append(doc)
-            else:
-                # Add metadata to duplicate documents (though they won't be in final result)
-                doc.add_metadata('deduplication_method', method)
-                doc.add_metadata('is_duplicate', True)
 
         self.logger.info(
             f"Deduplication complete: {len(result_documents)} files remaining, {duplicates_removed} duplicates removed"
