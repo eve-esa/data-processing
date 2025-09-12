@@ -7,7 +7,6 @@ Microsoft Presidio with support for both local and remote server processing.
 
 from .pii_step import PIIStep, create_pii_step
 from .pii_processors import (
-    PIIProcessor,
     LocalPresidioProcessor, 
     RemoteServerProcessor,
 )
@@ -15,7 +14,6 @@ from .pii_processors import (
 __all__ = [
     "PIIStep",
     "create_pii_step", 
-    "PIIProcessor",
     "LocalPresidioProcessor",
     "RemoteServerProcessor"
 ]

@@ -8,9 +8,9 @@ import tempfile
 from eve.steps.pii.pii_step import PIIStep
 from eve.model.document import Document
 from eve.steps.pii.pii_processors import (
-    PIIProcessor,
     LocalPresidioProcessor,
     RemoteServerProcessor,
+    anonymize_text,
 )
 
 
@@ -320,30 +320,26 @@ class TestPIIProcessors:
             assert result.get_metadata('pii_processed') != True
 
     def test_pii_processor_anonymize_text(self):
-        """Test the base anonymize_text method."""
-        processor = LocalPresidioProcessor()  # Use concrete implementation
-        
+        """Test the standalone anonymize_text function."""
         text = "Hello John Doe, contact support@company.com"
         entities = [
             {"start": 6, "end": 14, "entity_type": "PERSON", "text": "John Doe"},
             {"start": 24, "end": 43, "entity_type": "EMAIL_ADDRESS", "text": "support@company.com"}
         ]
         
-        result = processor._anonymize_text(text, entities)
+        result = anonymize_text(text, entities)
         
         assert result == "Hello [PERSON], contact [EMAIL_ADDRESS]"
 
     def test_pii_processor_anonymize_text_overlapping(self):
         """Test anonymize_text with overlapping entities (should handle gracefully)."""
-        processor = LocalPresidioProcessor()
-        
         text = "John Doe john.doe@company.com"
         entities = [
             {"start": 0, "end": 8, "entity_type": "PERSON", "text": "John Doe"},
             {"start": 9, "end": 29, "entity_type": "EMAIL_ADDRESS", "text": "john.doe@company.com"}
         ]
         
-        result = processor._anonymize_text(text, entities)
+        result = anonymize_text(text, entities)
         
         # Should replace both entities
         assert "[PERSON]" in result
@@ -351,12 +347,10 @@ class TestPIIProcessors:
 
     def test_pii_processor_anonymize_text_empty_entities(self):
         """Test anonymize_text with no entities."""
-        processor = LocalPresidioProcessor()
-        
         text = "This text has no PII."
         entities = []
         
-        result = processor._anonymize_text(text, entities)
+        result = anonymize_text(text, entities)
         
         assert result == text  # Should remain unchanged
 
