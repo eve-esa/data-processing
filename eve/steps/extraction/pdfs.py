@@ -35,5 +35,5 @@ class PdfExtractor:
     async def extract_text(self) -> Optional[str]:
         """Extract text from a single PDF file."""
         async with aiohttp.ClientSession() as session:
-            self.extraction = await self._call_nougat(session)
-        return self.extraction if self.extraction else None
+            self.document.content = await self._call_nougat(session)
+        return self.document
