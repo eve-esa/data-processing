@@ -19,7 +19,7 @@ class Inputs(BaseModel):
             if p.is_file():
                 files.append(p)
             elif p.is_dir():
-                files.extend(p.glob("*"))
+                files.extend([f for f in p.rglob("*") if f.is_file()]) # recursive search across multiple levels
         return files
 
 class PipelineConfig(BaseModel):
