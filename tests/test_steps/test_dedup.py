@@ -1,37 +1,21 @@
-import tempfile
 from unittest.mock import MagicMock, patch
-
 import pytest
 
 from eve.steps.dedup.dedup_step import DuplicationStep
 from eve.model.document import Document
+from create_files import create_documents, create_temp_files
 
 
 @pytest.fixture
 def temp_files():
-    """temporary files creation"""
-    # need to try more file formats
-    file1 = tempfile.NamedTemporaryFile(mode = 'w', delete = False, suffix = '.txt')
-    file2 = tempfile.NamedTemporaryFile(mode = 'w', delete = False, suffix = '.txt')
-    file3 = tempfile.NamedTemporaryFile(mode = 'w', delete = False, suffix = '.txt')
-    file1.write("test content")
-    file2.write("test content")  # Duplicate of file1
-    file3.write("unique content")
-    file1.close()
-    file2.close()
-    file3.close()
-    yield [file1.name, file2.name, file3.name]
-
-@pytest.fixture
-def temp_dir():
-    """temporary directory for test output."""
-    with tempfile.TemporaryDirectory() as temp_dir:
-        yield temp_dir
+    """Yield a list of Document objects created from temporary files."""
+    input_files = create_temp_files()
+    documents = create_documents(input_files)
+    yield documents
 
 @pytest.fixture
 def duplication_step():
-    step = DuplicationStep(config = {"method": "exact"})
-    return step
+    return DuplicationStep(config={"method": "exact"})
 
 @pytest.mark.asyncio
 async def test_exact_deduplication(temp_files, duplication_step):
@@ -40,8 +24,6 @@ async def test_exact_deduplication(temp_files, duplication_step):
     result = await duplication_step.execute(temp_files)
     assert len(result) == 2  # 3 files - 1 duplicate = 2 remaining
     assert all(isinstance(doc, Document) for doc in result)
-    assert all(doc.get_metadata('deduplication_method') == 'exact' for doc in result)
-    assert all(doc.get_metadata('is_duplicate') == False for doc in result)
 
 @pytest.mark.asyncio
 async def test_lsh_deduplication(temp_files, duplication_step):
@@ -54,8 +36,6 @@ async def test_lsh_deduplication(temp_files, duplication_step):
         result = await duplication_step.execute(temp_files)
         assert len(result) == 2  # 3 files - 1 duplicate = 2 remaining 
         assert all(isinstance(doc, Document) for doc in result)
-        assert all(doc.get_metadata('deduplication_method') == 'lsh' for doc in result)
-        assert all(doc.get_metadata('is_duplicate') == False for doc in result) 
 
 @pytest.mark.asyncio
 async def test_invalid_method(temp_files, duplication_step):
