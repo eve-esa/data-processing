@@ -46,18 +46,20 @@ class ExtractionStep(PipelineStep):
                     document_with_text = await self._html_extraction(document)
                 elif document.file_format == "pdf":
                     url = self.config.get("url", None)
+                    if not url:
+                        self.logger.error("No URL provided for PDF extraction service")
                     document_with_text = await self._pdf_extraction(document, url)
                 elif document.file_format == "xml":
                     document_with_text = await self._xml_extraction(document)
                 else:
-                    self.logger.error(f"Unsupported format: {format}")
-                    raise ValueError(f"Unsupported format: {format}")
+                    self.logger.error(f"Unsupported format: {document.file_format}")
+                    continue
                 
-                result.append(document_with_text)
-                if document_with_text.content_length > 1:
+                if document_with_text and hasattr(document_with_text, 'content_length') and document_with_text.content_length > 1:
+                    result.append(document_with_text)
                     self.logger.info(f"Successfully extracted {document_with_text.content_length} characters from {document_with_text.filename}")
                 else:
-                    self.logger.warning(f"No text extracted from {document_with_text.filename}")
+                    self.logger.warning(f"No text extracted from {document.filename}")
             except Exception as e:
                 self.logger.error(f"Failed to extract text from {document.filename}: {str(e)}")
                 continue

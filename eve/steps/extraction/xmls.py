@@ -11,8 +11,12 @@ class XmlExtractor:
     def __init__(self, document: Document):
         self.document = document
 
-    async def extract_text(self) -> Optional[str]:
-        """Extract text from a single XML file."""
+    async def extract_text(self) -> Optional[Document]:
+        """Extract text from a single XML file.
+        
+        Returns:
+            Document object with extracted text if successful, None otherwise
+        """
         try:
             content = await read_file(self.document.file_path, 'r')
             if not content:

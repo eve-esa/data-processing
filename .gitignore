@@ -16,7 +16,6 @@ eve.egg-info/
 
 test.py
 reqs.txt
-app.py
 *.ipynb
 *.log
 build/

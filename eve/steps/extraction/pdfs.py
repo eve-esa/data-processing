@@ -20,20 +20,32 @@ class PdfExtractor:
                 return None
                 
             data = aiohttp.FormData()
-            data.add_field('file', file_content, filename = self.file_path.name, content_type = 'application/pdf')
+            data.add_field('file', file_content, filename = self.document.filename, content_type = 'application/pdf')
             
             async with session.post(self.endpoint, data = data) as response:
                 if response.status == 200:
                     return await response.text()
                 else:
-                    logger.error(f"Nougat API request for {self.file_path} failed with status {response.status}")
+                    logger.error(f"Nougat API request for {self.document.file_path} failed with status {response.status}")
                     return None
         except Exception as e:
             logger.error(f"Failed to process {self.document.file_path}: {str(e)}")
             return None
 
-    async def extract_text(self) -> Optional[str]:
-        """Extract text from a single PDF file."""
-        async with aiohttp.ClientSession() as session:
-            self.document.content = await self._call_nougat(session)
-        return self.document
+    async def extract_text(self) -> Optional[Document]:
+        """Extract text from a single PDF file.
+        
+        Returns:
+            Document object with extracted text if successful, None otherwise
+        """
+        try:
+            async with aiohttp.ClientSession() as session:
+                content = await self._call_nougat(session)
+                if not content:
+                    logger.error(f"Failed to extract content from {self.document.file_path}")
+                    return None
+                self.document.content = content
+                return self.document
+        except Exception as e:
+            logger.error(f"Error in PDF extraction for {self.document.file_path}: {str(e)}")
+            return None

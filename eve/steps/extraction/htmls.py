@@ -10,8 +10,12 @@ class HtmlExtractor:
     def __init__(self, document: Document):
         self.document = document
     
-    async def extract_text(self) -> Document:
-        """Extract text from a single HTML file."""
+    async def extract_text(self) -> Optional[Document]:
+        """Extract text from a single HTML file.
+        
+        Returns:
+            Document object with extracted text if successful, None otherwise
+        """
         try:
             content = await read_file(self.document.file_path, 'r')
             if not content:
