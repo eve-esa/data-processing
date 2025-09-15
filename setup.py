@@ -18,4 +18,9 @@ setup(
         "pytest-asyncio==1.1.0",
     ],
     python_requires = ">=3.9",
+    entry_points={
+        "console_scripts": [
+            "eve = eve.pipeline:cli"
+        ]
+    }
 )

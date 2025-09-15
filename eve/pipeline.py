@@ -1,3 +1,4 @@
+import argparse
 import asyncio
 import time
 
@@ -68,5 +69,15 @@ def main():
     """entry point for the pipeline"""
     return asyncio.run(pipeline())
 
-if __name__ == "__main__":
-    main()
+def cli():
+    parser = argparse.ArgumentParser(prog = "eve")
+    subparsers = parser.add_subparsers(dest = "command")
+
+    _ = subparsers.add_parser("run", help = "Run the Eve pipeline")
+
+    args = parser.parse_args()
+
+    if args.command == "run":
+        main()
+    else:
+        parser.print_help()
