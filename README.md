@@ -36,10 +36,10 @@ pipeline:
       config: { format: "md", destination: "output/files"}
 ```
 
-3. Run the pipeline (add an entrypoint later)
+3. Run the pipeline
 
 ```
-python -m eve.pipeline
+eve run
 ```
 
 ## Examples
