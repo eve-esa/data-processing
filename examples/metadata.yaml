@@ -1,0 +1,25 @@
+pipeline:
+  inputs:
+    mode: "directory"
+    path: "input_files"
+  stages:
+    - name: extraction
+      config:
+        format: "auto"
+    - name: metadata
+      config:
+        enabled_formats: ["pdf", "html"]  # Extract metadata from PDF and HTML files
+        fallback_to_filename: true        # Use filename as title if extraction fails
+        debug: false
+        export_metadata: true             # Export metadata to JSON file (default: true)
+        metadata_destination: "./output"  # Directory to save metadata file (default: "./output")
+        metadata_filename: "metadata.json" # Name of metadata JSON file (default: "metadata.json")
+    - name: cleaning
+      config:
+        ocr_threshold: 0.99
+        min_words: 2
+        enable_latex_correction: false
+    - name: export
+      config:
+        format: "md"
+        destination: "output/processed_files"
