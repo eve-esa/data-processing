@@ -1,0 +1,10 @@
+pipeline:
+  inputs:
+    path: "research_papers"
+  stages:
+    - name: extraction
+      config: { format: "pdf", url: "http://127.0.0.1:8001"} # the url for the nougat server running, check server/ folder
+    - name: pii
+      config: { url: "http://127.0.0.1:8000" } # the url for the presidio server running, check server/ folder
+    - name: export
+      config: { format: "md", destination: "outputs/markdown" }

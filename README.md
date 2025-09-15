@@ -1,14 +1,55 @@
 # Eve Data Processing Pipeline
-(Design Document - https://docs.google.com/document/d/13sbBslvo7HGYX7pooL8tkjwldvrkVOsFyIZRJVTWLZg/edit?usp=sharing)
+
+Eve data pipeline is a library to process, duplicate and clean data at a large scale. It has a set of steps that can extended further 
+
+
+## Features
+
+1. Extraction Step - It handles extraction from different files formats like pdf, html and xml. You can pass in nested folders and it handles multi-format folders.
+2. Deduplication Step - It performs exact duplication and close duplication using lsh.
+3. Cleaning Step - It performs a cleaning step to handle all the irregularities and artifacts present in the documents. Performs latex equations and table correction using an LLM.
+4. Pii Step - It anonymizes the document and masks out the names and emails present in the documents.
+4. Export Step - This steps saves all the processed files.
+
+## Getting started
+
+1. Install the packages.
+
+```
+pip install -e .
+```
+
+2. Configure the `config.yaml` file. (Look at examples section on how to do this)
+
+```
+pipeline:
+  inputs:
+    path: "input_dir"
+  stages:
+    - name: extraction
+       config: { format: "xml"} # you can choose to specify the file format, if not the program auto-detects it
+    - name: duplication
+       config: { method: "lsh", shingle_size: 3, num_perm: 128, threshold: 0.8 }
+    - name: pii
+       config: { url: "http://127.0.0.1:8000" } # for the pii setup a presidio server like in server/pii_server.py
+    - name: export
+      config: { format: "md", destination: "output/files"}
+```
+
+3. Run the pipeline (add an entrypoint later)
+
+```
+python -m eve.pipeline
+```
+
+## Examples
+
+Example `config.py` files on how to use this pipeline.
 
 ## TO-DO
 
-(check if there is something better alt than asyncio thread)
-1. pipeline parallelism - files flow as and when completed instead of halting (check how this applies to the data duplication phase)
-~2. cleaning pipeline~
-~4. pii extraction~
-5. i think metadata extraction also part of this pipeline?
-~6. implement edge cases where multiple data formats is passed to the duplication stage and other stages, currently it assumes a particular format.~
-~7. see if it makes sense to convert all the data extracted to a custom Document unified object and add filename as metadata so we dont have to pass filenames and content seperately anymore.~
-~8. should we add a dictionary lookup instead of if else?~
-~9. can we also test what happens if i pass in a mix of different file formats?~
+
+1. switch to uv
+2. add an entrypoint to invoke the pipeline.
+3. work on test cases.
+

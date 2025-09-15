@@ -1,4 +1,5 @@
 import asyncio
+import time
 
 from eve.config import load_config
 from eve.logging import get_logger
@@ -15,7 +16,8 @@ async def pipeline():
     cfg = load_config("config.yaml")
 
     logger.info("Starting pipeline execution")
-    # logger.info("Files to process:")
+
+    start_time = time.perf_counter()
     input_files = cfg.inputs.get_files()
 
     documents = []
@@ -57,6 +59,10 @@ async def pipeline():
             documents = await step(documents)
         else:
             logger.error(f"No implementation found for step: {step_name}")
+    
+    end_time = time.perf_counter()  # end timer
+    elapsed_time = end_time - start_time
+    logger.info(f"Pipeline completed in {elapsed_time:.2f} seconds")
 
 def main():
     """entry point for the pipeline"""

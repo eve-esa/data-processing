@@ -1,0 +1,18 @@
+pipeline:
+  inputs:
+    path: "mixed_format_documents"
+  stages:
+    - name: extraction
+      config: { url: "http://127.0.0.1:8001"}
+    - name: duplication
+      config: {} # defaults to exact
+    - name: pii
+      config: { url: "http://127.0.0.1:8000" }
+    - name: cleaning
+      config: { 
+        ocr_threshold: 0.99, 
+        min_words: 2, 
+        enable_latex_correction: false,
+      }
+    - name: export
+      config: { format: "md", destination: "output/files"}

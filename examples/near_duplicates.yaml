@@ -1,0 +1,8 @@
+pipeline:
+  inputs:
+    path: "news_articles"
+  stages:
+    - name: duplication
+      config: { method: "lsh", shingle_size: 5, num_perm: 128, threshold: 0.85 } # when you trigger duplication, it does extraction by default, so no need to specify the step.
+    - name: export
+      config: { format: "md", destination: "outputs/news_dedup" }

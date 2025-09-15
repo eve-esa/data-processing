@@ -1,0 +1,10 @@
+pipeline:
+  inputs:
+    path: "scanned_docs"
+  stages:
+    - name: extraction
+      config: { format: "html" }
+    - name: cleaning
+      config: {}
+    - name: export
+      config: { format: "txt", destination: "outputs/cleaned_docs" }
