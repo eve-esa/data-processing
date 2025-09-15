@@ -1,11 +1,15 @@
 """HTML metadata extractor."""
 
-import re
 from typing import Dict, Any, Optional
 from urllib.parse import urlparse
 
 from eve.model.document import Document
 from eve.steps.metadata.extractors.base_extractor import BaseMetadataExtractor
+from eve.common.regex_patterns import (
+    extract_html_title,
+    extract_html_meta_tags,
+    extract_json_ld_count
+)
 
 
 class HtmlMetadataExtractor(BaseMetadataExtractor):
@@ -30,18 +34,9 @@ class HtmlMetadataExtractor(BaseMetadataExtractor):
         Returns:
             Extracted title or None if not found
         """
-        if not html_content:
-            return None
-
-        title_match = re.search(r'<title[^>]*>(.*?)</title>', html_content, re.IGNORECASE | re.DOTALL)
+        title = extract_html_title(html_content)
         
-        if title_match:
-            title = title_match.group(1)
-            
-            title = re.sub(r'<[^>]+>', '', title)
-            title = re.sub(r'&[a-zA-Z]+;', ' ', title)
-            title = re.sub(r'&#\d+;', ' ', title)
-            
+        if title:
             cleaned_title = self._clean_title(title)
             
             if cleaned_title:
@@ -60,28 +55,7 @@ class HtmlMetadataExtractor(BaseMetadataExtractor):
         Returns:
             Dictionary containing extracted meta tag information
         """
-        meta_data = {}
-        
-        if not html_content:
-            return meta_data
-
-        meta_patterns = {
-            'description': r'<meta[^>]*name=["\']description["\'][^>]*content=["\']([^"\']*)["\']',
-            'keywords': r'<meta[^>]*name=["\']keywords["\'][^>]*content=["\']([^"\']*)["\']',
-            'author': r'<meta[^>]*name=["\']author["\'][^>]*content=["\']([^"\']*)["\']',
-            'og_title': r'<meta[^>]*property=["\']og:title["\'][^>]*content=["\']([^"\']*)["\']',
-            'og_description': r'<meta[^>]*property=["\']og:description["\'][^>]*content=["\']([^"\']*)["\']',
-            'twitter_title': r'<meta[^>]*name=["\']twitter:title["\'][^>]*content=["\']([^"\']*)["\']',
-        }
-
-        for key, pattern in meta_patterns.items():
-            match = re.search(pattern, html_content, re.IGNORECASE)
-            if match:
-                value = match.group(1).strip()
-                if value:
-                    meta_data[key] = value
-
-        return meta_data
+        return extract_html_meta_tags(html_content)
 
     def _extract_structured_data(self, html_content: str) -> Dict[str, Any]:
         """
@@ -95,14 +69,9 @@ class HtmlMetadataExtractor(BaseMetadataExtractor):
         """
         structured_data = {}
         
-        if not html_content:
-            return structured_data
-
-        json_ld_pattern = r'<script[^>]*type=["\']application/ld\+json["\'][^>]*>(.*?)</script>'
-        json_ld_matches = re.findall(json_ld_pattern, html_content, re.IGNORECASE | re.DOTALL)
-        
-        if json_ld_matches:
-            structured_data['json_ld_count'] = len(json_ld_matches)
+        json_ld_count = extract_json_ld_count(html_content)
+        if json_ld_count > 0:
+            structured_data['json_ld_count'] = json_ld_count
 
         return structured_data
 

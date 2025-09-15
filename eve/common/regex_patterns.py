@@ -32,6 +32,13 @@ REFERENCE_PATTERN: Pattern[str] = re.compile(r"^\* \[\d+\]", flags=re.MULTILINE)
 # LaTeX table cleaning patterns
 DOUBLED_BACKSLASH_PATTERN: Pattern[str] = re.compile(r'\\{2,}')
 
+# HTML metadata extraction patterns
+HTML_TITLE_PATTERN: Pattern[str] = re.compile(r'<title[^>]*>(.*?)</title>', re.IGNORECASE | re.DOTALL)
+HTML_TAG_PATTERN: Pattern[str] = re.compile(r'<[^>]+>')
+HTML_ENTITY_PATTERN: Pattern[str] = re.compile(r'&[a-zA-Z]+;')
+HTML_NUMERIC_ENTITY_PATTERN: Pattern[str] = re.compile(r'&#\d+;')
+JSON_LD_SCRIPT_PATTERN: Pattern[str] = re.compile(r'<script[^>]*type=["\']application/ld\+json["\'][^>]*>(.*?)</script>', re.IGNORECASE | re.DOTALL)
+
 
 def get_latex_formula_patterns() -> dict[str, Pattern[str]]:
     """
@@ -83,3 +90,81 @@ def remove_nougat_artifacts(text: str) -> str:
     text = ERROR_PATTERN.sub('', text)
     text = text.replace('[MISSING_PAGE_POST]', '')
     return text
+
+
+def extract_html_title(html_content: str) -> str:
+    """
+    Extract title from HTML content.
+    
+    Args:
+        html_content: HTML content as string
+        
+    Returns:
+        Extracted and cleaned title, or None if not found
+    """
+    if not html_content:
+        return None
+        
+    title_match = HTML_TITLE_PATTERN.search(html_content)
+    
+    if title_match:
+        title = title_match.group(1)
+        
+        title = HTML_TAG_PATTERN.sub('', title)
+        title = HTML_ENTITY_PATTERN.sub(' ', title)
+        title = HTML_NUMERIC_ENTITY_PATTERN.sub(' ', title)
+        
+        return title.strip()
+    
+    return None
+
+
+def extract_html_meta_tags(html_content: str) -> dict[str, str]:
+    """
+    Extract metadata from HTML meta tags.
+    
+    Args:
+        html_content: HTML content as string
+        
+    Returns:
+        Dictionary containing extracted meta tag information
+    """
+    meta_data = {}
+    
+    if not html_content:
+        return meta_data
+
+    meta_patterns = {
+        'description': r'<meta[^>]*name=["\']description["\'][^>]*content=["\']([^"\']*)["\']',
+        'keywords': r'<meta[^>]*name=["\']keywords["\'][^>]*content=["\']([^"\']*)["\']',
+        'author': r'<meta[^>]*name=["\']author["\'][^>]*content=["\']([^"\']*)["\']',
+        'og_title': r'<meta[^>]*property=["\']og:title["\'][^>]*content=["\']([^"\']*)["\']',
+        'og_description': r'<meta[^>]*property=["\']og:description["\'][^>]*content=["\']([^"\']*)["\']',
+        'twitter_title': r'<meta[^>]*name=["\']twitter:title["\'][^>]*content=["\']([^"\']*)["\']',
+    }
+
+    for key, pattern in meta_patterns.items():
+        match = re.search(pattern, html_content, re.IGNORECASE)
+        if match:
+            value = match.group(1).strip()
+            if value:
+                meta_data[key] = value
+
+    return meta_data
+
+
+def extract_json_ld_count(html_content: str) -> int:
+    """
+    Count JSON-LD structured data blocks in HTML.
+    
+    Args:
+        html_content: HTML content as string
+        
+    Returns:
+        Number of JSON-LD script blocks found
+    """
+    if not html_content:
+        return 0
+        
+    json_ld_matches = JSON_LD_SCRIPT_PATTERN.findall(html_content)
+    return len(json_ld_matches)
