@@ -51,5 +51,6 @@ Example `config.py` files on how to use this pipeline.
 
 1. switch to uv
 2. add an entrypoint to invoke the pipeline.
-3. work on test cases.
+3. maybe nice to take in config file as an input
+4. work on test cases.
 
