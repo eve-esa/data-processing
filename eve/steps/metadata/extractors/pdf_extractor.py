@@ -50,7 +50,7 @@ class PdfMetadataExtractor(BaseMetadataExtractor):
 
     async def _extract_title_from_pdf(self, file_path: str) -> Optional[str]:
         """
-        Extract title from PDF using pdfplumber.
+        Extract title from PDF using pdfplumber or PyPDF2 as fallback.
         
         Args:
             file_path: Path to the PDF file
@@ -66,7 +66,7 @@ class PdfMetadataExtractor(BaseMetadataExtractor):
                     title = pdf.metadata['Title']
                     cleaned_title = self._clean_title(title)
                     if cleaned_title:
-                        self.logger.debug(f"Extracted title from PDF metadata: {cleaned_title}")
+                        self.logger.debug(f"Extracted title from PDF metadata (pdfplumber): {cleaned_title}")
                         return cleaned_title
                 
                 if len(pdf.pages) > 0:
@@ -78,11 +78,39 @@ class PdfMetadataExtractor(BaseMetadataExtractor):
                         for line in lines:
                             cleaned_line = self._clean_title(line.strip())
                             if cleaned_line and len(cleaned_line) > 10:
-                                self.logger.debug(f"Extracted title from first page: {cleaned_line}")
+                                self.logger.debug(f"Extracted title from first page (pdfplumber): {cleaned_line}")
                                 return cleaned_line
                                 
         except Exception as e:
-            self.logger.error(f"Failed to extract title from {file_path}: {str(e)}")
+            self.logger.debug(f"pdfplumber failed for {file_path}: {str(e)}, trying PyPDF2 fallback")
+            
+        try:
+            import PyPDF2
+            
+            with open(file_path, 'rb') as file:
+                pdf_reader = PyPDF2.PdfReader(file)
+                
+                if pdf_reader.metadata and pdf_reader.metadata.get('/Title'):
+                    title = pdf_reader.metadata['/Title']
+                    cleaned_title = self._clean_title(title)
+                    if cleaned_title:
+                        self.logger.debug(f"Extracted title from PDF metadata (PyPDF2): {cleaned_title}")
+                        return cleaned_title
+                
+                if len(pdf_reader.pages) > 0:
+                    first_page = pdf_reader.pages[0]
+                    text = first_page.extract_text()
+                    
+                    if text:
+                        lines = text.split('\n')[:5]
+                        for line in lines:
+                            cleaned_line = self._clean_title(line.strip())
+                            if cleaned_line and len(cleaned_line) > 10:
+                                self.logger.debug(f"Extracted title from first page (PyPDF2): {cleaned_line}")
+                                return cleaned_line
+                                
+        except Exception as e:
+            self.logger.error(f"Both pdfplumber and PyPDF2 failed for {file_path}: {str(e)}")
             
         return None
 
@@ -140,7 +168,7 @@ class PdfMetadataExtractor(BaseMetadataExtractor):
         metadata['extraction_methods'] = []
         if bibtex_data:
             metadata['extraction_methods'].append('pdf2bib')
-        metadata['extraction_methods'].append('pdfplumber')
+        metadata['extraction_methods'].append('pdf_reader')
 
         if self.debug:
             self.logger.debug(f"Extracted metadata for {document.filename}: {metadata}")

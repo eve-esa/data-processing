@@ -10,24 +10,29 @@ from eve.base_step import PipelineStep
 from eve.model.document import Document
 from eve.steps.metadata.extractors.pdf_extractor import PdfMetadataExtractor
 from eve.steps.metadata.extractors.html_extractor import HtmlMetadataExtractor
+from eve.steps.metadata.extractors.scholar_extractor import ScholarMetadataExtractor
 
 
 class MetadataStep(PipelineStep):
     """
     Metadata extraction step that extracts bibliographic and content metadata 
-    from PDF and HTML documents.
+    from PDF, HTML, and text documents.
     
     Supported formats:
     - PDF: Uses pdf2bib for DOI extraction and pdftitle for title extraction
-    - HTML: Extracts title from HTML title tags
+    - HTML: Extracts title from HTML title tags and meta tags
+    - TXT: Uses Google Scholar search with text content to find metadata (requires scholarly package)
+    - MD: Uses Google Scholar search with text content to find metadata (requires scholarly package)
     
     Configuration options:
-    - enabled_formats: List of formats to process (default: ["pdf", "html"])
+    - enabled_formats: List of formats to process (default: ["pdf", "html", "txt", "md"])
     - fallback_to_filename: Whether to use filename as title fallback (default: True)
     - debug: Enable debug logging (default: False)
     - export_metadata: Whether to export metadata to JSON file (default: True)
     - metadata_destination: Directory to save metadata file (default: "./output")
     - metadata_filename: Name of the metadata JSON file (default: "metadata.json")
+    - enable_scholar_search: Whether to use Google Scholar for additional metadata (default: False)
+      Note: Text formats (txt, md) automatically enable Google Scholar search
     """
 
     def __init__(self, config: dict):
@@ -36,25 +41,33 @@ class MetadataStep(PipelineStep):
         
         Args:
             config: Configuration dictionary with options:
-                - enabled_formats: List of file formats to process
+                - enabled_formats: List of file formats to process (pdf, html, txt, md)
                 - fallback_to_filename: Use filename as title fallback
                 - debug: Enable debug logging
                 - export_metadata: Whether to export metadata to JSON file
                 - metadata_destination: Directory to save metadata file
                 - metadata_filename: Name of the metadata JSON file
+                - enable_scholar_search: Whether to use Google Scholar for additional metadata
+                  Note: Text formats (txt, md) automatically enable this feature
         """
         super().__init__(config)
         
-        self.enabled_formats = set(config.get("enabled_formats", ["pdf", "html"]))
+        self.enabled_formats = set(config.get("enabled_formats", ["pdf", "html", "txt", "md"]))
         self.fallback_to_filename = config.get("fallback_to_filename", True)
         self.export_metadata = config.get("export_metadata", True)
         self.metadata_destination = Path(config.get("metadata_destination", "./output"))
         self.metadata_filename = config.get("metadata_filename", "metadata.json")
+        self.enable_scholar_search = config.get("enable_scholar_search", False)
         
         self.extractors = {
             "pdf": PdfMetadataExtractor(debug=self.debug),
             "html": HtmlMetadataExtractor(debug=self.debug)
         }
+        
+        if self.enable_scholar_search or any(fmt in self.enabled_formats for fmt in ["txt", "md"]):
+            self.scholar_extractor = ScholarMetadataExtractor(debug=self.debug)
+            if not self.enable_scholar_search:
+                self.logger.info("Enabling Google Scholar search automatically for text format support")
 
     async def _extract_metadata_for_document(self, document: Document) -> Document:
         """
@@ -70,13 +83,31 @@ class MetadataStep(PipelineStep):
             self.logger.debug(f"Skipping metadata extraction for unsupported format: {document.file_format}")
             return document
             
-        if document.file_format not in self.extractors:
-            self.logger.warning(f"No extractor available for format: {document.file_format}")
-            return document
-            
+        metadata = None
+        
         try:
-            extractor = self.extractors[document.file_format]
-            metadata = await extractor.extract_metadata(document)
+            if document.file_format in ["txt", "md"]:
+                if not document.content.strip() and document.file_path.exists():
+                    try:
+                        with open(document.file_path, 'r', encoding='utf-8') as f:
+                            document.update_content(f.read())
+                        self.logger.info(f"Loaded content for text file {document.filename}: {len(document.content)} characters")
+                    except Exception as e:
+                        self.logger.error(f"Failed to load content for {document.filename}: {str(e)}")
+                        return document
+                
+                if hasattr(self, 'scholar_extractor'):
+                    metadata = await self.scholar_extractor.extract_metadata(document)
+                    if metadata:
+                        self.logger.info(f"Successfully extracted metadata from text document {document.filename} using Google Scholar")
+                else:
+                    self.logger.warning("Scholar extractor not available for text format extraction. Enable scholar search to extract metadata from text files.")
+            
+            elif document.file_format in self.extractors:
+                extractor = self.extractors[document.file_format]
+                metadata = await extractor.extract_metadata(document)
+            else:
+                self.logger.warning(f"No extractor available for format: {document.file_format}")
             
             if metadata:
                 for key, value in metadata.items():
@@ -95,6 +126,27 @@ class MetadataStep(PipelineStep):
                     title = document.file_path.stem.replace("_", " ").replace("-", " ")
                     document.add_metadata("extracted_title", title)
                     self.logger.info(f"Using filename as title fallback: {title}")
+            
+            if (self.enable_scholar_search and hasattr(self, 'scholar_extractor')):
+                
+                try:
+                    scholar_metadata = await self.scholar_extractor.extract_metadata(document)
+                    
+                    if scholar_metadata:
+                        for key, value in scholar_metadata.items():
+                            if value is not None:
+                                document.add_metadata(f"scholar_{key}", value)
+                        
+                        document.add_metadata("scholar_metadata", scholar_metadata)
+                        self.logger.info(f"Successfully extracted Google Scholar metadata from {document.filename}")
+                        
+                        if self.debug:
+                            self.logger.debug(f"Scholar metadata keys: {list(scholar_metadata.keys())}")
+                    else:
+                        self.logger.info(f"No Google Scholar metadata found for {document.filename}")
+                        
+                except Exception as scholar_error:
+                    self.logger.warning(f"Google Scholar extraction failed for {document.filename}: {str(scholar_error)}")
                     
         except Exception as e:
             self.logger.error(f"Failed to extract metadata from {document.filename}: {str(e)}")
@@ -227,12 +279,18 @@ class MetadataStep(PipelineStep):
     
     def get_extractor_info(self) -> Dict[str, Any]:
         """Get information about available extractors."""
-        return {
+        info = {
             "supported_formats": list(self.enabled_formats),
             "available_extractors": list(self.extractors.keys()),
             "fallback_enabled": self.fallback_to_filename,
             "debug_enabled": self.debug,
             "export_metadata": self.export_metadata,
             "metadata_destination": str(self.metadata_destination),
-            "metadata_filename": self.metadata_filename
+            "metadata_filename": self.metadata_filename,
+            "scholar_search_enabled": self.enable_scholar_search
         }
+        
+        if self.enable_scholar_search:
+            info["available_extractors"].append("google_scholar")
+            
+        return info

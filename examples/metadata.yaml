@@ -8,12 +8,13 @@ pipeline:
         format: "auto"
     - name: metadata
       config:
-        enabled_formats: ["pdf", "html"]  # Extract metadata from PDF and HTML files
-        fallback_to_filename: true        # Use filename as title if extraction fails
-        debug: false
-        export_metadata: true             # Export metadata to JSON file (default: true)
-        metadata_destination: "./output"  # Directory to save metadata file (default: "./output")
-        metadata_filename: "metadata.json" # Name of metadata JSON file (default: "metadata.json")
+        enabled_formats: ["pdf", "html", "txt"]  # Extract metadata from multiple formats
+        fallback_to_filename: true              # Use filename as title if extraction fails
+        debug: true                             # Enable debug logging to see Scholar search progress
+        export_metadata: true                   # Export metadata to JSON file
+        metadata_destination: "./output"        # Directory to save metadata file
+        metadata_filename: "metadata.json"      # Name of metadata JSON file
+        enable_scholar_search: true             # Enable Google Scholar search for all file formats
     - name: cleaning
       config:
         ocr_threshold: 0.99

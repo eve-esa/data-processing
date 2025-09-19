@@ -14,5 +14,14 @@ pipeline:
         min_words: 2, 
         enable_latex_correction: false,
       }
+    - name: metadata
+      config:
+        enabled_formats: ["pdf", "html", "txt"] 
+        fallback_to_filename: true              
+        debug: true                             
+        export_metadata: true              
+        metadata_destination: "./output"       
+        metadata_filename: "metadata.json"     
+        enable_scholar_search: true            
     - name: export
       config: { format: "md", destination: "output/files"}

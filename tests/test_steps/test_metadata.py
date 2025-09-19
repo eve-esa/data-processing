@@ -11,6 +11,7 @@ from eve.steps.metadata.metadata_step import MetadataStep
 from eve.steps.metadata.extractors.pdf_extractor import PdfMetadataExtractor
 from eve.steps.metadata.extractors.html_extractor import HtmlMetadataExtractor
 from eve.steps.metadata.extractors.base_extractor import BaseMetadataExtractor
+from eve.steps.metadata.extractors.scholar_extractor import ScholarMetadataExtractor
 from eve.model.document import Document
 
 
@@ -366,7 +367,12 @@ class TestPdfMetadataExtractor:
         mock_pdf.__enter__ = Mock(return_value=mock_pdf)
         mock_pdf.__exit__ = Mock(return_value=None)
         
-        with patch("pdfplumber.open", return_value=mock_pdf):
+        # Mock the pdfplumber module import and its open function
+        mock_pdfplumber = Mock()
+        mock_pdfplumber.open = Mock(return_value=mock_pdf)
+        
+        with patch('builtins.__import__', side_effect=lambda name, *args, **kwargs: 
+                   mock_pdfplumber if name == 'pdfplumber' else __import__(name, *args, **kwargs)):
             result = await pdf_extractor._extract_title_from_pdf("test.pdf")
             
             assert result == "PDF Metadata Title"
@@ -375,7 +381,12 @@ class TestPdfMetadataExtractor:
     async def test_extract_title_from_pdf_failure(self, pdf_extractor):
         """Test title extraction when pdfplumber fails."""
         
-        with patch("pdfplumber.open", side_effect=Exception("pdfplumber failed")):
+        # Mock the pdfplumber module import to raise an exception when open is called
+        mock_pdfplumber = Mock()
+        mock_pdfplumber.open = Mock(side_effect=Exception("pdfplumber failed"))
+        
+        with patch('builtins.__import__', side_effect=lambda name, *args, **kwargs: 
+                   mock_pdfplumber if name == 'pdfplumber' else __import__(name, *args, **kwargs)):
             result = await pdf_extractor._extract_title_from_pdf("test.pdf")
             
             assert result is None
@@ -681,3 +692,233 @@ class TestMetadataStepWithJsonExport:
             assert info["export_metadata"] == True
             assert info["metadata_destination"] == "custom_output"  # Path strips ./ prefix
             assert info["metadata_filename"] == "custom.json"
+
+
+class TestScholarMetadataExtractor:
+    """Test suite for Google Scholar metadata extractor."""
+
+    @pytest.fixture
+    def scholar_extractor(self):
+        """Scholar extractor instance for testing."""
+        return ScholarMetadataExtractor(debug=False)
+
+    @pytest.fixture
+    def sample_academic_document(self):
+        """Sample academic document for testing."""
+        content = """First steps towards the assimilation of IASI ozone data into the
+MOCAGE-PALM system
+S. Massart, C. Clerbaux, D. Cariolle, A. Piacentini, S. Turquety, and J. Hadji-Lazaro
+Abstract. With the use of data assimilation, we study the
+quality of the Infrared Atmospheric Sounding Interferometer (IASI) total ozone column measurements."""
+        
+        return Document(
+            file_path=Path("academic_paper.pdf"),
+            content=content,
+            file_format="pdf"
+        )
+
+    def test_scholar_extractor_initialization(self, scholar_extractor):
+        """Test Scholar extractor initialization."""
+        assert isinstance(scholar_extractor, ScholarMetadataExtractor)
+        assert scholar_extractor.min_query_length == 1000
+        assert scholar_extractor.max_query_length == 8000
+        assert scholar_extractor.max_iterations == 5
+
+    def test_extract_text_snippet_normal(self, scholar_extractor, sample_academic_document):
+        """Test text snippet extraction with normal length."""
+        snippet = scholar_extractor._extract_text_snippet(sample_academic_document, 100)
+        
+        assert len(snippet) <= 100
+        assert "First steps towards" in snippet
+        assert snippet.strip()  # Not empty
+
+    def test_extract_text_snippet_long(self, scholar_extractor, sample_academic_document):
+        """Test text snippet extraction with length longer than content."""
+        content_length = len(sample_academic_document.content)
+        snippet = scholar_extractor._extract_text_snippet(sample_academic_document, content_length + 100)
+        
+        # Should return full content (cleaned)
+        assert "First steps towards" in snippet
+        assert "IASI ozone data" in snippet
+
+    def test_extract_text_snippet_empty_content(self, scholar_extractor):
+        """Test text snippet extraction with empty content."""
+        empty_doc = Document(
+            file_path=Path("empty_paper.pdf"),
+            content="",
+            file_format="pdf"
+        )
+        
+        snippet = scholar_extractor._extract_text_snippet(empty_doc, 100)
+        
+        assert snippet == ""
+
+    def test_extract_scholar_metadata(self, scholar_extractor):
+        """Test extraction of metadata from Scholar result."""
+        mock_scholar_result = {
+            'bib': {
+                'title': 'Test Paper Title',
+                'author': ['John Doe', 'Jane Smith'],
+                'pub_year': '2023',
+                'venue': 'Test Journal',
+                'abstract': 'This is a test abstract.'
+            },
+            'num_citations': 42,
+            'pub_url': 'https://example.com/paper',
+            'eprint_url': 'https://example.com/paper.pdf',
+            'filled': False
+        }
+        
+        metadata = scholar_extractor._extract_scholar_metadata(mock_scholar_result)
+        
+        assert metadata['title'] == 'Test Paper Title'
+        assert metadata['authors'] == ['John Doe', 'Jane Smith']
+        assert metadata['year'] == '2023'
+        assert metadata['venue'] == 'Test Journal'
+        assert metadata['abstract'] == 'This is a test abstract.'
+        assert metadata['citation_count'] == 42
+        assert metadata['publication_url'] == 'https://example.com/paper'
+        assert metadata['pdf_url'] == 'https://example.com/paper.pdf'
+        assert metadata['scholar_filled'] == False
+
+    def test_extract_scholar_metadata_string_authors(self, scholar_extractor):
+        """Test Scholar metadata extraction with string author format."""
+        mock_scholar_result = {
+            'bib': {
+                'title': 'Test Paper',
+                'author': 'John Doe and Jane Smith',
+                'pub_year': '2023'
+            }
+        }
+        
+        metadata = scholar_extractor._extract_scholar_metadata(mock_scholar_result)
+        
+        assert metadata['authors'] == ['John Doe', 'Jane Smith']
+
+    @pytest.mark.asyncio
+    async def test_search_scholar_mock(self, scholar_extractor):
+        """Test Scholar search with mocked scholarly."""
+        mock_results = [
+            {
+                'bib': {'title': 'Test Paper', 'author': ['Test Author']},
+                'num_citations': 10
+            }
+        ]
+        
+        def mock_search_pubs(query):
+            return iter(mock_results)
+        
+        with patch('scholarly.scholarly.search_pubs', mock_search_pubs):
+            results = await scholar_extractor._search_scholar("test query")
+            
+            assert len(results) == 1
+            assert results[0]['bib']['title'] == 'Test Paper'
+
+    @pytest.mark.asyncio
+    async def test_extract_metadata_no_content(self, scholar_extractor):
+        """Test Scholar extraction with no content."""
+        empty_doc = Document(
+            file_path=Path(""),
+            content="",
+            file_format="pdf"
+        )
+        
+        result = await scholar_extractor.extract_metadata(empty_doc)
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_extract_metadata_mock_unique_result(self, scholar_extractor, sample_academic_document):
+        """Test Scholar extraction that finds unique result."""
+        mock_scholar_result = {
+            'bib': {
+                'title': 'IASI ozone data assimilation',
+                'author': ['S Massart', 'C Clerbaux'],
+                'pub_year': '2009'
+            },
+            'num_citations': 60
+        }
+        
+        with patch.object(scholar_extractor, '_search_scholar', new_callable=AsyncMock) as mock_search:
+            mock_search.return_value = [mock_scholar_result]  # Single result
+            
+            result = await scholar_extractor.extract_metadata(sample_academic_document)
+            
+            assert result is not None
+            assert result['title'] == 'IASI ozone data assimilation'
+            assert result['authors'] == ['S Massart', 'C Clerbaux']
+            assert result['year'] == '2009'
+            assert result['citation_count'] == 60
+
+    @pytest.mark.asyncio
+    async def test_extract_metadata_mock_multiple_results(self, scholar_extractor, sample_academic_document):
+        """Test Scholar extraction with multiple results that eventually finds unique."""
+        mock_calls = [
+            [{'bib': {'title': 'Paper 1'}}, {'bib': {'title': 'Paper 2'}}, {'bib': {'title': 'Paper 3'}}],  # 3 results
+            [{'bib': {'title': 'Unique Paper', 'author': ['Author']}, 'num_citations': 5}]  # 1 result
+        ]
+        
+        with patch.object(scholar_extractor, '_search_scholar', new_callable=AsyncMock) as mock_search:
+            mock_search.side_effect = mock_calls
+            
+            result = await scholar_extractor.extract_metadata(sample_academic_document)
+            
+            assert result is not None
+            assert result['title'] == 'Unique Paper'
+            assert mock_search.call_count == 2
+
+
+class TestMetadataStepWithScholar:
+    """Test suite for metadata step with Google Scholar integration."""
+
+    @pytest.fixture
+    def scholar_config(self):
+        """Configuration with Scholar enabled."""
+        return {
+            "enabled_formats": ["pdf"],
+            "enable_scholar_search": True,
+            "fallback_to_filename": True,
+            "debug": False
+        }
+
+    @pytest.fixture
+    def sample_pdf_document(self):
+        """Sample PDF document for testing."""
+        content = "This is a research paper about machine learning and artificial intelligence."
+        return Document(
+            file_path=Path("research_paper.pdf"),
+            content=content,
+            file_format="pdf"
+        )
+
+    @pytest.mark.asyncio
+    async def test_metadata_step_with_scholar_enabled(self, scholar_config, sample_pdf_document):
+        """Test metadata step with Scholar search enabled."""
+        
+        with patch("eve.steps.metadata.extractors.pdf_extractor.PdfMetadataExtractor"), \
+             patch("eve.steps.metadata.extractors.scholar_extractor.ScholarMetadataExtractor"):
+            
+            metadata_step = MetadataStep(scholar_config)
+            
+            mock_pdf_metadata = {"title": "PDF Title", "authors": ["PDF Author"]}
+            metadata_step.extractors["pdf"].extract_metadata = AsyncMock(return_value=mock_pdf_metadata)
+            
+            mock_scholar_metadata = {"title": "Scholar Title", "citation_count": 25}
+            metadata_step.scholar_extractor.extract_metadata = AsyncMock(return_value=mock_scholar_metadata)
+            
+            result = await metadata_step._extract_metadata_for_document(sample_pdf_document)
+            
+            assert result.get_metadata("extracted_title") == "PDF Title"
+            assert result.get_metadata("scholar_title") == "Scholar Title"
+            assert result.get_metadata("scholar_citation_count") == 25
+
+    def test_get_extractor_info_with_scholar(self, scholar_config):
+        """Test extractor info includes Scholar configuration."""
+        
+        with patch("eve.steps.metadata.extractors.pdf_extractor.PdfMetadataExtractor"), \
+             patch("eve.steps.metadata.extractors.scholar_extractor.ScholarMetadataExtractor"):
+            
+            metadata_step = MetadataStep(scholar_config)
+            info = metadata_step.get_extractor_info()
+            
+            assert info["scholar_search_enabled"] == True
+            assert "google_scholar" in info["available_extractors"]
