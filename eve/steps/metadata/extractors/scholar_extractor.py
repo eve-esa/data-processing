@@ -31,10 +31,10 @@ class ScholarMetadataExtractor(BaseMetadataExtractor):
         super().__init__(debug)
         
         # Configuration for search behavior
-        self.min_query_length = 1000   # Minimum characters for initial search (increased from 200)
-        self.max_query_length = 8000   # Maximum characters to use in search (increased from 1500)
-        self.increment_size = 1000     # How much to increase query length each iteration (increased from 200)
-        self.max_iterations = 5        # Maximum search iterations to find unique result
+        self.min_query_length = 1000
+        self.max_query_length = 8000
+        self.increment_size = 1000
+        self.max_iterations = 5
 
     def _extract_text_snippet(self, document: Document, length: int) -> str:
         """
