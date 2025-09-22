@@ -1,4 +1,31 @@
-"""Metadata extraction step for the EVE pipeline."""
+"""
+Metadata extraction step for the EVE pipeline.
+
+This module orchestrates metadata extraction across different document formats using
+specialized extractors. It provides a unified interface for extracting bibliographic
+information, titles, authors, and other metadata from PDF, HTML, and text documents.
+
+Architecture:
+- **MetadataStep**: Main orchestrator that manages extractors and coordinates extraction
+- **Format-Specific Extractors**: PDF, HTML, and Scholar extractors for different content types
+- **Async Processing**: Parallel extraction across multiple documents for performance
+- **Export Functionality**: JSON export for extracted metadata collection
+
+Key Features:
+- Multi-format support (PDF, HTML, TXT, MD)
+- Configurable extractor selection
+- Google Scholar integration for text documents
+- Filename fallback when extraction fails
+- Comprehensive metadata export with statistics
+- Parallel processing for scalability
+
+Configuration Options:
+- enabled_formats: Which document formats to process
+- fallback_to_filename: Use filename as title when extraction fails
+- export_metadata: Whether to export results to JSON
+- enable_scholar_search: Enable Google Scholar for additional metadata
+- debug: Enable detailed logging for troubleshooting
+"""
 
 import asyncio
 import json
@@ -71,13 +98,28 @@ class MetadataStep(PipelineStep):
 
     async def _extract_metadata_for_document(self, document: Document) -> Document:
         """
-        Extract metadata for a single document.
+        Extract metadata for a single document using appropriate extractor.
+        
+        Extraction Strategy:
+        1. **Format Check**: Verify document format is supported
+        2. **Text Format Handling**: For TXT/MD, load content if needed and use Scholar
+        3. **Format-Specific Extraction**: Use PDF/HTML extractors for those formats
+        4. **Metadata Storage**: Store extracted fields with 'extracted_' prefix
+        5. **Filename Fallback**: Use filename as title if extraction fails
+        6. **Scholar Enhancement**: Optionally add Scholar metadata for any format
+        7. **Error Handling**: Graceful degradation with informative logging
         
         Args:
             document: Document to extract metadata from
             
         Returns:
-            Document with metadata added to the metadata field
+            Document with metadata added to the metadata field:
+            - extracted_title: Document title
+            - extracted_authors: List of authors
+            - extracted_year: Publication year
+            - extracted_metadata: Full metadata dictionary
+            - scholar_*: Google Scholar fields (if enabled)
+            - extraction_error: Error message (if extraction failed)
         """
         if document.file_format not in self.enabled_formats:
             self.logger.debug(f"Skipping metadata extraction for unsupported format: {document.file_format}")

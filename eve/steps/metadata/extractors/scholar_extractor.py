@@ -1,13 +1,29 @@
 """
 Google Scholar metadata extractor using scholarly package.
 
-This extractor searches Google Scholar to find metadata for academic papers by using
-progressively longer text snippets from the document content until a unique result is found.
+This extractor implements an advanced search strategy to find academic papers on Google Scholar
+by using progressively longer text snippets from document content. The goal is to find a
+unique match that corresponds to the input document.
 
-Extracted metadata includes:
+Search Strategy:
+1. **Iterative Query Expansion**: Starts with short text snippets and gradually increases length
+2. **Uniqueness Detection**: Continues searching until exactly one result is found
+3. **Disambiguation**: Uses longer text snippets to resolve ambiguous results
+4. **Metadata Extraction**: Extracts rich bibliographic data from the unique result
+
+This approach works well for academic papers, research documents, and other scholarly content
+that is indexed by Google Scholar. It's particularly useful for text documents without
+embedded metadata.
+
+Extracted Metadata:
 - Bibliographic information (title, authors, year, venue, abstract)
-- Citation count and publication URLs
-- Scholar-specific information
+- Citation metrics (citation count)
+- Publication URLs (paper URL, PDF URL)
+- Scholar-specific metadata (filled status, scholar ID)
+
+Dependencies:
+- scholarly package for Google Scholar API access
+- Network connectivity for search requests
 """
 
 import asyncio
@@ -19,33 +35,81 @@ from eve.steps.metadata.extractors.base_extractor import BaseMetadataExtractor
 
 
 class ScholarMetadataExtractor(BaseMetadataExtractor):
-    """Metadata extractor using Google Scholar search via scholarly package."""
+    """
+    Metadata extractor using Google Scholar search with iterative query refinement.
+    
+    This extractor implements a sophisticated search strategy to find academic papers
+    by progressively refining search queries until a unique result is found.
+    
+    Key Features:
+    - Iterative query expansion (1KB → 8KB text snippets)
+    - Uniqueness validation (continues until exactly 1 result)
+    - Rich metadata extraction from Scholar API
+    - Graceful handling of search failures and rate limits
+    
+    Search Parameters:
+    - min_query_length: Starting text snippet length (1000 chars)
+    - max_query_length: Maximum text snippet length (8000 chars)
+    - increment_size: Text expansion increment (1000 chars)
+    - max_iterations: Maximum search attempts (5 iterations)
+    
+    Extracted Fields:
+    - title: Paper title
+    - authors: List of author names
+    - year: Publication year
+    - venue: Journal/conference name
+    - abstract: Paper abstract
+    - citation_count: Number of citations
+    - publication_url: Link to paper
+    - pdf_url: Link to PDF if available
+    - scholar_filled: Whether full metadata was retrieved
+    """
 
     def __init__(self, debug: bool = False):
         """
         Initialize the Google Scholar metadata extractor.
         
+        Configures the iterative search parameters that control how the extractor
+        balances between search precision and recall. Smaller increments provide
+        more precision but require more API calls.
+        
         Args:
-            debug: Enable debug logging
+            debug: Enable debug logging for detailed search information
         """
         super().__init__(debug)
         
-        # Configuration for search behavior
-        self.min_query_length = 1000
-        self.max_query_length = 8000
-        self.increment_size = 1000
-        self.max_iterations = 5
+        # Configuration for iterative search behavior
+        self.min_query_length = 1000    # Start with 1KB of text
+        self.max_query_length = 8000    # Max 8KB of text (API limits)
+        self.increment_size = 1000      # Expand by 1KB each iteration
+        self.max_iterations = 5         # Prevent infinite loops
 
     def _extract_text_snippet(self, document: Document, length: int) -> str:
         """
-        Extract a text snippet of specified length from document content.
+        Extract a cleaned text snippet of specified length from document content.
+        
+        This method creates search queries by extracting meaningful text from the
+        document content. The text is cleaned and normalized to improve search
+        quality on Google Scholar.
+        
+        Text Processing Steps:
+        1. Extract substring of desired length from document start
+        2. Split into lines and clean each line (normalize whitespace)
+        3. Filter out empty lines
+        4. Join lines back into single search string
+        5. Ensure word boundaries (avoid cutting words in half)
         
         Args:
             document: Document to extract text from
-            length: Desired length of text snippet
+            length: Desired length of text snippet (in characters)
             
         Returns:
-            Cleaned text snippet for search query
+            Cleaned text snippet optimized for Google Scholar search.
+            Returns empty string if no content available.
+            
+        Note:
+            The snippet is truncated at word boundaries when possible to avoid
+            creating incomplete phrases that might hurt search quality.
         """
         content = document.content.strip()
         
@@ -53,20 +117,26 @@ class ScholarMetadataExtractor(BaseMetadataExtractor):
             self.logger.error("No content available for text snippet extraction")
             return ""
         
+        # Extract initial snippet of desired length
         snippet = content[:length]
         
+        # Clean and normalize text line by line
         lines = snippet.split('\n')
         cleaned_lines = []
         
         for line in lines:
+            # Normalize whitespace (collapse multiple spaces, tabs, etc.)
             cleaned_line = ' '.join(line.split())
-            if cleaned_line.strip():
+            if cleaned_line.strip():  # Only keep non-empty lines
                 cleaned_lines.append(cleaned_line)
         
+        # Join all cleaned lines into single search string
         result = ' '.join(cleaned_lines)
         
+        # Ensure word boundaries - truncate at last complete word if needed
         if len(result) == length and length < len(content):
             last_space = result.rfind(' ')
+            # Only truncate if we find a space in the last 20% of the text
             if last_space > length * 0.8:
                 result = result[:last_space]
         
@@ -74,13 +144,33 @@ class ScholarMetadataExtractor(BaseMetadataExtractor):
 
     async def _search_scholar(self, query: str) -> Optional[List[Dict[str, Any]]]:
         """
-        Search Google Scholar with the given query.
+        Search Google Scholar with the given query using async execution.
+        
+        This method handles the Google Scholar API call asynchronously to avoid
+        blocking the event loop during potentially slow network requests.
+        
+        Search Behavior:
+        - Limits results to top 3 matches (sufficient for uniqueness detection)
+        - Runs in thread pool executor to maintain async compatibility
+        - Provides detailed logging of search progress and results
+        - Handles various failure modes gracefully
         
         Args:
-            query: Search query string
+            query: Search query string (cleaned text snippet from document)
             
         Returns:
-            List of search results or None if search fails
+            List of search result dictionaries with fields:
+            - bib: Bibliographic information (title, authors, year, etc.)
+            - num_citations: Citation count
+            - pub_url: Publication URL
+            - eprint_url: PDF URL if available
+            - filled: Whether full metadata was retrieved
+            
+            Returns None if search fails due to network, API, or dependency issues.
+            
+        Note:
+            Requires the 'scholarly' package to be installed and network connectivity.
+            May be subject to rate limiting by Google Scholar.
         """
         try:
             from scholarly import scholarly
@@ -89,20 +179,28 @@ class ScholarMetadataExtractor(BaseMetadataExtractor):
             self.logger.info(f"Query text preview: {query[:200]}{'...' if len(query) > 200 else ''}")
             
             def do_search():
+                """
+                Inner function to perform synchronous Scholar search.
+                This runs in a thread pool to maintain async compatibility.
+                """
                 search_query = scholarly.search_pubs(query)
                 results = []
                 try:
+                    # Limit to top 3 results for efficiency
                     for i, result in enumerate(search_query):
-                        if i >= 3:
+                        if i >= 3:  # Only need a few results for uniqueness check
                             break
-                        results.append(dict(result))
+                        results.append(dict(result))  # Convert to dict for JSON serialization
                 except StopIteration:
+                    # Normal termination when fewer than 3 results available
                     pass
                 return results
             
+            # Execute search in thread pool to avoid blocking event loop
             loop = asyncio.get_event_loop()
             results = await loop.run_in_executor(None, do_search)
             
+            # Log search results for debugging
             self.logger.debug(f"Google Scholar returned {len(results)} results")
             for i, result in enumerate(results):
                 self.logger.debug(f"Result {i+1}:")
@@ -120,45 +218,73 @@ class ScholarMetadataExtractor(BaseMetadataExtractor):
 
     def _extract_scholar_metadata(self, scholar_result: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Extract metadata from Google Scholar result.
+        Extract and normalize metadata from a Google Scholar search result.
+        
+        This method processes the raw Scholar API response and converts it into
+        the standardized metadata format used by the EVE pipeline. It handles
+        various data types and applies necessary cleaning and normalization.
+        
+        Processing Steps:
+        1. Extract bibliographic data from 'bib' field
+        2. Apply title cleaning using base class utilities
+        3. Normalize author information to list format
+        4. Extract Scholar-specific fields (citations, URLs)
+        5. Apply type conversions (year to string, citations to int)
         
         Args:
-            scholar_result: Raw result from scholarly search
+            scholar_result: Raw result dictionary from scholarly.search_pubs()
+                          Contains 'bib' field with bibliographic data and
+                          top-level fields for citations, URLs, etc.
             
         Returns:
-            Cleaned metadata dictionary
+            Cleaned metadata dictionary with standardized fields:
+            - title: Paper title (cleaned)
+            - authors: List of author names (normalized)
+            - year: Publication year (as string)
+            - venue: Journal/conference name
+            - abstract: Paper abstract
+            - citation_count: Number of citations (as integer)
+            - publication_url: Link to paper
+            - pdf_url: Link to PDF if available
+            - scholar_filled: Whether full metadata was retrieved from Scholar
+            
+        Note:
+            Uses base class utilities (_map_metadata_fields, _process_authors)
+            to ensure consistency with other extractors.
         """
         metadata = {}
         
+        # Extract nested bibliographic information
         bib = scholar_result.get('bib', {})
         
-        # Map bibliographic fields
+        # Map standard bibliographic fields with title cleaning
         bib_mapping = {
-            'title': 'title',
-            'pub_year': 'year',
-            'venue': 'venue', 
-            'abstract': 'abstract'
+            'title': 'title',           # Paper title
+            'pub_year': 'year',         # Publication year  
+            'venue': 'venue',           # Journal/conference name
+            'abstract': 'abstract'      # Paper abstract
         }
+        # Apply cleaning to title field to ensure quality
         self._map_metadata_fields(bib, bib_mapping, metadata, apply_cleaning=['title'])
         
-        # Convert year to string if present
+        # Ensure year is stored as string for consistency
         if 'year' in metadata:
             metadata['year'] = str(metadata['year'])
             
-        # Process authors
+        # Process authors using base class utility for normalization
         if bib.get('author'):
             metadata['authors'] = self._process_authors(bib['author'])
                 
-        # Map scholar-specific fields
+        # Map Scholar-specific fields from top-level result
         scholar_mapping = {
-            'num_citations': 'citation_count',
-            'pub_url': 'publication_url',
-            'eprint_url': 'pdf_url',
-            'filled': 'scholar_filled'
+            'num_citations': 'citation_count',     # Citation count
+            'pub_url': 'publication_url',          # Link to paper
+            'eprint_url': 'pdf_url',              # Link to PDF
+            'filled': 'scholar_filled'             # Full metadata retrieved?
         }
         self._map_metadata_fields(scholar_result, scholar_mapping, metadata)
         
-        # Convert citation count to int if present
+        # Ensure citation count is stored as integer
         if 'citation_count' in metadata:
             metadata['citation_count'] = int(metadata['citation_count'])
         
@@ -166,25 +292,64 @@ class ScholarMetadataExtractor(BaseMetadataExtractor):
 
     async def extract_metadata(self, document: Document) -> Optional[Dict[str, Any]]:
         """
-        Extract metadata from a document using Google Scholar search.
+        Extract metadata from a document using iterative Google Scholar search.
+        
+        This method implements a sophisticated search strategy to find academic papers
+        by progressively refining search queries until a unique result is found.
+        
+        Iterative Search Algorithm:
+        1. **Initialization**: Start with minimum query length (1KB text)
+        2. **Search Loop**: For each iteration:
+           a. Extract text snippet of current length
+           b. Search Google Scholar with the snippet
+           c. Analyze result count:
+              - 0 results: No paper found, return None
+              - 1 result: Unique match found, extract metadata
+              - 2+ results: Ambiguous, increase query length and retry
+        3. **Termination**: Stop when unique result found or limits exceeded
+        
+        Why This Approach Works:
+        - Short queries may match many papers (too general)
+        - Long queries provide specificity to disambiguate
+        - Unique result indicates high confidence match
+        - Academic papers often have distinctive content patterns
         
         Args:
-            document: Document to extract metadata from
+            document: Document to extract metadata from (must have text content)
             
         Returns:
-            Dictionary containing extracted metadata or None if extraction fails
+            Dictionary containing extracted metadata with Scholar-specific fields:
+            - title: Paper title
+            - authors: List of author names
+            - year: Publication year
+            - venue: Journal/conference name
+            - abstract: Paper abstract
+            - citation_count: Number of citations
+            - publication_url: Link to paper
+            - pdf_url: Link to PDF if available
+            - scholar_filled: Whether full metadata was retrieved
+            
+            Returns None if:
+            - Document has no content
+            - No results found in Scholar
+            - Cannot find unique result within iteration limits
+            - Search or extraction fails
         """
+        # Validate document has content for search
         if not document.content.strip():
             self.logger.warning("No content available for Google Scholar search")
             return None
 
-        query_length = self.min_query_length
+        # Initialize iterative search variables
+        query_length = self.min_query_length  # Start with 1KB
         unique_result = None
         search_iterations = 0
         
+        # Iterative search loop: expand query until unique result found
         while search_iterations < self.max_iterations and query_length <= self.max_query_length:
             search_iterations += 1
             
+            # Extract text snippet of current length for search query
             query = self._extract_text_snippet(document, query_length)
             
             if not query:
@@ -193,16 +358,20 @@ class ScholarMetadataExtractor(BaseMetadataExtractor):
             
             self.logger.debug(f"Scholar search iteration {search_iterations}, query length: {len(query)}")
             
+            # Perform Scholar search with current query
             results = await self._search_scholar(query)
             
+            # Handle search failure
             if results is None:
                 self.logger.error("Google Scholar search failed")
                 return None
             
+            # Handle no results found
             if len(results) == 0:
                 self.logger.info("No results found in Google Scholar")
                 return None
             
+            # SUCCESS: Unique result found!
             if len(results) == 1:
                 unique_result = results[0]
                 self.logger.info(f"Found unique Google Scholar result after {search_iterations} iterations with query length {query_length}")
@@ -210,14 +379,19 @@ class ScholarMetadataExtractor(BaseMetadataExtractor):
                 self.logger.info(f"Unique result title: {bib.get('title', 'N/A')}")
                 break
             
+            # AMBIGUOUS: Multiple results found, need longer query
             if len(results) > 1:
                 self.logger.info(f"Found {len(results)} results in iteration {search_iterations}, increasing query length to {query_length + self.increment_size}")
+                # Log first few results for debugging
                 for i, result in enumerate(results[:2]):
                     bib = result.get('bib', {})
                     self.logger.debug(f"  Multiple result {i+1}: {bib.get('title', 'N/A')}")
+                
+                # Expand query length for next iteration
                 query_length += self.increment_size
                 continue
         
+        # Check if search was successful
         if unique_result is None:
             if search_iterations >= self.max_iterations:
                 self.logger.warning(f"Could not find unique result after {self.max_iterations} iterations")
@@ -225,6 +399,7 @@ class ScholarMetadataExtractor(BaseMetadataExtractor):
                 self.logger.warning("Could not find unique result - query too long")
             return None
         
+        # Extract metadata from the unique Scholar result
         try:
             metadata = self._extract_scholar_metadata(unique_result)
             
@@ -233,6 +408,7 @@ class ScholarMetadataExtractor(BaseMetadataExtractor):
                 self.logger.debug(f"Raw Scholar result keys: {list(unique_result.keys())}")
                 self.logger.debug(f"Extracted metadata keys: {list(metadata.keys()) if metadata else 'None'}")
             
+            # Finalize using base class utility
             return self._finalize_metadata(metadata, document)
             
         except Exception as e:
