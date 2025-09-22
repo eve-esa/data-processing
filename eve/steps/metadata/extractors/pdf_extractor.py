@@ -124,53 +124,50 @@ class PdfMetadataExtractor(BaseMetadataExtractor):
         Returns:
             Dictionary containing extracted metadata
         """
-        if document.file_format != "pdf":
-            self.logger.warning(f"Expected PDF format, got {document.file_format}")
+        if not self._validate_document_format(document, "pdf"):
             return None
 
         file_path = str(document.file_path)
         metadata = {}
 
+        # Extract bibtex metadata
         bibtex_data = await self._extract_bibtex_metadata(file_path)
         if bibtex_data:
-            metadata.update({
-                'identifier': bibtex_data.get('identifier'),
-                'identifier_type': bibtex_data.get('identifier_type'),
-                'validation_info': bibtex_data.get('validation_info'),
-                'method': bibtex_data.get('method'),
-                'bibtex': bibtex_data.get('bibtex')
-            })
+            # Map direct bibtex fields
+            direct_mapping = {
+                'identifier': 'identifier',
+                'identifier_type': 'identifier_type', 
+                'validation_info': 'validation_info',
+                'method': 'method',
+                'bibtex': 'bibtex'
+            }
+            self._map_metadata_fields(bibtex_data, direct_mapping, metadata)
             
+            # Process bibliographic metadata
             bib_metadata = bibtex_data.get('metadata')
             if bib_metadata and isinstance(bib_metadata, dict):
-                if 'title' in bib_metadata:
-                    metadata['title'] = self._clean_title(bib_metadata['title'])
+                bib_mapping = {
+                    'title': 'title',
+                    'year': 'year', 
+                    'journal': 'journal',
+                    'doi': 'doi'
+                }
+                self._map_metadata_fields(bib_metadata, bib_mapping, metadata, apply_cleaning=['title'])
+                
+                # Process authors
                 if 'author' in bib_metadata:
                     metadata['authors'] = bib_metadata['author']
-                if 'year' in bib_metadata:
-                    metadata['year'] = bib_metadata['year']
-                if 'journal' in bib_metadata:
-                    metadata['journal'] = bib_metadata['journal']
-                if 'doi' in bib_metadata:
-                    metadata['doi'] = bib_metadata['doi']
 
-        if not metadata.get('title'):
-            title = await self._extract_title_from_pdf(file_path)
-            if title:
-                metadata['title'] = title
+        # Handle title extraction with fallback
+        extracted_title = metadata.get('title')
+        if not extracted_title:
+            extracted_title = await self._extract_title_from_pdf(file_path)
+            
+        self._set_title_with_fallback(metadata, extracted_title, document)
 
-        if not metadata.get('title'):
-            metadata['title'] = self._extract_title_from_filename(document.file_path)
-            metadata['title_source'] = 'filename'
-        else:
-            metadata['title_source'] = 'extracted'
-
-        metadata['extraction_methods'] = []
+        # Add extraction methods
+        self._add_extraction_method(metadata, 'pdf_reader')
         if bibtex_data:
-            metadata['extraction_methods'].append('pdf2bib')
-        metadata['extraction_methods'].append('pdf_reader')
+            self._add_extraction_method(metadata, 'pdf2bib')
 
-        if self.debug:
-            self.logger.debug(f"Extracted metadata for {document.filename}: {metadata}")
-
-        return metadata if metadata else None
+        return self._finalize_metadata(metadata, document)

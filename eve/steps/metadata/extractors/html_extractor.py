@@ -112,47 +112,48 @@ class HtmlMetadataExtractor(BaseMetadataExtractor):
         Returns:
             Dictionary containing extracted metadata
         """
-        if document.file_format != "html":
-            self.logger.warning(f"Expected HTML format, got {document.file_format}")
+        if not self._validate_document_format(document, "html"):
             return None
 
         metadata = {}
 
-        title = self._extract_title_from_html(document.content)
-        if title:
-            metadata['title'] = title
-            metadata['title_source'] = 'html_tag'
-        else:
-            metadata['title'] = self._extract_title_from_filename(document.file_path)
-            metadata['title_source'] = 'filename'
-
+        # Extract title from HTML
+        extracted_title = self._extract_title_from_html(document.content)
+        title_source = 'html_tag' if extracted_title else None
+        
+        # Extract meta tags
         meta_data = self._extract_meta_tags(document.content)
         if meta_data:
             metadata['meta_tags'] = meta_data
             
-            if metadata['title_source'] == 'filename':
+            # Try alternative title sources from meta tags if no HTML title found
+            if not extracted_title:
                 alt_title = meta_data.get('og_title') or meta_data.get('twitter_title')
                 if alt_title:
                     cleaned_alt_title = self._clean_title(alt_title)
                     if cleaned_alt_title:
-                        metadata['title'] = cleaned_alt_title
-                        metadata['title_source'] = 'meta_tag'
+                        extracted_title = cleaned_alt_title
+                        title_source = 'meta_tag'
 
+        # Set title with fallback
+        self._set_title_with_fallback(metadata, extracted_title, document, title_source or 'extracted')
+
+        # Extract structured data
         structured_data = self._extract_structured_data(document.content)
         if structured_data:
             metadata['structured_data'] = structured_data
 
+        # Get URL information
         url_info = self._get_url_info(document)
         if url_info:
             metadata.update(url_info)
 
+        # Add content information
         content_length = len(document.content)
         metadata['content_length'] = content_length
         metadata['has_content'] = content_length > 0
 
-        metadata['extraction_methods'] = ['html_parsing']
+        # Add extraction method
+        self._add_extraction_method(metadata, 'html_parsing')
 
-        if self.debug:
-            self.logger.debug(f"Extracted metadata for {document.filename}: {metadata}")
-
-        return metadata if metadata else None
+        return self._finalize_metadata(metadata, document)

@@ -132,42 +132,35 @@ class ScholarMetadataExtractor(BaseMetadataExtractor):
         
         bib = scholar_result.get('bib', {})
         
-        if bib.get('title'):
-            metadata['title'] = self._clean_title(bib['title'])
-            
-        if bib.get('author'):
-            authors = bib['author']
-            if isinstance(authors, list):
-                metadata['authors'] = [author.strip() for author in authors if author.strip()]
-            elif isinstance(authors, str):
-                author_list = []
-                for sep in [' and ', ', ', '; ']:
-                    if sep in authors:
-                        author_list = [author.strip() for author in authors.split(sep)]
-                        break
-                if not author_list:
-                    author_list = [authors.strip()]
-                metadata['authors'] = author_list
-                
-        if bib.get('pub_year'):
-            metadata['year'] = str(bib['pub_year'])
-            
-        if bib.get('venue'):
-            metadata['venue'] = bib['venue']
-            
-        if bib.get('abstract'):
-            metadata['abstract'] = bib['abstract']
+        # Map bibliographic fields
+        bib_mapping = {
+            'title': 'title',
+            'pub_year': 'year',
+            'venue': 'venue', 
+            'abstract': 'abstract'
+        }
+        self._map_metadata_fields(bib, bib_mapping, metadata, apply_cleaning=['title'])
         
-        if scholar_result.get('num_citations'):
-            metadata['citation_count'] = int(scholar_result['num_citations'])
+        # Convert year to string if present
+        if 'year' in metadata:
+            metadata['year'] = str(metadata['year'])
             
-        if scholar_result.get('pub_url'):
-            metadata['publication_url'] = scholar_result['pub_url']
-            
-        if scholar_result.get('eprint_url'):
-            metadata['pdf_url'] = scholar_result['eprint_url']
-            
-        metadata['scholar_filled'] = scholar_result.get('filled', False)
+        # Process authors
+        if bib.get('author'):
+            metadata['authors'] = self._process_authors(bib['author'])
+                
+        # Map scholar-specific fields
+        scholar_mapping = {
+            'num_citations': 'citation_count',
+            'pub_url': 'publication_url',
+            'eprint_url': 'pdf_url',
+            'filled': 'scholar_filled'
+        }
+        self._map_metadata_fields(scholar_result, scholar_mapping, metadata)
+        
+        # Convert citation count to int if present
+        if 'citation_count' in metadata:
+            metadata['citation_count'] = int(metadata['citation_count'])
         
         return metadata
 
@@ -239,9 +232,8 @@ class ScholarMetadataExtractor(BaseMetadataExtractor):
             if self.debug:
                 self.logger.debug(f"Raw Scholar result keys: {list(unique_result.keys())}")
                 self.logger.debug(f"Extracted metadata keys: {list(metadata.keys()) if metadata else 'None'}")
-                self.logger.debug(f"Full extracted metadata: {metadata}")
             
-            return metadata
+            return self._finalize_metadata(metadata, document)
             
         except Exception as e:
             self.logger.error(f"Failed to extract metadata from Scholar result: {str(e)}")
