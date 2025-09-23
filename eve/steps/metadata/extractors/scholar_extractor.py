@@ -108,7 +108,7 @@ class ScholarMetadataExtractor(BaseMetadataExtractor):
             Returns None if search fails due to network, API, or dependency issues.
         """
         try:
-            from scholarly import scholarly
+            from scholarly import scholarly, ProxyGenerator
             
             self.logger.debug(f"Searching Google Scholar with query length: {len(query)}")
             self.logger.info(f"Query text preview: {query[:200]}{'...' if len(query) > 200 else ''}")
@@ -118,6 +118,9 @@ class ScholarMetadataExtractor(BaseMetadataExtractor):
                 Inner function to perform synchronous Scholar search.
                 This runs in a thread pool to maintain async compatibility.
                 """
+                pg = ProxyGenerator()
+                pg.FreeProxies()
+                scholarly.use_proxy(pg)
                 search_query = scholarly.search_pubs(query)
                 results = []
                 try:
