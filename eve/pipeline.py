@@ -10,6 +10,7 @@ from eve.steps.extraction.extract_step import ExtractionStep
 from eve.steps.export.export_step import ExportStep
 from eve.steps.cleaning.cleaning_step import CleaningStep
 from eve.steps.pii.pii_step import PiiStep
+from eve.steps.metadata.metadata_step import MetadataStep
 from eve.utils import find_format
 
 async def pipeline():
@@ -33,13 +34,22 @@ async def pipeline():
 
         documents.append(doc)
 
-    if len(unique_file_formats) >= 1 and 'md' not in unique_file_formats:
-        if not any(stage["name"] == "extraction" for stage in cfg.stages):
-            cfg.stages.insert(0, {"name": "extraction"})
-    
+    stages_with_extraction_dependency = {"dedup", "cleaning", "pii"}
+
+    # enable extraction only if needed
+    if 'md' not in unique_file_formats:
+        user_stage_names = {stage["name"] for stage in cfg.stages}
+        if not any(stage in user_stage_names for stage in stages_with_extraction_dependency):
+            # no dependency stage, skip extraction
+            pass
+        else:
+            if "extraction" not in user_stage_names:
+                cfg.stages.insert(0, {"name": "extraction"})
+
     # enable export by default
     if not any(stage["name"] == "export" for stage in cfg.stages):
         cfg.stages.append({"name": "export"})
+
     
     logger.info(f"Stages: {[stage['name'] for stage in cfg.stages]}")
 
@@ -49,6 +59,7 @@ async def pipeline():
         "duplication": DuplicationStep,
         "extraction": ExtractionStep,
         "pii": PiiStep,
+        "metadata": MetadataStep,
     }
 
     for stage in cfg.stages:

@@ -16,6 +16,9 @@ setup(
         "datasketch>=1.6.0",
         "pdflatex>=0.1.3",
         "pytest-asyncio==1.1.0",
+        "pdf2bib>=0.3.0",
+        "pdfplumber>=0.9.0",
+        "scholarly>=1.7.0",
     ],
     python_requires = ">=3.9",
     entry_points={
