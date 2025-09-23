@@ -14,13 +14,9 @@ This module handles metadata extraction from PDF documents using multiple approa
    - Extracts title from PDF metadata fields or first page content
 
 3. **Final Fallback - Filename**: Uses base class functionality when all else fails
-
-The extractor follows a graceful degradation strategy, attempting the most sophisticated
-methods first and falling back to simpler approaches as needed.
 """
 
 from typing import Dict, Any, Optional
-from pathlib import Path
 
 from eve.model.document import Document
 from eve.steps.metadata.extractors.base_extractor import BaseMetadataExtractor
@@ -29,21 +25,6 @@ from eve.steps.metadata.extractors.base_extractor import BaseMetadataExtractor
 class PdfMetadataExtractor(BaseMetadataExtractor):
     """
     Metadata extractor for PDF files using multiple extraction strategies.
-    
-    Extraction Strategy:
-    1. Attempt pdf2bib for DOI-based bibliographic metadata
-    2. Try direct PDF reading (pdfplumber -> PyPDF2 fallback)
-    3. Use filename as title fallback (handled by base class)
-    
-    Extracted Metadata Fields:
-    - title: Document title (from metadata, content, or filename)
-    - authors: List of author names (from bibliographic data)
-    - year: Publication year
-    - journal: Journal or publication venue
-    - doi: Digital Object Identifier
-    - identifier: Various identifier types (DOI, arXiv, etc.)
-    - bibtex: BibTeX citation format
-    - extraction_methods: List of methods used ['pdf2bib', 'pdf_reader']
     """
 
     def __init__(self, debug: bool = False):
@@ -64,14 +45,6 @@ class PdfMetadataExtractor(BaseMetadataExtractor):
     async def _extract_bibtex_metadata(self, file_path: str) -> Optional[Dict[str, Any]]:
         """
         Extract metadata using pdf2bib library (primary extraction method).
-        
-        pdf2bib attempts to:
-        1. Scan PDF content for DOI patterns
-        2. Resolve DOI to fetch bibliographic metadata
-        3. Return structured metadata including BibTeX format
-        
-        This is the preferred method as it can provide rich, accurate metadata
-        for academic papers with valid DOIs.
         
         Args:
             file_path: Path to the PDF file to analyze
@@ -107,17 +80,6 @@ class PdfMetadataExtractor(BaseMetadataExtractor):
     async def _extract_title_from_pdf(self, file_path: str) -> Optional[str]:
         """
         Extract title from PDF using direct PDF reading (fallback method).
-        
-        This method attempts title extraction when pdf2bib fails:
-        
-        Strategy 1 - pdfplumber (preferred):
-        1. Check PDF metadata fields for title
-        2. If no metadata title, scan first 5 lines of first page
-        3. Return first line that looks like a title (>10 chars after cleaning)
-        
-        Strategy 2 - PyPDF2 (fallback):
-        1. Same approach as pdfplumber but using PyPDF2 library
-        2. Used when pdfplumber fails or is unavailable
         
         Args:
             file_path: Path to the PDF file to analyze
@@ -198,15 +160,6 @@ class PdfMetadataExtractor(BaseMetadataExtractor):
     async def extract_metadata(self, document: Document) -> Optional[Dict[str, Any]]:
         """
         Extract metadata from a PDF document using multi-strategy approach.
-        
-        Extraction Workflow:
-        1. **Format Validation**: Ensure document is PDF format
-        2. **Primary Extraction**: Attempt pdf2bib for DOI-based metadata
-        3. **Metadata Mapping**: Map pdf2bib results to standard fields
-        4. **Title Fallback**: Try direct PDF reading if no title from pdf2bib
-        5. **Final Fallback**: Use filename if all title extraction fails
-        6. **Method Tracking**: Record which extraction methods were used
-        7. **Finalization**: Apply debug logging and validation
         
         Args:
             document: PDF document to extract metadata from

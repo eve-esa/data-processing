@@ -8,9 +8,6 @@ from eve.steps.metadata.extractors.base_extractor import BaseMetadataExtractor
 class ScholarMetadataExtractor(BaseMetadataExtractor):
     """
     Metadata extractor using Google Scholar search with iterative query refinement.
-    
-    This extractor implements a sophisticated search strategy to find academic papers
-    by progressively refining search queries until a unique result is found.
 
     """
 
@@ -40,13 +37,7 @@ class ScholarMetadataExtractor(BaseMetadataExtractor):
         This method creates search queries by extracting meaningful text from the
         document content. The text is cleaned and normalized to improve search
         quality on Google Scholar.
-        
-        Text Processing Steps:
-        1. Extract substring of desired length from document start
-        2. Split into lines and clean each line (normalize whitespace)
-        3. Filter out empty lines
-        4. Join lines back into single search string
-        5. Ensure word boundaries (avoid cutting words in half)
+
         
         Args:
             document: Document to extract text from
@@ -89,10 +80,7 @@ class ScholarMetadataExtractor(BaseMetadataExtractor):
 
     async def _search_scholar(self, query: str) -> Optional[List[Dict[str, Any]]]:
         """
-        Search Google Scholar with the given query using async execution.
-        
-        This method handles the Google Scholar API call asynchronously to avoid
-        blocking the event loop during potentially slow network requests.
+        Search Google Scholar with the given query.
         
         Args:
             query: Search query string (cleaned text snippet from document)
@@ -158,17 +146,6 @@ class ScholarMetadataExtractor(BaseMetadataExtractor):
         """
         Extract and normalize metadata from a Google Scholar search result.
         
-        This method processes the raw Scholar API response and converts it into
-        the standardized metadata format used by the EVE pipeline. It handles
-        various data types and applies necessary cleaning and normalization.
-        
-        Processing Steps:
-        1. Extract bibliographic data from 'bib' field
-        2. Apply title cleaning using base class utilities
-        3. Normalize author information to list format
-        4. Extract Scholar-specific fields (citations, URLs)
-        5. Apply type conversions (year to string, citations to int)
-        
         Args:
             scholar_result: Raw result dictionary from scholarly.search_pubs()
                           Contains 'bib' field with bibliographic data and
@@ -215,9 +192,6 @@ class ScholarMetadataExtractor(BaseMetadataExtractor):
     async def extract_metadata(self, document: Document) -> Optional[Dict[str, Any]]:
         """
         Extract metadata from a document using iterative Google Scholar search.
-        
-        This method implements a sophisticated search strategy to find academic papers
-        by progressively refining search queries until a unique result is found.
         
         Args:
             document: Document to extract metadata from (must have text content)

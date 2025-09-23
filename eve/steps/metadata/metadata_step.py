@@ -1,30 +1,5 @@
 """
 Metadata extraction step for the EVE pipeline.
-
-This module orchestrates metadata extraction across different document formats using
-specialized extractors. It provides a unified interface for extracting bibliographic
-information, titles, authors, and other metadata from PDF, HTML, and text documents.
-
-Architecture:
-- **MetadataStep**: Main orchestrator that manages extractors and coordinates extraction
-- **Format-Specific Extractors**: PDF, HTML, and Scholar extractors for different content types
-- **Async Processing**: Parallel extraction across multiple documents for performance
-- **Export Functionality**: JSON export for extracted metadata collection
-
-Key Features:
-- Multi-format support (PDF, HTML, TXT, MD)
-- Configurable extractor selection
-- Google Scholar integration for text documents
-- Filename fallback when extraction fails
-- Comprehensive metadata export with statistics
-- Parallel processing for scalability
-
-Configuration Options:
-- enabled_formats: Which document formats to process
-- fallback_to_filename: Use filename as title when extraction fails
-- export_metadata: Whether to export results to JSON
-- enable_scholar_search: Enable Google Scholar for additional metadata
-- debug: Enable detailed logging for troubleshooting
 """
 
 import asyncio
@@ -44,22 +19,6 @@ class MetadataStep(PipelineStep):
     """
     Metadata extraction step that extracts bibliographic and content metadata 
     from PDF, HTML, and text documents.
-    
-    Supported formats:
-    - PDF: Uses pdf2bib for DOI extraction and pdftitle for title extraction
-    - HTML: Extracts title from HTML title tags and meta tags
-    - TXT: Uses Google Scholar search with text content to find metadata (requires scholarly package)
-    - MD: Uses Google Scholar search with text content to find metadata (requires scholarly package)
-    
-    Configuration options:
-    - enabled_formats: List of formats to process (default: ["pdf", "html", "txt", "md"])
-    - fallback_to_filename: Whether to use filename as title fallback (default: True)
-    - debug: Enable debug logging (default: False)
-    - export_metadata: Whether to export metadata to JSON file (default: True)
-    - metadata_destination: Directory to save metadata file (default: "./output")
-    - metadata_filename: Name of the metadata JSON file (default: "metadata.json")
-    - enable_scholar_search: Whether to use Google Scholar for additional metadata (default: False)
-      Note: Text formats (txt, md) automatically enable Google Scholar search
     """
 
     def __init__(self, config: dict):
@@ -99,16 +58,6 @@ class MetadataStep(PipelineStep):
     async def _extract_metadata_for_document(self, document: Document) -> Document:
         """
         Extract metadata for a single document using appropriate extractor.
-        
-        Extraction Strategy:
-        1. **Format Check**: Verify document format is supported
-        2. **Text Format Handling**: For TXT/MD, load content if needed and use Scholar
-        3. **Format-Specific Extraction**: Use PDF/HTML extractors for those formats
-        4. **Metadata Storage**: Store extracted fields with 'extracted_' prefix
-        5. **Filename Fallback**: Use filename as title if extraction fails
-        6. **Scholar Enhancement**: Optionally add Scholar metadata for any format
-        7. **Error Handling**: Graceful degradation with informative logging
-        
         Args:
             document: Document to extract metadata from
             
@@ -288,7 +237,7 @@ class MetadataStep(PipelineStep):
                 "content_length": document.content_length,
                 "has_extracted_metadata": bool(document.get_metadata("extracted_metadata"))
             }
-            
+            print(document.metadata)
             if document.metadata:
                 extracted_metadata = {}
                 for key, value in document.metadata.items():

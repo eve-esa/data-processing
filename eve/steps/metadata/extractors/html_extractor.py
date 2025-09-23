@@ -1,23 +1,3 @@
-"""
-HTML metadata extractor for web pages and HTML documents.
-
-This module extracts metadata from HTML documents using multiple strategies:
-
-1. **HTML Title Tags**: Extracts content from <title> tags
-2. **Meta Tags**: Parses meta tags for OpenGraph, Twitter Card, and standard metadata
-3. **Structured Data**: Detects JSON-LD structured data schemas
-4. **URL Information**: Extracts domain and scheme information from document metadata
-
-The extractor handles various HTML metadata standards and provides fallback
-mechanisms to ensure some metadata is always extracted.
-
-Supported Metadata Standards:
-- Standard HTML meta tags (description, keywords, author)
-- OpenGraph protocol (og:title, og:description, etc.)
-- Twitter Card metadata (twitter:title, twitter:description, etc.)
-- JSON-LD structured data (schema.org)
-"""
-
 from typing import Dict, Any, Optional
 from urllib.parse import urlparse
 
@@ -33,25 +13,6 @@ from eve.common.regex_patterns import (
 class HtmlMetadataExtractor(BaseMetadataExtractor):
     """
     Metadata extractor for HTML files and web pages.
-    
-    Extraction Strategy:
-    1. Extract title from <title> tag
-    2. Parse meta tags for additional metadata
-    3. Try alternative title sources (OpenGraph, Twitter Cards)
-    4. Extract structured data information
-    5. Parse URL information if available
-    6. Use filename as final title fallback
-    
-    Extracted Metadata Fields:
-    - title: Page title (from title tag, meta tags, or filename)
-    - title_source: Source of title ('html_tag', 'meta_tag', 'filename')
-    - meta_tags: Dictionary of all extracted meta tag content
-    - structured_data: Information about JSON-LD and other structured data
-    - url: Source URL if available in document metadata
-    - domain: Domain name extracted from URL
-    - scheme: URL scheme (http/https)
-    - content_length: Length of HTML content
-    - has_content: Boolean indicating if content exists
     """
 
     def __init__(self, debug: bool = False):
