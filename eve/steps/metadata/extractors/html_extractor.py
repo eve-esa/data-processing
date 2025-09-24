@@ -26,6 +26,13 @@ class HtmlMetadataExtractor(BaseMetadataExtractor):
             debug: Enable debug logging for detailed extraction information
         """
         super().__init__(debug)
+    
+    def _extract_content_with_tags(self, document: Document) -> Optional[str]:
+        with open(document.file_path, 'r', encoding = 'utf-8') as file:
+            html_content = file.read()
+
+        document.content = html_content
+        return document
 
     def _extract_title_from_html(self, html_content: str) -> Optional[str]:
         """
@@ -168,17 +175,6 @@ class HtmlMetadataExtractor(BaseMetadataExtractor):
         """
         Extract metadata from an HTML document using multi-source approach.
         
-        Extraction Workflow:
-        1. **Format Validation**: Ensure document is HTML format
-        2. **Primary Title Extraction**: Extract title from <title> tag
-        3. **Meta Tag Parsing**: Extract all meta tag information
-        4. **Alternative Title Sources**: Try OpenGraph/Twitter Card titles if needed
-        5. **Structured Data Detection**: Count JSON-LD and other structured data
-        6. **URL Information**: Extract domain and scheme from document metadata
-        7. **Content Analysis**: Add content length and validity information
-        8. **Method Tracking**: Record extraction method used
-        9. **Finalization**: Apply debug logging and validation
-        
         Args:
             document: HTML document to extract metadata from
             
@@ -202,6 +198,8 @@ class HtmlMetadataExtractor(BaseMetadataExtractor):
             return None
 
         metadata = {}
+
+        document = self._extract_content_with_tags(document) # do this because extraction from previous step removes tag
 
         # Step 2: Extract title from HTML <title> tag
         extracted_title = self._extract_title_from_html(document.content)

@@ -237,7 +237,6 @@ class MetadataStep(PipelineStep):
                 "content_length": document.content_length,
                 "has_extracted_metadata": bool(document.get_metadata("extracted_metadata"))
             }
-            print(document.metadata)
             if document.metadata:
                 extracted_metadata = {}
                 for key, value in document.metadata.items():
