@@ -5,6 +5,7 @@ from eve.model.document import Document
 from eve.steps.extraction.htmls import HtmlExtractor
 from eve.steps.extraction.xmls import XmlExtractor
 from eve.steps.extraction.pdfs import PdfExtractor
+from eve.steps.extraction.markdown import MarkdownExtractor
 
 class ExtractionStep(PipelineStep):
     async def _html_extraction(self, document: Document) -> Document:
@@ -20,6 +21,11 @@ class ExtractionStep(PipelineStep):
     async def _xml_extraction(self, document: Document) -> Document:
         xml_extractor = XmlExtractor(document)
         text = await xml_extractor.extract_text()
+        return text
+    
+    async def _md_extraction(self, document: Document) -> Document:
+        md_extractor = MarkdownExtractor(document)
+        text = await md_extractor.extract_text()
         return text
 
     async def execute(self, documents: List[Document]) -> List[Document]:
@@ -51,6 +57,8 @@ class ExtractionStep(PipelineStep):
                     document_with_text = await self._pdf_extraction(document, url)
                 elif document.file_format == "xml":
                     document_with_text = await self._xml_extraction(document)
+                elif document.file_format == 'md':
+                    document_with_text = await self._md_extraction(document)
                 else:
                     self.logger.error(f"Unsupported format: {document.file_format}")
                     continue
