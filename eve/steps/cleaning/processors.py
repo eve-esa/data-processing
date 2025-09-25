@@ -313,7 +313,7 @@ class LaTeXProcessor(TextProcessor):
                             f.write(test_content)
                         
                         pdfl = PDFLaTeX.from_texfile(tex_file)
-                        pdf, log, completed_process = pdfl.create_pdf(keep_pdf_file=False, keep_log_file=False)
+                        _, log, completed_process = pdfl.create_pdf(keep_pdf_file=False, keep_log_file=False)
                         
                         if completed_process.returncode == 0:
                             return True, "Formula syntax is valid"
@@ -387,7 +387,7 @@ class LaTeXProcessor(TextProcessor):
                 
                 if not is_valid:
                     errors_found += 1
-                    self.logger.warning(f"{document.filename} - Invalid LaTeX formula: {formula[:50]}... Error: {error_message}")
+                    self.logger.warning(f"{document.filename} - Invalid LaTeX formula: {formula[:10]}... Error: {error_message}")
                     
                     if self.api_key:
                         prompt = get_latex_correction_prompt(formula_type, error_message, formula, document.content)
@@ -405,7 +405,7 @@ class LaTeXProcessor(TextProcessor):
                                 corrections_made += 1
                                 self.logger.info(f"{document.filename} - Corrected LaTeX formula: {formula[:30]}... -> {corrected_formula[:30]}...")
                             else:
-                                self.logger.warning(f"{document.filename} - AI correction still invalid: {corrected_formula[:50]}...")
+                                self.logger.warning(f"{document.filename} - LLM correction still invalid: {corrected_formula[:50]}...")
 
             document.update_content(modified_content)
             document.add_metadata('latex_errors_found', errors_found)
