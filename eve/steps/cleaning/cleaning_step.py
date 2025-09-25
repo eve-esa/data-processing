@@ -1,7 +1,6 @@
 """Comprehensive cleaning step that applies all data cleaning components."""
 
-from pathlib import Path
-from typing import List, Union, Tuple
+from typing import List
 
 from eve.base_step import PipelineStep
 from eve.model.document import Document
@@ -64,24 +63,15 @@ class CleaningStep(PipelineStep):
                 )
             )
 
-    async def execute(self, input_data: Union[List[Document], List[Tuple[Path, str]]]) -> List[Document]:
+    async def execute(self, documents: List[Document]) -> List[Document]:
         """Execute the cleaning step on input data.
         
         Args:
-            input_data: List of Documents or list of tuples containing (file_path, extracted_text).
+            documents: List of Documents.
             
         Returns:
             List of cleaned Documents.
         """
-        # Convert tuple format to Document objects if needed
-        documents = []
-        if input_data and isinstance(input_data[0], tuple):
-            documents = [Document.from_tuple(item) for item in input_data]
-        elif input_data and isinstance(input_data[0], Path):
-            documents = [Document.from_path_and_content(item, "") for item in input_data] #TO-DO handle to trigger extraction
-        else:
-            documents = input_data
-        
         self.logger.info(f"Executing cleaning step on {len(documents)} documents")
         
         if not documents:
