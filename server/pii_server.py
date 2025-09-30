@@ -236,7 +236,7 @@ def create_server(workers: int = 1, devices: str = "auto"):
         api, 
         accelerator = devices,
         workers_per_device = workers,
-        timeout = 120,  # 120 s timeout - do we need to increase?
+        timeout = 300,  # 300 s timeout - do we need to increase?
         max_batch_size = 1,  
     )
     

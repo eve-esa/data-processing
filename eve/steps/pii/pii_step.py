@@ -68,7 +68,7 @@ class PiiStep(PipelineStep):
 
         # Run all requests concurrently
         tasks = [self.remove_pii(document, url=url) for document in documents]
-        results = await asyncio.gather(*tasks)
+        results = await asyncio.gather(*tasks, return_exceptions = True)
 
         final = []
         for doc in results:
