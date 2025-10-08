@@ -5,6 +5,7 @@ import time
 from eve.config import load_config
 from eve.logging import get_logger
 from eve.model.document import Document
+from eve.steps.chunking.chunker_step import ChunkerStep
 from eve.steps.dedup.dedup_step import DuplicationStep
 from eve.steps.extraction.extract_step import ExtractionStep
 from eve.steps.export.export_step import ExportStep
@@ -60,6 +61,7 @@ async def pipeline():
         "extraction": ExtractionStep,
         "pii": PiiStep,
         "metadata": MetadataStep,
+        "chunker": ChunkerStep,
     }
 
     for stage in cfg.stages:
