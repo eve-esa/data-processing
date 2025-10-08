@@ -1,0 +1,26 @@
+pipeline:
+  inputs:
+    path: "data"
+  stages:
+    - name: extraction
+      config: { format: "jsonl"}
+    # - name: duplication
+    #   config: { method: "lsh", shingle_size: 3, num_perm: 128, threshold: 0.8 }
+    - name: chunker
+      config: {
+        "chunk_overlap": 0,
+        "max_chunk_size": 512,
+        "word_overlap": 0,
+        "add_headers", False,
+        "merge_small_chunks": True,
+        "headers_to_split_on": [ 1, 2, 3, 4, 5, 6 ]
+      }
+
+    - name: cleaning
+      config:
+        ocr_threshold: 0.99
+        min_words: 2
+        enable_latex_correction: false
+
+    - name: export
+      config: { format: "jsonl", destination: "output/files"}
