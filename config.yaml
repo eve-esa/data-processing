@@ -1,39 +1,10 @@
 pipeline:
   inputs:
-    path: "pdf_single"
+    path: "htmls"
   stages:
     - name: extraction
-      config: { format: "xml", url: "http://127.0.0.1:8001"}
+      config: { url: "http://127.0.0.1:8001"}
     # - name: duplication
     #   config: { method: "lsh", shingle_size: 3, num_perm: 128, threshold: 0.8 }
     - name: pii
       config: { url: "http://127.0.0.1:8000" }
-      # config: {} # defaults to exact
-    # - name: extraction
-    #   config: { format: "pdf", url: "http://127.0.0.1:8001"}
-    # - name: cleaning
-    #   config: { 
-    #     ocr_threshold: 0.99, 
-    #     min_words: 2, 
-    #     enable_latex_correction: false,
-    #     # openrouter_api_key: "your_openrouter_api_key_here",
-    #     # openrouter_model: "anthropic/claude-3-haiku",
-    #     debug: false 
-    #   }
-    # - name: export
-    #   config: { format: "md", destination: "output"}
-
-
-# passing in files
-
-# pipeline:
-#   inputs:
-#     path:
-#       - "files/s44288-024-00042-0.pdf"
-#       - "files/mar-18-eos-magazine.pdf"
-#       - "files/ff36bbf0-e71c-493e-834d-94906b03d7cc.pdf"
-#   output_directory: "files/output"
-#   output_format: "md"
-#   stages:
-#     - cleaning
-#     - export
