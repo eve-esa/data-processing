@@ -1,5 +1,3 @@
-from pathlib import Path
-import aiofiles
 from typing import List
 
 from eve.model.document import Document
@@ -42,9 +40,10 @@ class ChunkerStep(PipelineStep):
 
 
 def convert_langchain_doc(doc: Document, chunk: LangchainDocument):
+    headers = ["#" * key + value for key, value in chunk.metadata.items()]
     return Document(
         content=chunk.page_content,
         file_path=doc.file_path,
         file_format=doc.file_format,
-        metadata={"headers": chunk.metadata.get("headers", []), **doc.metadata},
+        metadata={"headers": headers, **doc.metadata},
     )

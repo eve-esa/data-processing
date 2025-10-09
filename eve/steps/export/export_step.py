@@ -24,7 +24,6 @@ class ExportStep(PipelineStep):
             async with aiofiles.open(output_file, "a+", encoding="utf-8") as f:
                 await f.write(json.dumps(document.__dict__()))
                 await f.write("\n")
-            self.logger.info(f"Saved file: {output_file}")
         return None
 
     async def export_md(self, documents: List[Document]) -> None:
@@ -45,10 +44,16 @@ class ExportStep(PipelineStep):
             self.logger.info(f"Saved file: {output_file}")
         return None
 
+    async def dummy_export(self, documents: List[Document]) -> None:
+        return None
+
     async def execute(self, documents: List[Document]) -> None:
         format = self.config.get("format", "jsonl")
         if format == "jsonl":
             await self.export_jsonl(documents)
+        elif format == "dummy":
+            await self.dummy_export(documents)
         else:
             await self.export_md(documents)
+
         return None

@@ -62,7 +62,7 @@ class ExtractionStep(PipelineStep):
         result = []
         for document in documents:
             try:
-                if document in text_extraction_formats:
+                if document.file_format in text_extraction_formats:
                     if document.file_format == "html":
                         document_with_text = await self._html_extraction(document)
                     elif document.file_format == "pdf":
