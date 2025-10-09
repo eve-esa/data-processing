@@ -16,7 +16,7 @@ Eve data pipeline is a library to process, duplicate and clean data at a large s
 1. Install the packages.
 
 ```
-pip install -e .
+uv sync
 ```
 
 2. Configure the `config.yaml` file. (Look at examples section on how to do this)
