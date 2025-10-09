@@ -2,7 +2,6 @@ from typing import List
 
 from eve.base_step import PipelineStep
 from eve.model.document import Document
-from eve.steps.cleaning.standalone import logger
 from eve.steps.extraction.htmls import HtmlExtractor
 from eve.steps.extraction.jsonl import JSONLExtractor
 from eve.steps.extraction.xmls import XmlExtractor

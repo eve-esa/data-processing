@@ -1,6 +1,4 @@
 from typing import Optional, List
-import asyncio
-from trafilatura import extract
 import json
 
 from eve.utils import read_file
@@ -13,7 +11,7 @@ class JSONLExtractor:
         self.document = document
 
     async def extract_documents(self) -> Optional[List[Document]]:
-        """Extract text from a single HTML file.
+        """Extract text from a single Jsonl file.
 
         Returns:
             Document object with extracted text if successful, None otherwise
@@ -32,10 +30,10 @@ class JSONLExtractor:
                 else:
                     docs.append(
                         Document(
-                            file_path=self.document.file_path,
-                            content=json_doc["content"],
-                            metadata=json_doc.get("metadata", {}),
-                            file_format="md",
+                            file_path = self.document.file_path,
+                            content = json_doc["content"],
+                            metadata = json_doc.get("metadata", {}),
+                            file_format = "md",
                         )
                     )
             return docs
