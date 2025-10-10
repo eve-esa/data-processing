@@ -48,13 +48,13 @@ class PiiFilterStep(PipelineStep):
             if self.action == "keep":
                 condition = lambda doc: doc.metadata[
                     "pii_tokens"
-                ] >= self.threshold or not self.reference_filter(doc)
+                ] >= self.threshold or self.reference_filter(doc)
                 documents = [doc for doc in documents if condition(doc)]
                 log_str = f"""Total docs: {original_len} Remaining docs: {len(documents)} Percentage kept: {len(documents)/original_len * 100:.2f}%"""
             else:
                 condition = lambda doc: doc.metadata[
                     "pii_tokens"
-                ] < self.threshold or self.reference_filter(doc)
+                ] < self.threshold or not self.reference_filter(doc)
                 documents = [doc for doc in documents if condition(doc)]
                 log_str = f"""Total docs: {original_len} Remaining docs: {len(documents)} Percentage filtered: {1-len(documents)/original_len * 100:.2f}%"""
 

@@ -1,39 +1,33 @@
 pipeline:
   inputs:
-    path: "pdf_single"
+    path: "/Users/antoniolopez/Desktop/pischool/utils/final_corpus_split_1.jsonl"
   stages:
     - name: extraction
-      config: { format: "xml", url: "http://127.0.0.1:8001"}
+      config: { format: "jsonl"}
     # - name: duplication
     #   config: { method: "lsh", shingle_size: 3, num_perm: 128, threshold: 0.8 }
-    - name: pii
-      config: { url: "http://127.0.0.1:8000" }
-      # config: {} # defaults to exact
-    # - name: extraction
-    #   config: { format: "pdf", url: "http://127.0.0.1:8001"}
-    # - name: cleaning
-    #   config: { 
-    #     ocr_threshold: 0.99, 
-    #     min_words: 2, 
-    #     enable_latex_correction: false,
-    #     # openrouter_api_key: "your_openrouter_api_key_here",
-    #     # openrouter_model: "anthropic/claude-3-haiku",
-    #     debug: false 
-    #   }
-    # - name: export
-    #   config: { format: "md", destination: "output"}
+    - name: chunker
+      config: {
+        "chunk_overlap": 0,
+        "max_chunk_size": 512,
+        "word_overlap": 0,
+        "add_headers", False,
+        "merge_small_chunks": True,
+        "headers_to_split_on": [ 1, 2, 3, 4, 5, 6 ]
+      }
 
+    - name: pii_filter
+      config:
+        apply_filter: true
+        threshold: 0.5
+        action: keep
+#
+#    - name: perplexity
+#      config:
+#        max_length: 1024
+#        stride: 512
+#        enable_filter: false
+#        model_name: meta-llama/Llama-3.2-1B
 
-# passing in files
-
-# pipeline:
-#   inputs:
-#     path:
-#       - "files/s44288-024-00042-0.pdf"
-#       - "files/mar-18-eos-magazine.pdf"
-#       - "files/ff36bbf0-e71c-493e-834d-94906b03d7cc.pdf"
-#   output_directory: "files/output"
-#   output_format: "md"
-#   stages:
-#     - cleaning
-#     - export
+    - name: export
+      config: { format: "jsonl", destination: "output/files"}
