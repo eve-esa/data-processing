@@ -1,0 +1,37 @@
+[project]
+name = "eve"
+version = "0.1.0"
+description = ""
+requires-python = ">=3.9"
+dependencies = [
+    "aiofiles",
+    "aiohttp",
+    "loguru",
+    "pydantic",
+    "PyYAML",
+    "trafilatura",
+    "rapidfuzz>=3.0.0",
+    "nltk>=3.8",
+    "datasketch>=1.6.0",
+    "pdflatex>=0.1.3",
+    "pytest-asyncio==1.1.0",
+    "fastapi>=0.118.2",
+    "pypdfium2>=4.30.0",
+    "torch>=2.8.0",
+    "nougat-ocr>=0.1.17",
+    "albumentations==1.0",
+    "python-multipart>=0.0.20",
+    "uvicorn>=0.37.0",
+    "transformers==4.38.2",
+    "litserve>=0.2.15",
+    "flair>=0.15.1",
+    "presidio-analyzer>=2.2.360",
+    "pip>=25.2",
+]
+
+[project.scripts]
+eve = "eve.pipeline:cli"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"

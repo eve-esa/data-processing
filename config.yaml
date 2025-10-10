@@ -1,33 +1,10 @@
 pipeline:
   inputs:
-    path: "/Users/antoniolopez/Desktop/pischool/utils/final_corpus_split_1.jsonl"
+    path: "htmls"
   stages:
     - name: extraction
-      config: { format: "jsonl"}
+      config: { url: "http://127.0.0.1:8001"}
     # - name: duplication
     #   config: { method: "lsh", shingle_size: 3, num_perm: 128, threshold: 0.8 }
-    - name: chunker
-      config: {
-        "chunk_overlap": 0,
-        "max_chunk_size": 512,
-        "word_overlap": 0,
-        "add_headers", False,
-        "merge_small_chunks": True,
-        "headers_to_split_on": [ 1, 2, 3, 4, 5, 6 ]
-      }
-
-    - name: pii_filter
-      config:
-        apply_filter: true
-        threshold: 0.5
-        action: keep
-#
-#    - name: perplexity
-#      config:
-#        max_length: 1024
-#        stride: 512
-#        enable_filter: false
-#        model_name: meta-llama/Llama-3.2-1B
-
-    - name: export
-      config: { format: "jsonl", destination: "output/files"}
+    - name: pii
+      config: { url: "http://127.0.0.1:8000" }
