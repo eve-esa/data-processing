@@ -5,12 +5,15 @@ import time
 from eve.config import load_config
 from eve.logging import get_logger
 from eve.model.document import Document
+from eve.steps.chunking.chunker_step import ChunkerStep
 from eve.steps.dedup.dedup_step import DuplicationStep
 from eve.steps.extraction.extract_step import ExtractionStep
 from eve.steps.export.export_step import ExportStep
 from eve.steps.cleaning.cleaning_step import CleaningStep
+from eve.steps.filters.perplexity import PerplexityFilterStep
 from eve.steps.pii.pii_step import PiiStep
 from eve.steps.metadata.metadata_step import MetadataStep
+from eve.steps.filters.pii_filter import PiiFilterStep
 from eve.utils import find_format
 
 async def pipeline():
@@ -60,6 +63,9 @@ async def pipeline():
         "extraction": ExtractionStep,
         "pii": PiiStep,
         "metadata": MetadataStep,
+        "chunker": ChunkerStep,
+        "perplexity": PerplexityFilterStep,
+        "pii_filter": PiiFilterStep
     }
 
     for stage in cfg.stages:
