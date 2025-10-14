@@ -14,6 +14,8 @@ from eve.steps.filters.perplexity import PerplexityFilterStep
 from eve.steps.pii.pii_step import PiiStep
 from eve.steps.metadata.metadata_step import MetadataStep
 from eve.steps.filters.pii_filter import PiiFilterStep
+from eve.steps.filters.length_filter import LengthFilterStep
+from eve.steps.qdrant.qdrant_step import QdrantUploadStep
 from eve.utils import find_format
 
 async def pipeline():
@@ -65,7 +67,9 @@ async def pipeline():
         "metadata": MetadataStep,
         "chunker": ChunkerStep,
         "perplexity": PerplexityFilterStep,
-        "pii_filter": PiiFilterStep
+        "pii_filter": PiiFilterStep,
+        "length_filter": LengthFilterStep,
+        "qdrant_upload": QdrantUploadStep
     }
 
     for stage in cfg.stages:
