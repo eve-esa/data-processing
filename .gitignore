@@ -20,3 +20,8 @@ reqs.txt
 *.log
 build/
 .pytest_cache/
+node_modules/*
+.idea/*
+CLAUDE.md
+package-lock.json
+package.json
