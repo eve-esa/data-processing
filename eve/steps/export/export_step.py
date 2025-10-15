@@ -6,7 +6,9 @@ from eve.model.document import Document
 from eve.base_step import PipelineStep
 
 class ExportStep(PipelineStep):
-    async def execute(self, documents: List[Document]) -> None:
+    async def execute(self, documents: List[Document]) -> List[Document]:
+        result = []
+
         destination = Path(self.config.get("destination", "./output"))
 
         if not destination.exists():
@@ -18,5 +20,6 @@ class ExportStep(PipelineStep):
             async with aiofiles.open(output_file, 'w', encoding='utf-8') as f:
                 await f.write(document.content)
             self.logger.info(f"Saved file: {output_file}")
+            result.append(document)
 
-        return None
+        return result
