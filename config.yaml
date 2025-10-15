@@ -1,10 +1,11 @@
 pipeline:
+  batch_size: 10
   inputs:
     path: "htmls"
   stages:
     - name: extraction
       config: { url: "http://127.0.0.1:8001"}
-    # - name: duplication
+    - name: duplication
     #   config: { method: "lsh", shingle_size: 3, num_perm: 128, threshold: 0.8 }
-    - name: pii
-      config: { url: "http://127.0.0.1:8000" }
+    # - name: pii
+    #   config: { url: "http://127.0.0.1:8000" }

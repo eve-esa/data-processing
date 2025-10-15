@@ -23,6 +23,7 @@ class Inputs(BaseModel):
         return files
 
 class PipelineConfig(BaseModel):
+    batch_size: int = 20
     inputs: Inputs
     stages: list[dict[str, Any]]  # list of dict since we have stage name + stage configs
 

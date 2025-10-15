@@ -35,9 +35,9 @@ async def pipeline():
     logger = get_logger("pipeline")
     cfg = load_config("config.yaml")
 
-    logger.info("Starting pipeline execution")
+    batch_size = cfg.batch_size
 
-    batch_size = 10 # hard code for testing
+    logger.info("Starting pipeline execution")
 
     start_time = time.perf_counter()
     input_files = cfg.inputs.get_files()
