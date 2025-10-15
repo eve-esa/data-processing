@@ -23,6 +23,7 @@ uv sync
 
 ```
 pipeline:
+  batch_size: 10 # not applicable to dedup
   inputs:
     path: "input_dir"
   stages:
