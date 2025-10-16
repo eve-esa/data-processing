@@ -1,6 +1,7 @@
 import argparse
 import asyncio
 import time
+import json
 from typing import List, AsyncIterator
 
 from eve.config import load_config
@@ -21,21 +22,73 @@ from eve.steps.filters.reference_filter import ReferenceFilterStep
 from eve.steps.qdrant.qdrant_step import QdrantUploadStep
 from eve.utils import find_format
 
-async def create_batches(input_files: List[str], batch_size: int) -> AsyncIterator[List[Document]]:
-    """Create batches of Document objects from input files."""
+async def create_batches(input_files: List, batch_size: int) -> AsyncIterator[List[Document]]:
+    """Create batches of Document objects from input files.
+
+    For regular files: Creates one Document per file and batches them.
+    For JSONL files: Reads documents from JSONL and batches them.
+
+    Args:
+        input_files: List of Path objects pointing to input files
+        batch_size: Number of documents per batch
+
+    Yields:
+        Batches of Document objects
+    """
     batch = []
+    logger = get_logger("pipeline.batching")
+
     for file_path in input_files:
-        doc = Document(
-            file_path = file_path,
-            content = "",
-            file_format = find_format(file_path),
-        )
-        batch.append(doc)
-        
-        if len(batch) >= batch_size:
-            yield batch
-            batch = []
-    if batch: #final batch
+        file_format = find_format(file_path)
+
+        # Handle JSONL files specially - read and batch their contents
+        if file_format == "jsonl":
+            logger.info(f"Reading JSONL file for batching: {file_path}")
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    for line_num, line in enumerate(f, 1):
+                        try:
+                            json_doc = json.loads(line.strip())
+                            if "content" not in json_doc:
+                                logger.warning(f"No content found in {file_path} line {line_num}")
+                                continue
+
+                            # Create Document from JSONL line
+                            doc = Document(
+                                file_path=file_path,
+                                content=json_doc["content"],
+                                metadata=json_doc.get("metadata", {}),
+                                embedding=json_doc.get("embedding", None),
+                                pipeline_metadata=json_doc.get("pipeline_metadata", {}),
+                                file_format="md",  # JSONL documents are treated as markdown
+                            )
+                            batch.append(doc)
+
+                            # Yield batch when it reaches batch_size
+                            if len(batch) >= batch_size:
+                                yield batch
+                                batch = []
+                        except json.JSONDecodeError as e:
+                            logger.error(f"JSON decode error in {file_path} line {line_num}: {e}")
+                            continue
+            except Exception as e:
+                logger.error(f"Error reading JSONL file {file_path}: {e}")
+                continue
+        else:
+            # Handle regular files - create placeholder Document
+            doc = Document(
+                file_path=file_path,
+                content="",
+                file_format=file_format,
+            )
+            batch.append(doc)
+
+            if len(batch) >= batch_size:
+                yield batch
+                batch = []
+
+    # Yield final batch if any documents remain
+    if batch:
         yield batch
 
 async def pipeline():
@@ -56,7 +109,8 @@ async def pipeline():
     stages_with_extraction_dependency = {"dedup", "cleaning", "pii"}
 
     # enable extraction only if needed
-    if 'md' not in unique_file_formats:
+    # Skip auto-adding extraction if all files are JSONL (handled in create_batches)
+    if 'md' not in unique_file_formats and unique_file_formats != {'jsonl'}:
         user_stage_names = {stage["name"] for stage in cfg.stages}
         if not any(stage in user_stage_names for stage in stages_with_extraction_dependency):
             # no dependency stage, skip extraction

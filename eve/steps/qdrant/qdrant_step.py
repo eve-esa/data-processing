@@ -158,7 +158,7 @@ class QdrantUploadStep(PipelineStep):
             self._ensure_collection()
         else:
             # Local mode: set batch size for processing
-            self.batch_size = config.get("batch_size", 100)
+            self.batch_size = config.get("batch_size", 10)
             self.client = None
 
     def _ensure_collection(self) -> None:

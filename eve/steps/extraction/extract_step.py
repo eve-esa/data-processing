@@ -62,6 +62,13 @@ class ExtractionStep(PipelineStep):
         result = []
         for document in documents:
             try:
+                # Skip documents that already have content (already extracted in create_batches)
+                # This happens for JSONL files that are pre-loaded
+                if document.content and document.file_format == "md":
+                    result.append(document)
+                    self.logger.debug(f"Skipping already-loaded document: {document.filename}")
+                    continue
+
                 if document.file_format in text_extraction_formats:
                     if document.file_format == "html":
                         document_with_text = await self._html_extraction(document)
