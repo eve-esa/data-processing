@@ -1,0 +1,84 @@
+pipeline:
+  inputs:
+    path: "data"
+  stages:
+    # Example 1: Keep only documents with more than 1000 words
+    # This filters out short documents
+    - name: length_filter
+      config:
+        length: 1000
+        comparison: "greater"  # "greater" or "less"
+        action: "keep"          # "keep" or "discard"
+
+    - name: export
+      config: { format: "md", destination: "output/filtered_long_docs"}
+
+# ============================================================
+# Other common use cases (uncomment to use):
+# ============================================================
+
+# Example 2: Discard very short documents (less than 100 words)
+# pipeline:
+#   inputs:
+#     path: "data"
+#   stages:
+#     - name: length_filter
+#       config:
+#         length: 100
+#         comparison: "less"
+#         action: "discard"
+#     - name: export
+#       config: { format: "md", destination: "output/files"}
+
+# Example 3: Keep only short documents (useful for summaries or abstracts)
+# pipeline:
+#   inputs:
+#     path: "data"
+#   stages:
+#     - name: length_filter
+#       config:
+#         length: 5000
+#         comparison: "less"
+#         action: "keep"
+#     - name: export
+#       config: { format: "md", destination: "output/short_docs"}
+
+# Example 4: Multiple filters - keep documents between 50 and 1000 words
+# pipeline:
+#   inputs:
+#     path: "data"
+#   stages:
+#     # First filter: remove documents less than 50 words
+#     - name: length_filter
+#       config:
+#         length: 50
+#         comparison: "less"
+#         action: "discard"
+#     # Second filter: remove documents greater than 1000 words
+#     - name: length_filter
+#       config:
+#         length: 1000
+#         comparison: "greater"
+#         action: "discard"
+#     - name: export
+#       config: { format: "md", destination: "output/medium_docs"}
+
+# Example 5: Combined with other pipeline steps
+# pipeline:
+#   inputs:
+#     path: "pdfs"
+#   stages:
+#     - name: extraction
+#       config: { url: "http://127.0.0.1:8001"}
+#     - name: cleaning
+#       config: { ocr_threshold: 0.99, min_words: 2 }
+#     - name: duplication
+#       config: { method: "exact" }
+#     # Filter out very short documents after cleaning (less than 100 words)
+#     - name: length_filter
+#       config:
+#         length: 100
+#         comparison: "greater"
+#         action: "keep"
+#     - name: export
+#       config: { format: "md", destination: "output/cleaned_filtered"}

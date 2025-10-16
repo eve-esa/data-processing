@@ -1,0 +1,53 @@
+pipeline:
+  inputs:
+    path: "input_dir"
+
+  stages:
+    # Complete filter pipeline based on notebook analysis
+    # This pipeline applies filters in the optimal order as determined by the analysis
+
+    # Step 1: Remove short chunks (< 40 words)
+    # Removes very short, low-content chunks
+    - name: length_filter
+      config:
+        length: 40
+        comparison: "greater"  # Keep documents with word count > 40
+        action: "keep"
+
+    # Step 2: Remove long chunks (>= 1024 words)
+    # Removes excessively long chunks
+    - name: length_filter
+      config:
+        length: 1024
+        comparison: "less"  # Keep documents with word count < 1024
+        action: "keep"
+
+    # Step 3: Remove references and acknowledgements
+    # Filters out reference and acknowledgement sections
+    # Checks both headers metadata and text content
+    - name: reference_filter
+      config:
+        action: "discard"  # Remove documents with references/acknowledgements
+
+    # Step 4: PII filter with abstract/introduction exceptions
+    # Removes chunks with high PII percentage
+    # BUT keeps chunks with "abstract" or "introduction" regardless of PII
+    - name: pii_filter
+      config:
+        threshold: 0.03  # 3% PII token threshold
+        action: "discard"  # Remove high PII documents
+        apply_filter: true
+
+    # Step 5: Remove chunks with excessive newlines (>= 60)
+    # Filters out poorly formatted or fragmented content
+    - name: newline_filter
+      config:
+        chunks: 60
+        comparison: "less"  # Keep documents with newline count < 60
+        action: "keep"
+
+    # Export the filtered documents
+    - name: export
+      config:
+        format: "md"
+        destination: "output_filtered"

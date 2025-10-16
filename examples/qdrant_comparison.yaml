@@ -1,0 +1,66 @@
+# QDRANT UPLOAD STEP - MODE COMPARISON
+#
+# This example shows the two modes available for the qdrant_upload step:
+# 1. "qdrant" mode: Upload embeddings to a Qdrant vector database
+# 2. "local" mode: Store embeddings in document metadata
+
+pipeline:
+  inputs:
+    path: "input_dir"
+
+  stages:
+    - name: extraction
+
+    # === MODE 1: QDRANT (Upload to vector database) ===
+    # Uncomment this section to upload to Qdrant
+    # - name: qdrant_upload
+    #   config:
+    #     mode: "qdrant"
+    #
+    #     # Vector store configuration
+    #     vector_store:
+    #       url: "http://localhost:6333"
+    #       api_key: "your-qdrant-api-key"  # Optional
+    #       collection_name: "my_collection"
+    #       batch_size: 100
+    #       vector_size: 768  # Must match embedding model dimension
+    #
+    #     # Embedder configuration
+    #     embedder:
+    #       url: "https://api.deepinfra.com/"
+    #       model_name: "BAAI/bge-base-en-v1.5"  # 768 dimensions
+    #       timeout: 300
+    #       api_key: "your-api-key-here"
+
+    # === MODE 2: LOCAL (Store in document metadata) ===
+    # Uncomment this section to store embeddings locally
+    - name: qdrant_upload
+      config:
+        mode: "local"
+
+        # Batch size for processing
+        batch_size: 100
+
+        # Embedder configuration (same as qdrant mode)
+        embedder:
+          url: "https://api.deepinfra.com/"
+          model_name: "BAAI/bge-base-en-v1.5"
+          timeout: 300
+          api_key: "your-api-key-here"
+
+    - name: export
+      config:
+        # For local mode, use JSONL to preserve metadata with embeddings
+        format: "jsonl"
+        destination: "output"
+
+# NOTES:
+# - Local mode adds "embedding" and "embedding_model" to document metadata
+# - Local mode is useful for:
+#   * Exporting embeddings for use in other systems
+#   * Testing embedding generation without database setup
+#   * Creating datasets with precomputed embeddings
+# - Qdrant mode is useful for:
+#   * Production vector search applications
+#   * Large-scale semantic search
+#   * RAG (Retrieval-Augmented Generation) systems

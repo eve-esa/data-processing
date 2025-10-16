@@ -82,42 +82,39 @@ class VLLMEmbedder:
 
 
 class QdrantUploadStep(PipelineStep):
-    """Pipeline step for uploading chunked documents to Qdrant vector database."""
+    """Pipeline step for uploading chunked documents to Qdrant vector database or storing embeddings locally.
+
+    Supports two modes:
+    - "qdrant": Upload embeddings to a Qdrant vector database
+    - "local": Store embeddings in document metadata without uploading
+    """
 
     def __init__(self, config: dict, name: str = "QdrantUpload"):
         """Initialize the Qdrant upload step.
 
         Args:
             config: Configuration containing:
-                - vector_store.url: Qdrant instance URL
+                - mode: "qdrant" or "local" (default: "qdrant")
+                - vector_store.url: Qdrant instance URL (required for mode="qdrant")
                 - vector_store.api_key: API key for Qdrant authentication (optional)
-                - collection_name: Target collection name
+                - vector_store.collection_name: Target collection name (required for mode="qdrant")
+                - vector_store.batch_size: Number of documents per batch (required for mode="qdrant")
+                - vector_store.vector_size: Dimension of embedding vectors (required for mode="qdrant")
                 - embedder.url: URL of VLLM embedding server
                 - embedder.model_name: Embedding model identifier
                 - embedder.timeout: Optional request timeout (default: 300)
                 - embedder.api_key: Optional API key for VLLM authentication (default: "EMPTY")
-                - batch_size: Number of documents per batch
-                - vector_size: Dimension of embedding vectors
             name: Name for logging purposes
         """
         super().__init__(config, name)
 
-        # Get vector store configuration
-        vector_store_cfg = config.get("vector_store", {})
-        self.qdrant_url = vector_store_cfg.get("url", "http://localhost:6333")
-        self.vector_store_api_key = vector_store_cfg.get("api_key")
+        # Determine mode: "qdrant" or "local"
+        self.mode = config.get("mode", "qdrant").lower()
 
-        # Get collection configuration
-        self.collection_name = vector_store_cfg["collection_name"]
-        self.batch_size = vector_store_cfg["batch_size"]
-        self.vector_size = vector_store_cfg["vector_size"]
+        if self.mode not in ["qdrant", "local"]:
+            raise ValueError(f"Invalid mode '{self.mode}'. Must be 'qdrant' or 'local'")
 
-        # Initialize Qdrant client
-        self.client = QdrantClient(
-            url=self.qdrant_url, api_key=self.vector_store_api_key
-        )
-
-        # Initialize VLLM embedder
+        # Initialize VLLM embedder (required for both modes)
         embedding_cfg = config["embedder"]
         self.embedder = VLLMEmbedder(
             url=embedding_cfg["url"],
@@ -127,9 +124,30 @@ class QdrantUploadStep(PipelineStep):
         )
 
         self.logger.info(f"Initialized VLLM embedder at {embedding_cfg['url']}")
+        self.logger.info(f"Mode: {self.mode}")
 
-        # Ensure collection exists
-        self._ensure_collection()
+        # Initialize Qdrant-specific configuration only if mode is "qdrant"
+        if self.mode == "qdrant":
+            vector_store_cfg = config.get("vector_store", {})
+            self.qdrant_url = vector_store_cfg.get("url", "http://localhost:6333")
+            self.vector_store_api_key = vector_store_cfg.get("api_key")
+
+            # Get collection configuration
+            self.collection_name = vector_store_cfg["collection_name"]
+            self.batch_size = vector_store_cfg["batch_size"]
+            self.vector_size = vector_store_cfg["vector_size"]
+
+            # Initialize Qdrant client
+            self.client = QdrantClient(
+                url=self.qdrant_url, api_key=self.vector_store_api_key
+            )
+
+            # Ensure collection exists
+            self._ensure_collection()
+        else:
+            # Local mode: set batch size for processing
+            self.batch_size = config.get("batch_size", 100)
+            self.client = None
 
     def _ensure_collection(self) -> None:
         """Create Qdrant collection if it doesn't exist."""
@@ -324,17 +342,68 @@ class QdrantUploadStep(PipelineStep):
         """Execute the upload step.
 
         Args:
-            documents: List of Document objects to upload
+            documents: List of Document objects to process
 
         Returns:
             The same list of documents (pass-through for chaining)
         """
         if not documents:
-            self.logger.warning("No documents to upload")
+            self.logger.warning("No documents to process")
             return documents
 
         self.logger.info(f"Processing {len(documents)} documents")
 
+        if self.mode == "local":
+            # Local mode: add embeddings to document metadata
+            return await self._execute_local(documents)
+        else:
+            # Qdrant mode: upload to vector database
+            return await self._execute_qdrant(documents)
+
+    async def _execute_local(self, documents: List[Document]) -> List[Document]:
+        """Execute local embedding storage (add embeddings to document metadata).
+
+        Args:
+            documents: List of Document objects
+
+        Returns:
+            Documents with embeddings added to metadata
+        """
+        self.logger.info("Generating embeddings in local mode")
+
+        # Process in batches
+        for i in tqdm(
+            range(0, len(documents), self.batch_size),
+            desc="Generating embeddings",
+        ):
+            batch = documents[i : i + self.batch_size]
+            batch_texts = [doc.content for doc in batch]
+
+            try:
+                # Generate embeddings
+                batch_embeddings = self.embedder.embed_documents(batch_texts)
+
+                # Add embeddings to document metadata
+                for doc, embedding in zip(batch, batch_embeddings):
+                    doc.add_metadata("embedding", embedding)
+                    doc.add_metadata("embedding_model", self.embedder.model_name)
+
+            except Exception as e:
+                self.logger.error(f"Error generating embeddings for batch: {e}")
+                # Continue with next batch
+
+        self.logger.info(f"Successfully generated embeddings for {len(documents)} documents")
+        return documents
+
+    async def _execute_qdrant(self, documents: List[Document]) -> List[Document]:
+        """Execute Qdrant upload mode.
+
+        Args:
+            documents: List of Document objects to upload
+
+        Returns:
+            The same list of documents (pass-through for chaining)
+        """
         # Prepare data for upload
         ids = []
         chunks = []

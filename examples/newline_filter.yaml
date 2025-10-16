@@ -1,0 +1,46 @@
+pipeline:
+  inputs:
+    path: "input_dir"
+
+  stages:
+    # Example 1: Keep only documents with more than 10 newline chunks
+    # This filters out documents that are too short or have too few sections
+    - name: newline_filter
+      config:
+        chunks: 10
+        comparison: "greater"
+        action: "keep"
+
+    # Example 2: Discard documents with less than 5 newline chunks
+    # This removes documents that are too minimal or poorly structured
+    # - name: newline_filter
+    #   config:
+    #     chunks: 5
+    #     comparison: "less"
+    #     action: "discard"
+
+    # Example 3: Keep documents with less than 100 chunks
+    # This filters out documents that are excessively fragmented
+    # - name: newline_filter
+    #   config:
+    #     chunks: 100
+    #     comparison: "less"
+    #     action: "keep"
+
+    # Example 4: Create a range filter by chaining two newline_filter steps
+    # Keep documents with between 10 and 50 chunks
+    # - name: newline_filter
+    #   config:
+    #     chunks: 10
+    #     comparison: "greater"
+    #     action: "keep"
+    # - name: newline_filter
+    #   config:
+    #     chunks: 50
+    #     comparison: "less"
+    #     action: "keep"
+
+    - name: export
+      config:
+        format: "md"
+        destination: "output"
