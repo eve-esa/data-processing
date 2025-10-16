@@ -1,3 +1,2 @@
-model:
-  name: "Qwen/Qwen3-Embedding-4B"
-  task: "embed"
+model: "Qwen/Qwen3-Embedding-4B"
+task: "embed"

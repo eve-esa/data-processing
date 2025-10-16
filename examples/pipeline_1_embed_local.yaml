@@ -9,12 +9,15 @@
 # Output: JSONL file with documents containing embeddings in metadata
 
 pipeline:
+  batch_size: 10 # not applicable to dedup
   inputs:
-    path: "data/doc_w_metadata_sample.jsonl"
+    path: "data/doc_w_metadata.jsonl"
 
   stages:
     # Step 1: Extract content from documents (PDF, HTML, etc.)
     - name: extraction
+      config: { format: "jsonl" }
+
 
     # Step 2: Chunk documents into smaller pieces
     - name: chunker
@@ -33,9 +36,9 @@ pipeline:
         batch_size: 5
         embedder:
           model_name: "Qwen/Qwen3-Embedding-4B"
-          url: 'https://api.deepinfra.com/' # type sentence,vllm and transformer for qwen only
+          url: 'http://0.0.0.0:8000' # type sentence,vllm and transformer for qwen only
           timeout: 300
-          api_key: "QaxPlUkWPvm9HvnItBGCm2R4e92UYnMJ"  # Optional: API key for VLLM authentication
+          api_key: "EMPTY"  # Optional: API key for VLLM authentication
 
     # Step 4: Export to JSONL with embeddings in metadata
     - name: export
