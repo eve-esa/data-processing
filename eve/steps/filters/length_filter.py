@@ -93,10 +93,10 @@ class LengthFilterStep(PipelineStep):
 
         original_count = len(documents)
 
-        # Add word count metadata to all documents
+        # Add word count to pipeline metadata for all documents
         for document in documents:
             word_count = self._get_word_count(document)
-            document.add_metadata("word_count", word_count)
+            document.add_pipeline_metadata("word_count", word_count)
 
         # Apply filtering based on action
         filtered_documents = []

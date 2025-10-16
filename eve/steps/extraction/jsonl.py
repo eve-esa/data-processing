@@ -33,6 +33,8 @@ class JSONLExtractor:
                                 file_path=self.document.file_path,
                                 content=json_doc["content"],
                                 metadata=json_doc.get("metadata", {}),
+                                embedding=json_doc.get("embedding", None),
+                                pipeline_metadata=json_doc.get("pipeline_metadata", {}),
                                 file_format="md",
                             )
                         )

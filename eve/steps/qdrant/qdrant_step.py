@@ -95,13 +95,15 @@ class QdrantUploadStep(PipelineStep):
         Args:
             config: Configuration containing:
                 - mode: "qdrant" or "local" (default: "qdrant")
+                - use_existing_embeddings: If True, use embeddings from document.embedding field (default: False)
+                - upload_pipeline_metadata: If True, include pipeline_metadata in Qdrant payload (default: False)
                 - vector_store.url: Qdrant instance URL (required for mode="qdrant")
                 - vector_store.api_key: API key for Qdrant authentication (optional)
                 - vector_store.collection_name: Target collection name (required for mode="qdrant")
                 - vector_store.batch_size: Number of documents per batch (required for mode="qdrant")
                 - vector_store.vector_size: Dimension of embedding vectors (required for mode="qdrant")
-                - embedder.url: URL of VLLM embedding server
-                - embedder.model_name: Embedding model identifier
+                - embedder.url: URL of VLLM embedding server (not required if use_existing_embeddings=True)
+                - embedder.model_name: Embedding model identifier (not required if use_existing_embeddings=True)
                 - embedder.timeout: Optional request timeout (default: 300)
                 - embedder.api_key: Optional API key for VLLM authentication (default: "EMPTY")
             name: Name for logging purposes
@@ -114,16 +116,26 @@ class QdrantUploadStep(PipelineStep):
         if self.mode not in ["qdrant", "local"]:
             raise ValueError(f"Invalid mode '{self.mode}'. Must be 'qdrant' or 'local'")
 
-        # Initialize VLLM embedder (required for both modes)
-        embedding_cfg = config["embedder"]
-        self.embedder = VLLMEmbedder(
-            url=embedding_cfg["url"],
-            model_name=embedding_cfg["model_name"],
-            timeout=embedding_cfg.get("timeout", 300),
-            api_key=embedding_cfg.get("api_key", "EMPTY"),
-        )
+        # Check if we should use existing embeddings from document.embedding field
+        self.use_existing_embeddings = config.get("use_existing_embeddings", False)
 
-        self.logger.info(f"Initialized VLLM embedder at {embedding_cfg['url']}")
+        # Check if we should upload pipeline_metadata to Qdrant
+        self.upload_pipeline_metadata = config.get("upload_pipeline_metadata", False)
+
+        # Initialize VLLM embedder only if not using existing embeddings
+        if not self.use_existing_embeddings:
+            embedding_cfg = config["embedder"]
+            self.embedder = VLLMEmbedder(
+                url=embedding_cfg["url"],
+                model_name=embedding_cfg["model_name"],
+                timeout=embedding_cfg.get("timeout", 300),
+                api_key=embedding_cfg.get("api_key", "EMPTY"),
+            )
+            self.logger.info(f"Initialized VLLM embedder at {embedding_cfg['url']}")
+        else:
+            self.embedder = None
+            self.logger.info("Using existing embeddings from document metadata")
+
         self.logger.info(f"Mode: {self.mode}")
 
         # Initialize Qdrant-specific configuration only if mode is "qdrant"
@@ -268,7 +280,7 @@ class QdrantUploadStep(PipelineStep):
         return existing_ids
 
     def _upload_batch(
-        self, batch_ids: List[int], batch_chunks: List[str], batch_metadata: List[dict]
+        self, batch_ids: List[int], batch_chunks: List[str], batch_metadata: List[dict], batch_embeddings: List[List[float]] = None
     ) -> None:
         """Upload a batch of documents to Qdrant.
 
@@ -276,12 +288,21 @@ class QdrantUploadStep(PipelineStep):
             batch_ids: List of unique IDs
             batch_chunks: List of text chunks
             batch_metadata: List of metadata dictionaries
+            batch_embeddings: Optional pre-computed embeddings (if use_existing_embeddings=True)
         """
-        try:
-            batch_vectors = self.embedder.embed_documents(batch_chunks)
-        except Exception as e:
-            self.logger.error(f"Embedding error: {e}")
-            return
+        # Generate embeddings if not provided
+        if batch_embeddings is None:
+            if self.use_existing_embeddings:
+                self.logger.error("use_existing_embeddings=True but no embeddings provided")
+                return
+
+            try:
+                batch_vectors = self.embedder.embed_documents(batch_chunks)
+            except Exception as e:
+                self.logger.error(f"Embedding error: {e}")
+                return
+        else:
+            batch_vectors = batch_embeddings
 
         points = [
             PointStruct(id=id_val, vector=vec, payload=meta)
@@ -308,35 +329,46 @@ class QdrantUploadStep(PipelineStep):
     def _prepare_metadata(self, doc: Document) -> dict:
         """Prepare metadata from Document object for Qdrant storage.
 
+        Only includes:
+        - content field
+        - metadata fields (unwrapped at root level)
+        - pipeline_metadata (wrapped in dict if upload_pipeline_metadata=True)
+
         Args:
             doc: Document object
 
         Returns:
-            Dictionary with cleaned metadata
+            Dictionary with cleaned metadata for Qdrant payload
         """
-        meta = doc.metadata.copy()
+        payload = {}
 
-        # Ensure year is an integer
-        if "year" in meta:
-            try:
-                meta["year"] = int(float(meta["year"]))
-            except (ValueError, TypeError):
-                meta["year"] = None
+        # Add content
+        payload["content"] = doc.content
 
-        # Ensure title is a string
-        if "title" in meta:
-            meta["title"] = str(meta["title"])
+        # Add original metadata fields directly to root level (unwrapped)
+        if doc.metadata:
+            # Clean up metadata types
+            metadata_copy = doc.metadata.copy()
 
-        # Add content if not present
-        if "content" not in meta:
-            meta["content"] = doc.content
+            # Ensure year is an integer if present
+            if "year" in metadata_copy:
+                try:
+                    metadata_copy["year"] = int(float(metadata_copy["year"]))
+                except (ValueError, TypeError):
+                    metadata_copy["year"] = None
 
-        # Add file metadata
-        meta["file_path"] = str(doc.file_path)
-        meta["file_format"] = doc.file_format
-        meta["filename"] = doc.filename
+            # Ensure title is a string if present
+            if "title" in metadata_copy:
+                metadata_copy["title"] = str(metadata_copy["title"])
 
-        return meta
+            # Add all metadata fields directly to payload (unwrapped)
+            payload.update(metadata_copy)
+
+        # Add pipeline_metadata as wrapped dict if configured
+        if self.upload_pipeline_metadata and doc.pipeline_metadata:
+            payload["pipeline_metadata"] = doc.pipeline_metadata.copy()
+
+        return payload
 
     async def execute(self, documents: List[Document]) -> List[Document]:
         """Execute the upload step.
@@ -361,13 +393,13 @@ class QdrantUploadStep(PipelineStep):
             return await self._execute_qdrant(documents)
 
     async def _execute_local(self, documents: List[Document]) -> List[Document]:
-        """Execute local embedding storage (add embeddings to document metadata).
+        """Execute local embedding storage (add embeddings to document.embedding field).
 
         Args:
             documents: List of Document objects
 
         Returns:
-            Documents with embeddings added to metadata
+            Documents with embeddings added to embedding field
         """
         self.logger.info("Generating embeddings in local mode")
 
@@ -383,10 +415,9 @@ class QdrantUploadStep(PipelineStep):
                 # Generate embeddings
                 batch_embeddings = self.embedder.embed_documents(batch_texts)
 
-                # Add embeddings to document metadata
+                # Add embeddings to document.embedding field
                 for doc, embedding in zip(batch, batch_embeddings):
-                    doc.add_metadata("embedding", embedding)
-                    doc.add_metadata("embedding_model", self.embedder.model_name)
+                    doc.embedding = embedding
 
             except Exception as e:
                 self.logger.error(f"Error generating embeddings for batch: {e}")
@@ -408,6 +439,7 @@ class QdrantUploadStep(PipelineStep):
         ids = []
         chunks = []
         metadata = []
+        embeddings = [] if self.use_existing_embeddings else None
 
         for doc in documents:
             # Create unique ID based on file path and content hash
@@ -418,13 +450,31 @@ class QdrantUploadStep(PipelineStep):
             chunks.append(doc.content)
             metadata.append(self._prepare_metadata(doc))
 
+            # Extract existing embeddings if configured
+            if self.use_existing_embeddings:
+                if doc.embedding is None:
+                    self.logger.error(f"Document {doc.filename} missing embedding")
+                    # Skip this document
+                    ids.pop()
+                    chunks.pop()
+                    metadata.pop()
+                    continue
+                embeddings.append(doc.embedding)
+
         # Convert to uint IDs
         uint_ids = [self._string_to_uint(id_str) for id_str in ids]
-        to_process = list(zip(uint_ids, chunks, metadata, ids))
+
+        if self.use_existing_embeddings:
+            to_process = list(zip(uint_ids, chunks, metadata, embeddings, ids))
+        else:
+            to_process = list(zip(uint_ids, chunks, metadata, ids))
 
         # Filter out existing IDs
         existing_ids = self._get_existing_ids()
-        to_process = [item for item in to_process if item[0] not in existing_ids]
+        if self.use_existing_embeddings:
+            to_process = [item for item in to_process if item[0] not in existing_ids]
+        else:
+            to_process = [item for item in to_process if item[0] not in existing_ids]
 
         skipped = len(uint_ids) - len(to_process)
         self.logger.info(f"Skipping {skipped} existing documents")
@@ -436,11 +486,18 @@ class QdrantUploadStep(PipelineStep):
             desc=f"Uploading to {self.collection_name}",
         ):
             batch = to_process[i : i + self.batch_size]
-            batch_ids = [item[0] for item in batch]
-            batch_chunks = [item[1] for item in batch]
-            batch_metadata = [item[2] for item in batch]
 
-            self._upload_batch(batch_ids, batch_chunks, batch_metadata)
+            if self.use_existing_embeddings:
+                batch_ids = [item[0] for item in batch]
+                batch_chunks = [item[1] for item in batch]
+                batch_metadata = [item[2] for item in batch]
+                batch_embeddings = [item[3] for item in batch]
+                self._upload_batch(batch_ids, batch_chunks, batch_metadata, batch_embeddings)
+            else:
+                batch_ids = [item[0] for item in batch]
+                batch_chunks = [item[1] for item in batch]
+                batch_metadata = [item[2] for item in batch]
+                self._upload_batch(batch_ids, batch_chunks, batch_metadata)
 
         self.logger.info(f"Successfully uploaded {len(to_process)} documents")
 

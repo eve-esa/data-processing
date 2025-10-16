@@ -116,14 +116,13 @@ class PiiFilterStep(PipelineStep):
                 for special_token in self.special_tokens:
                     special_tokens_count += document.content.count(special_token)
                 # Percentage of pii_tokens overall
-                document.metadata["pii_tokens"] = (
-                    special_tokens_count / total_words if total_words > 0 else 0
-                )
+                pii_percentage = special_tokens_count / total_words if total_words > 0 else 0
+                document.add_pipeline_metadata("pii_tokens_percentage", pii_percentage)
             except Exception as e:
                 self.logger.error(
                     f"Error processing {document.filename}, exception {e}"
                 )
-                document.metadata["pii_tokens"] = 0
+                document.add_pipeline_metadata("pii_tokens_percentage", 0)
 
         # Apply filtering if enabled
         if self.apply_filter:
@@ -131,7 +130,7 @@ class PiiFilterStep(PipelineStep):
             filtered_documents = []
 
             for doc in documents:
-                pii_percentage = doc.metadata.get("pii_tokens", 0)
+                pii_percentage = doc.get_pipeline_metadata("pii_tokens_percentage", 0)
                 has_abstract_intro = self._has_abstract_or_introduction(doc)
                 meets_threshold = pii_percentage >= self.threshold
 

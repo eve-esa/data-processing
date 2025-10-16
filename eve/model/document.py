@@ -1,7 +1,7 @@
 """Unified Document object for the EVE pipeline."""
 
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, field
 
 
@@ -12,20 +12,34 @@ class Document:
 
     This replaces the need to pass (Path, str) tuples and provides a consistent
     interface for document handling across all pipeline stages.
+
+    Attributes:
+        content: The actual document text content
+        file_path: Path to the source file
+        file_format: Format of the source file (pdf, md, html, etc.)
+        metadata: Original metadata from the document (preserved from source)
+        embedding: Optional embedding vector for the document
+        pipeline_metadata: Metadata added by pipeline steps (filters, processing, etc.)
     """
 
     content: str
     file_path: Path
     file_format: str
     metadata: Dict[str, Any] = field(default_factory=dict)
+    embedding: Optional[List[float]] = None
+    pipeline_metadata: Dict[str, Any] = field(default_factory=dict)
 
     def __dict__(self) -> Dict[str, Any]:
-        return {
+        result = {
             "content": self.content,
             "file_path": str(self.file_path),
             "file_format": self.file_format,
             "metadata": self.metadata.copy(),
+            "pipeline_metadata": self.pipeline_metadata.copy(),
         }
+        if self.embedding is not None:
+            result["embedding"] = self.embedding
+        return result
 
     def __hash__(self):
         return hash(self.file_path)
@@ -53,12 +67,20 @@ class Document:
         return not self.content.strip()
 
     def add_metadata(self, key: str, value: Any) -> None:
-        """Add a metadata entry."""
+        """Add an entry to the original metadata."""
         self.metadata[key] = value
 
     def get_metadata(self, key: str, default: Any = None) -> Any:
-        """Get a metadata value with optional default."""
+        """Get a value from the original metadata with optional default."""
         return self.metadata.get(key, default)
+
+    def add_pipeline_metadata(self, key: str, value: Any) -> None:
+        """Add an entry to pipeline metadata (for tracking pipeline processing)."""
+        self.pipeline_metadata[key] = value
+
+    def get_pipeline_metadata(self, key: str, default: Any = None) -> Any:
+        """Get a value from pipeline metadata with optional default."""
+        return self.pipeline_metadata.get(key, default)
 
     def update_content(self, new_content: str) -> None:
         """Update the document content and track the change in metadata."""

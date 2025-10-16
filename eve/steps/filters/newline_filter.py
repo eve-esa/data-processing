@@ -97,10 +97,10 @@ class NewLineFilterStep(PipelineStep):
 
         original_count = len(documents)
 
-        # Add chunk count metadata to all documents
+        # Add chunk count to pipeline metadata for all documents
         for document in documents:
             chunk_count = self._get_chunk_count(document)
-            document.add_metadata("newline_chunk_count", chunk_count)
+            document.add_pipeline_metadata("newline_count", chunk_count)
 
         # Apply filtering based on action
         filtered_documents = []

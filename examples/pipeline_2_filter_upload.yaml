@@ -1,0 +1,74 @@
+# PIPELINE 2: FILTER + UPLOAD (Using Pre-computed Embeddings)
+#
+# This pipeline:
+# 1. Reads JSONL file with documents that already have embeddings
+# 2. Applies all filter steps
+# 3. Uploads filtered documents to Qdrant using existing embeddings
+#
+# Input: JSONL file from Pipeline 1 (with embeddings in metadata)
+# Output: Filtered documents uploaded to Qdrant
+
+pipeline:
+  inputs:
+    # Point to the JSONL output from pipeline 1
+    path: "output_embeddings_local"
+
+  stages:
+    # Apply all filters from the notebook analysis
+
+    # Step 1: Remove short chunks (< 40 words)
+    - name: length_filter
+      config:
+        length: 40
+        comparison: "greater"
+        action: "keep"
+
+    # Step 2: Remove long chunks (>= 1024 words)
+    - name: length_filter
+      config:
+        length: 1024
+        comparison: "less"
+        action: "keep"
+
+    # Step 3: Remove references and acknowledgements
+    - name: reference_filter
+      config:
+        action: "discard"
+
+    # Step 4: PII filter with abstract/introduction exceptions
+    - name: pii_filter
+      config:
+        threshold: 0.03
+        action: "discard"
+        apply_filter: true
+
+    # Step 5: Remove chunks with excessive newlines
+    - name: newline_filter
+      config:
+        chunks: 60
+        comparison: "less"
+        action: "keep"
+
+    # Step 6: Upload to Qdrant using existing embeddings
+    - name: qdrant_upload
+      config:
+        mode: "qdrant"
+        use_existing_embeddings: true  # Use embeddings from document.embedding field
+        upload_pipeline_metadata: true  # Upload pipeline_metadata to Qdrant (filter stats, etc.)
+
+        # Vector store configuration
+        vector_store:
+          url: "http://localhost:6333"
+          api_key: "your-qdrant-api-key"  # Optional
+          collection_name: "filtered_collection"
+          batch_size: 100
+          vector_size: 768  # Must match embedding model dimension from pipeline 1
+
+# NOTES:
+# - This pipeline expects documents to have embeddings in document.embedding field
+# - The embeddings come from Pipeline 1 (no re-computation needed)
+# - Filters add metadata to document.pipeline_metadata (separate from original metadata)
+# - upload_pipeline_metadata controls whether filter stats are uploaded to Qdrant
+# - Filters are applied before upload to reduce Qdrant storage
+# - If you want to skip upload and just save filtered results locally:
+#   Replace the qdrant_upload step with an export step

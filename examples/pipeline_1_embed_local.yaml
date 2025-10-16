@@ -1,0 +1,54 @@
+# PIPELINE 1: EXTRACTION + CHUNKING + EMBEDDING (Local Storage)
+#
+# This pipeline:
+# 1. Extracts content from documents
+# 2. Chunks the documents
+# 3. Generates embeddings and stores them in document metadata
+# 4. Exports everything to JSONL with embeddings
+#
+# Output: JSONL file with documents containing embeddings in metadata
+
+pipeline:
+  inputs:
+    path: "data/doc_w_metadata_sample.jsonl"
+
+  stages:
+    # Step 1: Extract content from documents (PDF, HTML, etc.)
+    - name: extraction
+
+    # Step 2: Chunk documents into smaller pieces
+    - name: chunker
+      config:
+        max_chunk_size: 512
+        chunk_overlap: 0
+        add_headers: false
+        word_overlap: 0
+        headers_to_split_on: [1, 2, 3, 4, 5, 6]
+        merge_small_chunks: true
+
+    # Step 3: Generate embeddings and store locally
+    - name: qdrant_upload
+      config:
+        mode: "local"
+        batch_size: 5
+        embedder:
+          model_name: "Qwen/Qwen3-Embedding-4B"
+          url: 'https://api.deepinfra.com/' # type sentence,vllm and transformer for qwen only
+          timeout: 300
+          api_key: "QaxPlUkWPvm9HvnItBGCm2R4e92UYnMJ"  # Optional: API key for VLLM authentication
+
+    # Step 4: Export to JSONL with embeddings in metadata
+    - name: export
+      config:
+        format: "jsonl"
+        destination: "output_embeddings_local"
+
+# NOTES:
+# - Output will be a JSONL file where each line is a document with:
+#   * content: the chunked text
+#   * metadata.embedding: the embedding vector
+#   * metadata.embedding_model: the model name
+#   * metadata.headers: extracted headers (if available)
+#   * other metadata fields
+#
+# - This output can be used as input for pipeline 2 (filtering + upload)
