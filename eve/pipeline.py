@@ -3,6 +3,7 @@ import asyncio
 import time
 import json
 from typing import List, AsyncIterator
+from tqdm import tqdm
 
 from eve.config import load_config
 from eve.logging import get_logger
@@ -21,6 +22,33 @@ from eve.steps.filters.newline_filter import NewLineFilterStep
 from eve.steps.filters.reference_filter import ReferenceFilterStep
 from eve.steps.qdrant.qdrant_step import QdrantUploadStep
 from eve.utils import find_format
+
+def count_total_documents(input_files: List, batch_size: int) -> int:
+    """Count total number of documents to process (for progress bar).
+
+    Args:
+        input_files: List of Path objects
+        batch_size: Batch size for processing
+
+    Returns:
+        Total number of documents
+    """
+    total = 0
+    for file_path in input_files:
+        file_format = find_format(file_path)
+        if file_format == "jsonl":
+            # Count lines in JSONL file
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        if line.strip():  # Non-empty line
+                            total += 1
+            except Exception:
+                pass
+        else:
+            # Regular file counts as 1 document
+            total += 1
+    return total
 
 async def create_batches(input_files: List, batch_size: int) -> AsyncIterator[List[Document]]:
     """Create batches of Document objects from input files.
@@ -143,33 +171,40 @@ async def pipeline():
     }
 
     batchable_steps = {"cleaning", "extraction", "pii", "metadata", "export"}
-    
+
+    # Count total documents for progress bar
+    total_docs = count_total_documents(input_files, batch_size)
+    logger.info(f"Total documents to process: {total_docs}")
+
     has_dedup = any(stage["name"] == "duplication" for stage in cfg.stages) #TO-DO - is there a way to do dedup with batching?
-    
+
     if has_dedup: #handle batching seperately
         logger.info("Deduplication detected - collecting all documents before processing")
         all_documents = []
-        async for batch in create_batches(input_files, batch_size):
-            batch_docs = batch
-            for stage in cfg.stages:
-                step_name = stage["name"]
-                if step_name == "duplication":
-                    break  # stop here, accumulate all docs and run dedup in phase 2
-                if step_name in batchable_steps and step_name in step_mapping:
-                    step_config = stage.get("config", {})
-                    step = step_mapping[step_name](config = step_config)
-                    logger.info(f"Running step on batch: {step_name}")
-                    batch_docs = await step(batch_docs)
-            
-            all_documents.extend(batch_docs)
-        
+
+        # Create progress bar for batch processing
+        with tqdm(total=total_docs, desc="Processing batches (pre-dedup)", unit="doc") as pbar:
+            async for batch in create_batches(input_files, batch_size):
+                batch_docs = batch
+                for stage in cfg.stages:
+                    step_name = stage["name"]
+                    if step_name == "duplication":
+                        break  # stop here, accumulate all docs and run dedup in phase 2
+                    if step_name in batchable_steps and step_name in step_mapping:
+                        step_config = stage.get("config", {})
+                        step = step_mapping[step_name](config = step_config)
+                        batch_docs = await step(batch_docs)
+
+                all_documents.extend(batch_docs)
+                pbar.update(len(batch))
+
         documents = all_documents
         dedup_started = False
         for stage in cfg.stages:
             step_name = stage["name"]
             if step_name == "duplication":
                 dedup_started = True
-            
+
             if dedup_started:
                 step_config = stage.get("config", {})
                 if step_name in step_mapping:
@@ -181,23 +216,24 @@ async def pipeline():
     else:
         logger.info("No deduplication - using streaming batch processing")
         all_processed = []
-        
-        async for batch in create_batches(input_files, batch_size):
-            batch_docs = batch
-            logger.info(f"Processing batch of {len(batch_docs)} documents")
-            
-            for stage in cfg.stages:
-                step_name = stage["name"]
-                step_config = stage.get("config", {})
-                if step_name in step_mapping:
-                    step = step_mapping[step_name](config = step_config)
-                    logger.info(f"Running step on batch: {step_name}")
-                    batch_docs = await step(batch_docs)
-                else:
-                    logger.error(f"No implementation found for step: {step_name}")
-            
-            all_processed.extend(batch_docs)
-        
+
+        # Create progress bar for batch processing
+        with tqdm(total=total_docs, desc="Processing batches", unit="doc") as pbar:
+            async for batch in create_batches(input_files, batch_size):
+                batch_docs = batch
+
+                for stage in cfg.stages:
+                    step_name = stage["name"]
+                    step_config = stage.get("config", {})
+                    if step_name in step_mapping:
+                        step = step_mapping[step_name](config = step_config)
+                        batch_docs = await step(batch_docs)
+                    else:
+                        logger.error(f"No implementation found for step: {step_name}")
+
+                all_processed.extend(batch_docs)
+                pbar.update(len(batch))
+
         documents = all_processed
     
     end_time = time.perf_counter()
