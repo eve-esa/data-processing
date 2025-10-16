@@ -1,6 +1,7 @@
 import argparse
 import asyncio
 import time
+from typing import List, AsyncIterator
 
 from eve.config import load_config
 from eve.logging import get_logger
@@ -20,26 +21,37 @@ from eve.steps.filters.reference_filter import ReferenceFilterStep
 from eve.steps.qdrant.qdrant_step import QdrantUploadStep
 from eve.utils import find_format
 
-async def pipeline():
-    logger = get_logger("pipeline")
-    cfg = load_config("config.yaml")
-
-    logger.info("Starting pipeline execution")
-
-    start_time = time.perf_counter()
-    input_files = cfg.inputs.get_files()
-
-    documents = []
-    unique_file_formats = set()
+async def create_batches(input_files: List[str], batch_size: int) -> AsyncIterator[List[Document]]:
+    """Create batches of Document objects from input files."""
+    batch = []
     for file_path in input_files:
         doc = Document(
             file_path = file_path,
             content = "",
             file_format = find_format(file_path),
         )
-        unique_file_formats.add(doc.file_format)
+        batch.append(doc)
+        
+        if len(batch) >= batch_size:
+            yield batch
+            batch = []
+    if batch: #final batch
+        yield batch
 
-        documents.append(doc)
+async def pipeline():
+    logger = get_logger("pipeline")
+    cfg = load_config("config.yaml")
+
+    batch_size = cfg.batch_size
+
+    logger.info("Starting pipeline execution")
+
+    start_time = time.perf_counter()
+    input_files = cfg.inputs.get_files()
+
+    logger.info(f"Processing {len(input_files)} files with batch size {batch_size}")
+
+    unique_file_formats = {find_format(f) for f in input_files}
 
     stages_with_extraction_dependency = {"dedup", "cleaning", "pii"}
 
@@ -76,19 +88,68 @@ async def pipeline():
         "qdrant_upload": QdrantUploadStep
     }
 
-    for stage in cfg.stages:
-        step_name = stage["name"]
-        step_config = stage.get("config", {})
-        if step_name in step_mapping:
-            step = step_mapping[step_name](config = step_config)
-            logger.info(f"Running step: {step_name}")
-            documents = await step(documents)
-        else:
-            logger.error(f"No implementation found for step: {step_name}")
+    batchable_steps = {"cleaning", "extraction", "pii", "metadata", "export"}
     
-    end_time = time.perf_counter()  # end timer
+    has_dedup = any(stage["name"] == "duplication" for stage in cfg.stages) #TO-DO - is there a way to do dedup with batching?
+    
+    if has_dedup: #handle batching seperately
+        logger.info("Deduplication detected - collecting all documents before processing")
+        all_documents = []
+        async for batch in create_batches(input_files, batch_size):
+            batch_docs = batch
+            for stage in cfg.stages:
+                step_name = stage["name"]
+                if step_name == "duplication":
+                    break  # stop here, accumulate all docs and run dedup in phase 2
+                if step_name in batchable_steps and step_name in step_mapping:
+                    step_config = stage.get("config", {})
+                    step = step_mapping[step_name](config = step_config)
+                    logger.info(f"Running step on batch: {step_name}")
+                    batch_docs = await step(batch_docs)
+            
+            all_documents.extend(batch_docs)
+        
+        documents = all_documents
+        dedup_started = False
+        for stage in cfg.stages:
+            step_name = stage["name"]
+            if step_name == "duplication":
+                dedup_started = True
+            
+            if dedup_started:
+                step_config = stage.get("config", {})
+                if step_name in step_mapping:
+                    step = step_mapping[step_name](config = step_config)
+                    logger.info(f"Running step: {step_name}")
+                    documents = await step(documents)
+                else:
+                    logger.error(f"No implementation found for step: {step_name}")
+    else:
+        logger.info("No deduplication - using streaming batch processing")
+        all_processed = []
+        
+        async for batch in create_batches(input_files, batch_size):
+            batch_docs = batch
+            logger.info(f"Processing batch of {len(batch_docs)} documents")
+            
+            for stage in cfg.stages:
+                step_name = stage["name"]
+                step_config = stage.get("config", {})
+                if step_name in step_mapping:
+                    step = step_mapping[step_name](config = step_config)
+                    logger.info(f"Running step on batch: {step_name}")
+                    batch_docs = await step(batch_docs)
+                else:
+                    logger.error(f"No implementation found for step: {step_name}")
+            
+            all_processed.extend(batch_docs)
+        
+        documents = all_processed
+    
+    end_time = time.perf_counter()
     elapsed_time = end_time - start_time
     logger.info(f"Pipeline completed in {elapsed_time:.2f} seconds")
+    logger.info(f"Processed {len(documents)} documents successfully")
 
 def main():
     """entry point for the pipeline"""
