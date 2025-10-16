@@ -15,6 +15,8 @@ from eve.steps.pii.pii_step import PiiStep
 from eve.steps.metadata.metadata_step import MetadataStep
 from eve.steps.filters.pii_filter import PiiFilterStep
 from eve.steps.filters.length_filter import LengthFilterStep
+from eve.steps.filters.newline_filter import NewLineFilterStep
+from eve.steps.filters.reference_filter import ReferenceFilterStep
 from eve.steps.qdrant.qdrant_step import QdrantUploadStep
 from eve.utils import find_format
 
@@ -69,6 +71,8 @@ async def pipeline():
         "perplexity": PerplexityFilterStep,
         "pii_filter": PiiFilterStep,
         "length_filter": LengthFilterStep,
+        "newline_filter": NewLineFilterStep,
+        "reference_filter": ReferenceFilterStep,
         "qdrant_upload": QdrantUploadStep
     }
 
