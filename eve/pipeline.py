@@ -21,7 +21,9 @@ from eve.steps.filters.length_filter import LengthFilterStep
 from eve.steps.filters.newline_filter import NewLineFilterStep
 from eve.steps.filters.reference_filter import ReferenceFilterStep
 from eve.steps.qdrant.qdrant_step import QdrantUploadStep
+from eve.checkpoint import CheckpointManager
 from eve.utils import find_format
+from pathlib import Path
 
 def count_total_documents(input_files: List, batch_size: int) -> int:
     """Count total number of documents to process (for progress bar).
@@ -50,7 +52,7 @@ def count_total_documents(input_files: List, batch_size: int) -> int:
             total += 1
     return total
 
-async def create_batches(input_files: List, batch_size: int) -> AsyncIterator[List[Document]]:
+async def create_batches(input_files: List, batch_size: int, checkpoint_manager=None) -> AsyncIterator[List[Document]]:
     """Create batches of Document objects from input files.
 
     For regular files: Creates one Document per file and batches them.
@@ -59,6 +61,7 @@ async def create_batches(input_files: List, batch_size: int) -> AsyncIterator[Li
     Args:
         input_files: List of Path objects pointing to input files
         batch_size: Number of documents per batch
+        checkpoint_manager: Optional CheckpointManager for resume functionality
 
     Yields:
         Batches of Document objects
@@ -90,6 +93,11 @@ async def create_batches(input_files: List, batch_size: int) -> AsyncIterator[Li
                                 pipeline_metadata=json_doc.get("pipeline_metadata", {}),
                                 file_format="md",  # JSONL documents are treated as markdown
                             )
+
+                            # Skip if already processed (resume mode)
+                            if checkpoint_manager and checkpoint_manager.is_processed(doc):
+                                continue
+
                             batch.append(doc)
 
                             # Yield batch when it reaches batch_size
@@ -176,6 +184,16 @@ async def pipeline():
     total_docs = count_total_documents(input_files, batch_size)
     logger.info(f"Total documents to process: {total_docs}")
 
+    # Initialize checkpoint manager if resume is enabled in export step
+    checkpoint_manager = None
+    export_stage = next((stage for stage in cfg.stages if stage["name"] == "export"), None)
+    if export_stage and export_stage.get("config", {}).get("resume", False):
+        destination = Path(export_stage.get("config", {}).get("destination", "./output"))
+        checkpoint_manager = CheckpointManager(destination, resume=True)
+        stats = checkpoint_manager.get_stats()
+        logger.info(f"Resume mode enabled: {stats['processed_count']} documents already processed")
+        logger.info(f"Checkpoint file: {stats['checkpoint_file']}")
+
     has_dedup = any(stage["name"] == "duplication" for stage in cfg.stages) #TO-DO - is there a way to do dedup with batching?
 
     if has_dedup: #handle batching seperately
@@ -184,7 +202,7 @@ async def pipeline():
 
         # Create progress bar for batch processing
         with tqdm(total=total_docs, desc="Processing batches (pre-dedup)", unit="doc") as pbar:
-            async for batch in create_batches(input_files, batch_size):
+            async for batch in create_batches(input_files, batch_size, checkpoint_manager):
                 batch_docs = batch
                 for stage in cfg.stages:
                     step_name = stage["name"]
@@ -219,7 +237,7 @@ async def pipeline():
 
         # Create progress bar for batch processing
         with tqdm(total=total_docs, desc="Processing batches", unit="doc") as pbar:
-            async for batch in create_batches(input_files, batch_size):
+            async for batch in create_batches(input_files, batch_size, checkpoint_manager):
                 batch_docs = batch
 
                 for stage in cfg.stages:
