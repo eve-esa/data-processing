@@ -84,13 +84,8 @@ class ExportStep(PipelineStep):
         return documents
 
     async def execute(self, documents: List[Document]) -> List[Document]:
-        # Filter out already-processed documents if resume is enabled
-        if self.checkpoint:
-            original_count = len(documents)
-            documents = self.checkpoint.filter_unprocessed(documents)
-            skipped = original_count - len(documents)
-            if skipped > 0:
-                self.logger.info(f"Skipping {skipped} already processed documents (resume mode)")
+        # Note: Documents are already filtered in create_batches() when resume is enabled
+        # No need to filter again here to avoid memory overhead
 
         format = self.config.get("format", "jsonl")
         if format == "jsonl":

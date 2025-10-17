@@ -234,7 +234,7 @@ async def pipeline():
                     logger.error(f"No implementation found for step: {step_name}")
     else:
         logger.info("No deduplication - using streaming batch processing")
-        all_processed = []
+        total_processed = 0
 
         # Create progress bar for batch processing
         with tqdm(total=total_docs, desc="Processing batches", unit="doc") as pbar:
@@ -250,15 +250,23 @@ async def pipeline():
                     else:
                         logger.error(f"No implementation found for step: {step_name}")
 
-                all_processed.extend(batch_docs)
+                # Don't accumulate documents - they're already exported
+                # Just track count for reporting
+                total_processed += len(batch_docs)
                 pbar.update(len(batch))
 
-        documents = all_processed
-    
+                # Clear batch to free memory
+                del batch_docs
+                del batch
+
+        documents = []  # Empty list since documents were exported inline
+        logger.info(f"Total documents processed in streaming mode: {total_processed}")
+
     end_time = time.perf_counter()
     elapsed_time = end_time - start_time
     logger.info(f"Pipeline completed in {elapsed_time:.2f} seconds")
-    logger.info(f"Processed {len(documents)} documents successfully")
+    if documents:  # Only log count if documents list is populated (dedup mode)
+        logger.info(f"Processed {len(documents)} documents successfully")
 
 def main():
     """entry point for the pipeline"""
