@@ -33,6 +33,10 @@ class ChunkerStep(PipelineStep):
         )
 
     async def execute(self, documents: List[Document]) -> List[Document]:
+        self.logger.info(f"Chunking {len(documents)} documents")
+        self.logger.info(f"Using max_chunk_size={self.max_chunk_size}, chunk_overlap={self.chunk_overlap}")
+        self.logger.info(f"Parallel processing with max_workers={self.max_workers or 'CPU count'}")
+
         loop = asyncio.get_event_loop()
 
         # Serialize documents to plain dicts for pickling
@@ -61,6 +65,8 @@ class ChunkerStep(PipelineStep):
         all_chunks = []
         for doc_chunks in results:
             all_chunks.extend([_deserialize_document(chunk) for chunk in doc_chunks])
+
+        self.logger.info(f"Chunking complete: {len(documents)} documents -> {len(all_chunks)} chunks")
 
         return all_chunks
 

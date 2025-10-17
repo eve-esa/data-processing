@@ -19,7 +19,8 @@ class VLLMEmbedder:
     """Client for VLLM embedding server with support for multiple URLs and parallel requests."""
 
     def __init__(
-        self, url: Union[str, List[str]], model_name: str, timeout: int = 300, api_key: str = "EMPTY"
+        self, url: Union[str, List[str]], model_name: str, timeout: int = 300, api_key: str = "EMPTY",
+        max_retries: int = 3, retry_delay: float = 1.0
     ):
         """Initialize VLLM embedder client.
 
@@ -28,6 +29,8 @@ class VLLMEmbedder:
             model_name: Name of the embedding model
             timeout: Request timeout in seconds
             api_key: API key for authentication (default: "EMPTY" for local servers)
+            max_retries: Maximum number of retry attempts for failed requests (default: 3)
+            retry_delay: Delay in seconds between retry attempts (default: 1.0)
         """
         # Support both single URL and multiple URLs
         if isinstance(url, str):
@@ -38,6 +41,8 @@ class VLLMEmbedder:
         self.model_name = model_name
         self.timeout = timeout
         self.api_key = api_key
+        self.max_retries = max_retries
+        self.retry_delay = retry_delay
 
         # Set up headers with API key
         headers = (
@@ -56,12 +61,13 @@ class VLLMEmbedder:
         """Get next URL in round-robin fashion."""
         return next(self.url_cycle)
 
-    async def _embed_single_batch(self, texts: List[str], url: str) -> List[List[float]]:
-        """Generate embeddings for a single batch using a specific URL.
+    async def _embed_single_batch(self, texts: List[str], url: str, attempt: int = 0) -> List[List[float]]:
+        """Generate embeddings for a single batch using a specific URL with retry logic.
 
         Args:
             texts: List of text strings to embed
             url: URL to use for this request
+            attempt: Current retry attempt number (0-indexed)
 
         Returns:
             List of embedding vectors
@@ -81,46 +87,69 @@ class VLLMEmbedder:
             ]
             return embeddings
 
-        except httpx.HTTPError as e:
-            raise Exception(f"VLLM embedding request to {url} failed: {e}")
-        except KeyError as e:
-            raise Exception(f"Unexpected response format from VLLM server at {url}: {e}")
-
-    async def embed_documents_async(self, texts: List[str], batch_size: int = None) -> List[List[float]]:
+        except (httpx.HTTPError, KeyError, Exception) as e:
+            # If we haven't exceeded max retries, try again
+            if attempt < self.max_retries:
+                # Fixed delay between retries
+                print(f"Warning: Request to {url} failed (attempt {attempt + 1}/{self.max_retries + 1}): {e}")
+                print(f"Retrying in {self.retry_delay}s...")
+                await asyncio.sleep(self.retry_delay)
+                return await self._embed_single_batch(texts, url, attempt + 1)
+            else:
+                # All retries exhausted
+                raise Exception(f"VLLM embedding request to {url} failed after {self.max_retries + 1} attempts: {e}")
+    async def embed_documents_async(self, texts: List[str]) -> List[Union[List[float], None]]:
         """Generate embeddings for texts with parallel requests across multiple URLs.
+
+        Documents are divided equally across all available URLs for maximum parallelism.
+        If a batch fails after all retries, embeddings for those texts will be None.
 
         Args:
             texts: List of text strings to embed
-            batch_size: Number of texts per request (if None, send all in one request per URL)
 
         Returns:
-            List of embedding vectors in the same order as input texts
+            List of embedding vectors (or None for failed embeddings) in the same order as input texts
         """
         if not texts:
             return []
 
-        # If batch_size not specified and we have multiple URLs, split across URLs
-        if batch_size is None:
-            batch_size = max(1, len(texts) // len(self.urls)) if len(self.urls) > 1 else len(texts)
+        num_urls = len(self.urls)
 
-        # Split texts into batches
-        batches = [texts[i:i + batch_size] for i in range(0, len(texts), batch_size)]
+        if num_urls > 1:
+            # Divide equally across URLs (ceiling division to ensure all texts are covered)
+            chunk_size = (len(texts) + num_urls - 1) // num_urls
+            batches = [texts[i:i + chunk_size] for i in range(0, len(texts), chunk_size)]
 
-        # Create tasks for parallel embedding
-        tasks = []
-        for batch in batches:
-            url = self._get_next_url()
-            tasks.append(self._embed_single_batch(batch, url))
+            # Assign each batch to a different URL
+            tasks = []
+            for i, batch in enumerate(batches):
+                url = self.urls[i % num_urls]
+                tasks.append(self._embed_single_batch(batch, url))
 
-        # Execute all requests in parallel
-        results = await asyncio.gather(*tasks)
+            # Execute all requests in parallel, but don't fail on exceptions
+            results = await asyncio.gather(*tasks, return_exceptions=True)
 
-        # Flatten results while maintaining order
-        all_embeddings = []
-        for batch_embeddings in results:
-            all_embeddings.extend(batch_embeddings)
+            # Flatten results while maintaining order, set None for failed batches
+            all_embeddings = []
+            for i, batch_result in enumerate(results):
+                if isinstance(batch_result, Exception):
+                    # This batch failed after all retries - set None for all texts in this batch
+                    batch_size = len(batches[i])
+                    print(f"Warning: Batch {i+1}/{len(results)} failed completely: {batch_result}")
+                    print(f"Setting {batch_size} embeddings to None")
+                    all_embeddings.extend([None] * batch_size)
+                else:
+                    all_embeddings.extend(batch_result)
 
-        return all_embeddings
+            return all_embeddings
+        else:
+            # Single URL: send everything to it
+            try:
+                return await self._embed_single_batch(texts, self.urls[0])
+            except Exception as e:
+                # If single URL fails, return None for all texts
+                print(f"Warning: Embedding failed for all {len(texts)} texts: {e}")
+                return [None] * len(texts)
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         """Synchronous wrapper for backward compatibility.
@@ -213,6 +242,8 @@ class QdrantUploadStep(PipelineStep):
                 model_name=embedding_cfg["model_name"],
                 timeout=embedding_cfg.get("timeout", 300),
                 api_key=embedding_cfg.get("api_key", "EMPTY"),
+                max_retries=embedding_cfg.get("max_retries", 3),
+                retry_delay=embedding_cfg.get("retry_delay", 1.0),
             )
             # Log URLs being used
             if isinstance(embedding_cfg["url"], list):
@@ -221,6 +252,7 @@ class QdrantUploadStep(PipelineStep):
                     self.logger.info(f"  [{i}] {url}")
             else:
                 self.logger.info(f"Initialized VLLM embedder at {embedding_cfg['url']}")
+            self.logger.info(f"Retry configuration: max_retries={embedding_cfg.get('max_retries', 3)}, retry_delay={embedding_cfg.get('retry_delay', 1.0)}s")
         else:
             self.embedder = None
             self.logger.info("Using existing embeddings from document metadata")
@@ -488,31 +520,34 @@ class QdrantUploadStep(PipelineStep):
             documents: List of Document objects
 
         Returns:
-            Documents with embeddings added to embedding field
+            Documents with embeddings added to embedding field (None for failed embeddings)
         """
         self.logger.info("Generating embeddings in local mode")
+        self.logger.info(f"Processing {len(documents)} documents - embeddings will be distributed across {len(self.embedder.urls)} URLs")
 
-        # Process in batches
-        for i in tqdm(
-            range(0, len(documents), self.batch_size),
-            desc="Generating embeddings",
-        ):
-            batch = documents[i : i + self.batch_size]
-            batch_texts = [doc.content for doc in batch]
+        # Extract all texts
+        all_texts = [doc.content for doc in documents]
 
-            try:
-                # Generate embeddings using async method directly
-                batch_embeddings = await self.embedder.embed_documents_async(batch_texts)
+        try:
+            # Generate embeddings for ALL documents at once
+            # The embedder will automatically distribute them across URLs
+            self.logger.info(f"Sending {len(all_texts)} documents to embedder for parallel processing")
+            all_embeddings = await self.embedder.embed_documents_async(all_texts)
 
-                # Add embeddings to document.embedding field
-                for doc, embedding in zip(batch, batch_embeddings):
-                    doc.embedding = embedding
+            # Add embeddings to document.embedding field (will be None for failed embeddings)
+            failed_count = 0
+            for doc, embedding in zip(documents, all_embeddings):
+                doc.embedding = embedding
+                if embedding is None:
+                    failed_count += 1
 
-            except Exception as e:
-                self.logger.error(f"Error generating embeddings for batch: {e}")
-                # Continue with next batch
+            success_count = len(documents) - failed_count
+            self.logger.info(f"Embedding generation complete: {success_count} succeeded, {failed_count} failed")
 
-        self.logger.info(f"Successfully generated embeddings for {len(documents)} documents")
+        except Exception as e:
+            self.logger.error(f"Unexpected error generating embeddings: {e}")
+            raise
+
         return documents
 
     async def _execute_qdrant(self, documents: List[Document]) -> List[Document]:
