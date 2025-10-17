@@ -15,7 +15,7 @@ class ExportStep(PipelineStep):
 
         Args:
             config: Configuration containing:
-                - output_dir: Output directory path (alias: destination for backwards compatibility)
+                - output_dir: Output directory path
                 - format: Output format (jsonl, md, etc.)
                 - resume: Whether to enable resume functionality (default: False)
             name: Name for logging purposes
@@ -24,8 +24,7 @@ class ExportStep(PipelineStep):
 
         # Initialize checkpoint manager if resume is enabled
         self.resume = config.get("resume", False)
-        # Support both output_dir and destination (backwards compatibility)
-        output_dir = Path(config.get("output_dir", config.get("destination", "./output")))
+        output_dir = Path(config.get("output_dir", "./output"))
 
         if self.resume:
             self.checkpoint = CheckpointManager(output_dir, resume=True)
@@ -35,17 +34,16 @@ class ExportStep(PipelineStep):
             self.checkpoint = None
 
     async def export_jsonl(self, documents: List[Document]) -> List[Document]:
-        # Support both output_dir and destination (backwards compatibility)
-        destination = Path(self.config.get("output_dir", self.config.get("destination", "./output")))
+        output_dir = Path(self.config.get("output_dir", "./output"))
         result = []
 
-        if not destination.exists():
-            self.logger.info(f"{destination} does not exist. creating...")
-            destination.mkdir(parents=True, exist_ok=True)
+        if not output_dir.exists():
+            self.logger.info(f"{output_dir} does not exist. creating...")
+            output_dir.mkdir(parents=True, exist_ok=True)
 
         for document in documents:
             output_file = (
-                destination
+                output_dir
                 / f"{Path(document.filename).stem}.{self.config.get('format', 'jsonl')}"
             )
             async with aiofiles.open(output_file, "a+", encoding="utf-8") as f:
@@ -60,14 +58,14 @@ class ExportStep(PipelineStep):
         return result
 
     async def export_md(self, documents: List[Document]) -> List[Document]:
-        destination = Path(self.config.get("destination", "./output"))
+        output_dir = Path(self.config.get("output_dir", "./output"))
         result = []
-        if not destination.exists():
-            self.logger.info(f"{destination} does not exist. creating...")
-            destination.mkdir(parents=True, exist_ok=True)
+        if not output_dir.exists():
+            self.logger.info(f"{output_dir} does not exist. creating...")
+            output_dir.mkdir(parents=True, exist_ok=True)
         for document in documents:
             output_file = (
-                destination
+                output_dir
                 / f"{Path(document.filename).stem}.{self.config.get('format', 'jsonl')}"
             )
             async with aiofiles.open(output_file, "a+", encoding="utf-8") as f:

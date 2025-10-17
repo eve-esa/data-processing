@@ -188,8 +188,9 @@ async def pipeline():
     checkpoint_manager = None
     export_stage = next((stage for stage in cfg.stages if stage["name"] == "export"), None)
     if export_stage and export_stage.get("config", {}).get("resume", False):
-        destination = Path(export_stage.get("config", {}).get("destination", "./output"))
-        checkpoint_manager = CheckpointManager(destination, resume=True)
+        export_config = export_stage.get("config", {})
+        output_dir = Path(export_config.get("output_dir", "./output"))
+        checkpoint_manager = CheckpointManager(output_dir, resume=True)
         stats = checkpoint_manager.get_stats()
         logger.info(f"Resume mode enabled: {stats['processed_count']} documents already processed")
         logger.info(f"Checkpoint file: {stats['checkpoint_file']}")
