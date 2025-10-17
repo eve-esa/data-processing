@@ -131,14 +131,21 @@ class VLLMEmbedder:
         Returns:
             List of embedding vectors
         """
-        # Run async function in event loop
+        # Check if we're already in an async context
         try:
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
+            # We're in an async context, need to use nest_asyncio or run in thread
+            import nest_asyncio
+            nest_asyncio.apply()
+            return loop.run_until_complete(self.embed_documents_async(texts))
         except RuntimeError:
+            # Not in async context, create new loop
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
-
-        return loop.run_until_complete(self.embed_documents_async(texts))
+            try:
+                return loop.run_until_complete(self.embed_documents_async(texts))
+            finally:
+                loop.close()
 
     async def close(self):
         """Close the async HTTP client."""
@@ -494,8 +501,8 @@ class QdrantUploadStep(PipelineStep):
             batch_texts = [doc.content for doc in batch]
 
             try:
-                # Generate embeddings
-                batch_embeddings = self.embedder.embed_documents(batch_texts)
+                # Generate embeddings using async method directly
+                batch_embeddings = await self.embedder.embed_documents_async(batch_texts)
 
                 # Add embeddings to document.embedding field
                 for doc, embedding in zip(batch, batch_embeddings):
