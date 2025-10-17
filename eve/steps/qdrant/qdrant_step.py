@@ -1,8 +1,10 @@
 import hashlib
 import time
 import httpx
-from typing import List, Set
+import asyncio
+from typing import List, Set, Union
 from pathlib import Path
+from itertools import cycle
 
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import PointStruct
@@ -14,20 +16,25 @@ from eve.model.document import Document
 
 
 class VLLMEmbedder:
-    """Client for VLLM embedding server."""
+    """Client for VLLM embedding server with support for multiple URLs and parallel requests."""
 
     def __init__(
-        self, url: str, model_name: str, timeout: int = 300, api_key: str = "EMPTY"
+        self, url: Union[str, List[str]], model_name: str, timeout: int = 300, api_key: str = "EMPTY"
     ):
         """Initialize VLLM embedder client.
 
         Args:
-            url: Base URL of the VLLM server
+            url: Base URL(s) of the VLLM server. Can be a single URL string or list of URLs for load balancing
             model_name: Name of the embedding model
             timeout: Request timeout in seconds
             api_key: API key for authentication (default: "EMPTY" for local servers)
         """
-        self.url = url.rstrip("/")
+        # Support both single URL and multiple URLs
+        if isinstance(url, str):
+            self.urls = [url.rstrip("/")]
+        else:
+            self.urls = [u.rstrip("/") for u in url]
+
         self.model_name = model_name
         self.timeout = timeout
         self.api_key = api_key
@@ -38,28 +45,33 @@ class VLLMEmbedder:
             if api_key and api_key != "EMPTY"
             else {}
         )
-        self.client = httpx.Client(timeout=timeout, headers=headers)
 
-    def embed_documents(self, texts: List[str]) -> List[List[float]]:
-        """Generate embeddings for a list of texts.
+        # Create async client for parallel requests
+        self.async_client = httpx.AsyncClient(timeout=timeout, headers=headers)
+
+        # Round-robin iterator for load balancing
+        self.url_cycle = cycle(self.urls)
+
+    def _get_next_url(self) -> str:
+        """Get next URL in round-robin fashion."""
+        return next(self.url_cycle)
+
+    async def _embed_single_batch(self, texts: List[str], url: str) -> List[List[float]]:
+        """Generate embeddings for a single batch using a specific URL.
 
         Args:
             texts: List of text strings to embed
+            url: URL to use for this request
 
         Returns:
             List of embedding vectors
-
-        Raises:
-            Exception: If the API request fails
         """
-        endpoint = f"{self.url}/v1/embeddings"
-
+        endpoint = f"{url}/v1/embeddings"
         payload = {"input": texts, "model": self.model_name, "encoding_format": "float"}
 
         try:
-            response = self.client.post(endpoint, json=payload)
+            response = await self.async_client.post(endpoint, json=payload)
             response.raise_for_status()
-
             result = response.json()
 
             # Extract embeddings in order
@@ -67,18 +79,82 @@ class VLLMEmbedder:
                 item["embedding"]
                 for item in sorted(result["data"], key=lambda x: x["index"])
             ]
-
             return embeddings
 
         except httpx.HTTPError as e:
-            raise Exception(f"VLLM embedding request failed: {e}")
+            raise Exception(f"VLLM embedding request to {url} failed: {e}")
         except KeyError as e:
-            raise Exception(f"Unexpected response format from VLLM server: {e}")
+            raise Exception(f"Unexpected response format from VLLM server at {url}: {e}")
+
+    async def embed_documents_async(self, texts: List[str], batch_size: int = None) -> List[List[float]]:
+        """Generate embeddings for texts with parallel requests across multiple URLs.
+
+        Args:
+            texts: List of text strings to embed
+            batch_size: Number of texts per request (if None, send all in one request per URL)
+
+        Returns:
+            List of embedding vectors in the same order as input texts
+        """
+        if not texts:
+            return []
+
+        # If batch_size not specified and we have multiple URLs, split across URLs
+        if batch_size is None:
+            batch_size = max(1, len(texts) // len(self.urls)) if len(self.urls) > 1 else len(texts)
+
+        # Split texts into batches
+        batches = [texts[i:i + batch_size] for i in range(0, len(texts), batch_size)]
+
+        # Create tasks for parallel embedding
+        tasks = []
+        for batch in batches:
+            url = self._get_next_url()
+            tasks.append(self._embed_single_batch(batch, url))
+
+        # Execute all requests in parallel
+        results = await asyncio.gather(*tasks)
+
+        # Flatten results while maintaining order
+        all_embeddings = []
+        for batch_embeddings in results:
+            all_embeddings.extend(batch_embeddings)
+
+        return all_embeddings
+
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        """Synchronous wrapper for backward compatibility.
+
+        Args:
+            texts: List of text strings to embed
+
+        Returns:
+            List of embedding vectors
+        """
+        # Run async function in event loop
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
+        return loop.run_until_complete(self.embed_documents_async(texts))
+
+    async def close(self):
+        """Close the async HTTP client."""
+        await self.async_client.aclose()
 
     def __del__(self):
         """Clean up HTTP client."""
-        if hasattr(self, "client"):
-            self.client.close()
+        if hasattr(self, "async_client"):
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    loop.create_task(self.async_client.aclose())
+                else:
+                    loop.run_until_complete(self.async_client.aclose())
+            except Exception:
+                pass
 
 
 class QdrantUploadStep(PipelineStep):
@@ -131,7 +207,13 @@ class QdrantUploadStep(PipelineStep):
                 timeout=embedding_cfg.get("timeout", 300),
                 api_key=embedding_cfg.get("api_key", "EMPTY"),
             )
-            self.logger.info(f"Initialized VLLM embedder at {embedding_cfg['url']}")
+            # Log URLs being used
+            if isinstance(embedding_cfg["url"], list):
+                self.logger.info(f"Initialized VLLM embedder with {len(embedding_cfg['url'])} URLs for parallel requests:")
+                for i, url in enumerate(embedding_cfg["url"], 1):
+                    self.logger.info(f"  [{i}] {url}")
+            else:
+                self.logger.info(f"Initialized VLLM embedder at {embedding_cfg['url']}")
         else:
             self.embedder = None
             self.logger.info("Using existing embeddings from document metadata")
