@@ -161,6 +161,7 @@ class QdrantUploadStep(PipelineStep):
 
             # Ensure collection exists
             self._ensure_collection()
+            self.existing_ids = self._get_existing_ids()
         else:
             # Local mode: set batch size for processing
             self.batch_size = config.get("batch_size", 10)
@@ -263,18 +264,34 @@ class QdrantUploadStep(PipelineStep):
         return int.from_bytes(hash_bytes[:8], byteorder="big", signed=False)
 
     def _get_existing_ids(self) -> Set[int]:
-        """Retrieve all existing point IDs from the collection."""
+        """Retrieve all existing point IDs from the collection with retry logic."""
         existing_ids = set()
         scroll_offset = None
+        max_retries = 3
+        retry_delay = 5
 
         while True:
-            response = self.client.scroll(
-                collection_name=self.collection_name,
-                offset=scroll_offset,
-                limit=10000,
-                with_payload=False,
-                with_vectors=False,
-            )
+            response = None
+            for attempt in range(max_retries):
+                try:
+                    response = self.client.scroll(
+                        collection_name=self.collection_name,
+                        offset=scroll_offset,
+                        limit=10000,
+                        with_payload=False,
+                        with_vectors=False,
+                        timeout=3000,
+                    )
+                    break  # Success, exit retry loop
+                except Exception as e:
+                    if attempt < max_retries - 1:
+                        self.logger.warning(f"Scroll request failed (attempt {attempt + 1}/{max_retries}): {e}")
+                        self.logger.info(f"Retrying in {retry_delay}s...")
+                        time.sleep(retry_delay)
+                    else:
+                        self.logger.error(f"Scroll request failed after {max_retries} attempts: {e}")
+                        raise
+
             for point in response[0]:
                 existing_ids.add(point.id)
 
@@ -475,11 +492,10 @@ class QdrantUploadStep(PipelineStep):
             to_process = list(zip(uint_ids, chunks, metadata, ids))
 
         # Filter out existing IDs
-        existing_ids = self._get_existing_ids()
         if self.use_existing_embeddings:
-            to_process = [item for item in to_process if item[0] not in existing_ids]
+            to_process = [item for item in to_process if item[0] not in self.existing_ids]
         else:
-            to_process = [item for item in to_process if item[0] not in existing_ids]
+            to_process = [item for item in to_process if item[0] not in self.existing_ids]
 
         skipped = len(uint_ids) - len(to_process)
         self.logger.info(f"Skipping {skipped} existing documents")
