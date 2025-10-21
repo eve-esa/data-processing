@@ -64,13 +64,9 @@ class VLLMEmbedder:
 
                 result = response.json()
 
-                # Extract embeddings in order
-                embeddings = [
-                    item["embedding"]
-                    for item in sorted(result["data"], key=lambda x: x["index"])
-                ]
-
-                embeddings.extend(embeddings)
+                # Extract embedding (single document)
+                embedding = result["data"][0]["embedding"]
+                embeddings.append(embedding)
 
             except httpx.HTTPError as e:
                 print(f"VLLM embedding request failed: {e}")
