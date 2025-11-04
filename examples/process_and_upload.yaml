@@ -1,0 +1,93 @@
+# COMBINED PIPELINE: EXTRACTION + EMBEDDING + FILTERING + UPLOAD
+#
+# This pipeline combines all steps from pipeline_1 and pipeline_2:
+# 1. Extracts content from documents
+# 2. Generates embeddings and stores them in document metadata
+# 3. Applies all filter steps (length, reference, PII, newline)
+# 4. Uploads filtered documents to Qdrant with embeddings
+#
+# This is a complete end-to-end pipeline that processes raw documents
+# and uploads clean, filtered results to Qdrant.
+
+pipeline:
+  batch_size: 10
+  inputs:
+    path: "data/doc_w_metadata.jsonl"
+
+  stages:
+    # ========================================
+    # PIPELINE 1 STEPS: EXTRACTION + EMBEDDING
+    # ========================================
+
+    # Step 1: Extract content from documents (PDF, HTML, etc.)
+    - name: extraction
+      config: { format: "jsonl" }
+
+    # ========================================
+    # PIPELINE 2 STEPS: FILTERING + UPLOAD
+    # ========================================
+
+    # Step 3: Remove short chunks (< 40 words)
+    - name: length_filter
+      config:
+        length: 40
+        comparison: "greater"
+        action: "keep"
+
+    # Step 4: Remove long chunks (>= 1024 words)
+    - name: length_filter
+      config:
+        length: 1024
+        comparison: "less"
+        action: "keep"
+
+    # Step 5: Remove references and acknowledgements
+    - name: reference_filter
+      config:
+        action: "discard"
+
+    # Step 6: PII filter with abstract/introduction exceptions
+    - name: pii_filter
+      config:
+        threshold: 0.03
+        action: "discard"
+        apply_filter: true
+
+    # Step 7: Remove chunks with excessive newlines
+    - name: newline_filter
+      config:
+        chunks: 60
+        comparison: "less"
+        action: "keep"
+    # Step 2: Generate embeddings and store locally
+    - name: qdrant_upload
+      config:
+        mode: "local"
+        batch_size: 5
+        embedder:
+          model_name: "Qwen/Qwen3-Embedding-4B"
+          url: 'http://0.0.0.0:8000' # type sentence,vllm and transformer for qwen only
+          timeout: 300
+          api_key: "EMPTY"  # Optional: API key for VLLM authentication
+    # Step 8: Upload to Qdrant using existing embeddings
+    - name: qdrant_upload
+      config:
+        mode: "qdrant"
+        use_existing_embeddings: true  # Use embeddings from document.embedding field
+        upload_pipeline_metadata: true  # Upload pipeline_metadata to Qdrant (filter stats, etc.)
+
+        # Vector store configuration
+        vector_store:
+          batch_size: 100
+          collection_name:
+          vector_size: 2560
+          url:
+          api_key:
+
+# NOTES:
+# - This is a complete end-to-end pipeline combining both pipeline_1 and pipeline_2
+# - Raw documents are processed, embedded, filtered, and uploaded to Qdrant
+# - Embeddings are computed once (step 2) and reused for upload (step 8)
+# - All filters add metadata to document.pipeline_metadata
+# - Final upload includes both embeddings and filter statistics
+# - If you want to save intermediate results, add an export step before the final qdrant_upload

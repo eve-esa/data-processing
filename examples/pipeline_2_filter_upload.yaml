@@ -11,7 +11,7 @@
 pipeline:
   inputs:
     # Point to the JSONL output from pipeline 1
-    path: "output_embeddings_local"
+    path: "doc_w_metadata_split_1_remaining.jsonl"
 
   stages:
     # Apply all filters from the notebook analysis
@@ -58,11 +58,11 @@ pipeline:
 
         # Vector store configuration
         vector_store:
-          url: "http://localhost:6333"
-          api_key: "your-qdrant-api-key"  # Optional
-          collection_name: "filtered_collection"
           batch_size: 100
-          vector_size: 768  # Must match embedding model dimension from pipeline 1
+          collection_name: "qwen-512-filtered"
+          vector_size: 2560
+          url: ""
+          api_key: ""
 
 # NOTES:
 # - This pipeline expects documents to have embeddings in document.embedding field

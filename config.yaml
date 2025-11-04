@@ -1,9 +1,8 @@
 pipeline:
+  batch_size: 100
   inputs:
-    path: "data/doc_w_metadata_sample.jsonl"
+    path: "./embeddings/doc_w_metadata_split_3_failed.jsonl"
   stages:
-    - name: extraction
-      config: { format: "jsonl"}
     # - name: duplication
     #   config: { method: "lsh", shingle_size: 3, num_perm: 128, threshold: 0.8 }
     - name: chunker
@@ -16,37 +15,6 @@ pipeline:
         "headers_to_split_on": [ 1, 2, 3, 4, 5, 6 ]
       }
 
-    - name: pii_filter
-      config:
-        apply_filter: true
-        threshold: 0.5
-        action: keep
-
-    - name: length_filter
-      config:
-        length: 30
-        comparison: "less"
-        action: "discard"
-
-    - name: length_filter
-      config:
-        length: 1024
-        comparison: "greater"  # "greater" or "less"
-        action: "discard"          # "keep" or "discard"
-
-    - name: qdrant_upload
-      config:
-          vector_store:
-            batch_size: 100
-            collection_name: "pipeline-test"
-            vector_size: 2560
-            url: "https://82e69449-1678-4cdd-9b36-1daccdbc58e9.eu-central-1-0.aws.cloud.qdrant.io"
-            api_key: ""  # Optional: API key for Qdrant authentication
-          embedder:
-            model_name: "Qwen/Qwen3-Embedding-4B"
-            url: 'https://api.deepinfra.com/' # type sentence,vllm and transformer for qwen only
-            timeout: 300
-            api_key: ""  # Optional: API key for VLLM authentication
 
     - name: export
-      config: { format: "jsonl", destination: "output/files"}
+      config: { format: "jsonl", output_dir: "output3"}
