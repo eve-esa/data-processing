@@ -130,7 +130,12 @@ async def predict(
             predictions[idx * BATCHSIZE + j] = (
                 markdown_compatible(output) + disclaimer
             )
-
+        del sample, model_output
+        torch.cuda.empty_cache()
+    
+    del pdf, images, dataset, dataloader
+    torch.cuda.empty_cache()
+    
     final = "".join(predictions).strip()
     return final
 
