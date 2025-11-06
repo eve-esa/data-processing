@@ -28,6 +28,7 @@ dependencies = [
     "presidio-analyzer>=2.2.360",
     "pip>=25.2",
     "hf-transfer>=0.1.9",
+    "httpx>=0.28.1",
 ]
 
 [project.scripts]
