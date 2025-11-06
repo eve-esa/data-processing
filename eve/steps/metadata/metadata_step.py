@@ -4,12 +4,12 @@ Metadata extraction step for the EVE pipeline.
 
 import asyncio
 import json
-from typing import List, Dict, Any
+from typing import List
 from pathlib import Path
 
 from eve.base_step import PipelineStep
 from eve.model.document import Document
-# from eve.steps.metadata.extractors.pdf_extractor import PdfMetadataExtractor
+from eve.steps.metadata.extractors.pdf_extractor import PdfMetadataExtractor
 from eve.steps.metadata.extractors.html_extractor import HtmlMetadataExtractor
 
 class MetadataStep(PipelineStep):
@@ -40,7 +40,7 @@ class MetadataStep(PipelineStep):
         self.metadata_filename = config.get("metadata_filename", "metadata.jsonl")
         
         self.extractors = {
-            # "pdf": PdfMetadataExtractor(debug=self.debug),
+            "pdf": PdfMetadataExtractor(debug=self.debug),
             "html": HtmlMetadataExtractor(debug=self.debug)
         }
 

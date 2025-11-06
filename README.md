@@ -43,6 +43,8 @@ pipeline:
 eve run
 ```
 
+4. For pdf based metadata extraction you need to setup [MonkeyOCR](https://github.com/Yuliang-Liu/MonkeyOCR/tree/main) in the `server` folder.
+
 ## Examples
 
 You can find examples of `config.py` files on how to use this pipeline effectively.
