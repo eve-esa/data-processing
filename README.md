@@ -43,7 +43,8 @@ pipeline:
 eve run
 ```
 
-4. For pdf based metadata extraction you need to setup [MonkeyOCR](https://github.com/Yuliang-Liu/MonkeyOCR/tree/main) in the `server` folder.
+4. For pdf based metadata extraction you need to setup [MonkeyOCR](https://github.com/Yuliang-Liu/MonkeyOCR/tree/main) in the `server` folder. 
+   Run inference on the files and then setup metadata extraction config.yaml file.
 
 ## Examples
 
