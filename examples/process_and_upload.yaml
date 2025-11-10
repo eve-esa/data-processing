@@ -23,6 +23,16 @@ pipeline:
     - name: extraction
       config: { format: "jsonl" }
 
+    - name: chunker
+      config: {
+        "chunk_overlap": 0,
+        "max_chunk_size": 512,
+        "word_overlap": 0,
+                "add_headers", False,
+        "merge_small_chunks": True,
+        "headers_to_split_on": [ 1, 2, 3, 4, 5, 6 ]
+      }
+
     # ========================================
     # PIPELINE 2 STEPS: FILTERING + UPLOAD
     # ========================================
@@ -64,25 +74,28 @@ pipeline:
       config:
         mode: "local"
         batch_size: 5
+
+    # Step 8: Upload to Qdrant using existing embeddings
+    - name: qdrant_upload
+      config:
+        mode: "qdrant"
+        use_existing_embeddings: false  # Use embeddings from document.embedding field
+        upload_pipeline_metadata: true  # Upload pipeline_metadata to Qdrant (filter stats, etc.)
+
         embedder:
           model_name: "Qwen/Qwen3-Embedding-4B"
           url: 'http://0.0.0.0:8000' # type sentence,vllm and transformer for qwen only
           timeout: 300
           api_key: "EMPTY"  # Optional: API key for VLLM authentication
-    # Step 8: Upload to Qdrant using existing embeddings
-    - name: qdrant_upload
-      config:
-        mode: "qdrant"
-        use_existing_embeddings: true  # Use embeddings from document.embedding field
-        upload_pipeline_metadata: true  # Upload pipeline_metadata to Qdrant (filter stats, etc.)
-
         # Vector store configuration
         vector_store:
-          batch_size: 100
+          batch_size: 1000
           collection_name:
           vector_size: 2560
           url:
           api_key:
+
+
 
 # NOTES:
 # - This is a complete end-to-end pipeline combining both pipeline_1 and pipeline_2
