@@ -1,6 +1,16 @@
 # Eve Data Processing Pipeline
 
-Eve data pipeline is a library to process, duplicate and clean data at a large scale.
+## Overview
+
+The **Eve Data Processing Pipeline** is a high-performance, modular library designed to extract, deduplicate, clean, anonymize, and export large-scale Earth science and Earth observation datasets. It is part of the Earth Virtual Expert (EVE) initiative—an open-science program funded by the European Space Agency’s Φ-lab and developed by Pi School, in collaboration with Imperative Space and Mistral AI.
+
+## Earth Virtual Expert (EVE)
+
+**Earth Virtual Expert (EVE)** aims to advance the use of Large Language Models (LLMs) within the Earth Observation (EO) and Earth Science (ES) community.
+
+- Website: https://eve.philab.esa.int/  
+- Other repositories: https://github.com/eve-esa
+
 
 
 ## Features
@@ -50,3 +60,19 @@ eve run
 
 You can find examples of `config.py` files on how to use this pipeline effectively.
 
+## Funding
+
+This project is supported by the European Space Agency (ESA) through the Large Language Model for Earth Observation and Earth Science initiative, under the ESA Express Procurement Plus (EXPRO+) program. Contract: 4000144469/24/I-DT. Development is facilitated by ESA Φ-lab AI4EO as part of the Foresight Element within FutureEO Block 4.
+
+## Citation 
+
+If you use this project in academic or research settings, please cite:
+
+## License
+
+This project is released under the Apache 2.0 License - see the (LICENSE)[LICENSE] file for more details.
+
+## Contributing
+
+We welcome contributions!
+Please open an issue or submit a pull request on GitHub to help improve the pipeline.
