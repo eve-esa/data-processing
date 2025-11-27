@@ -70,7 +70,7 @@ If you use this project in academic or research settings, please cite:
 
 ## License
 
-This project is released under the Apache 2.0 License - see the (LICENSE)[LICENSE] file for more details.
+This project is released under the Apache 2.0 License - see the [LICENSE](LICENSE) file for more details.
 
 ## Contributing
 
