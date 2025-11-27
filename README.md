@@ -15,11 +15,23 @@ The **Eve Data Processing Pipeline** is a high-performance, modular library desi
 
 ## Features
 
-1. Extraction Step - Extraction from different files formats like pdf, html and xml. You can pass in any heirarchy of folder structure.
-2. Deduplication Step - Exact duplication and close duplication using lsh.
-3. Cleaning Step - Handles all the irregularities and artifacts present in the documents. Performs latex equations and table correction using an LLM.
-4. Pii Step - Aanonymizes the document by masking out the `names` and `emails` present in the documents.
-4. Export Step - This steps saves all the processed files in the desired format.
+### Extraction
+- Supports PDF, HTML, XML, Markdown and nested folder structures.
+- Automatically detects file formats unless explicitly specified.
+
+### Deduplication
+- Performs exact matching using SHA-256 checksum.
+- Supports LSH based near-duplicate detection (configurable: shingle size, permutations, similarity threshold).
+
+### Cleaning
+- Removes irregularities and noise artifacts.
+- Corrects LaTeX equations and tables using LLM assistance.
+
+### PII Removal
+- Automatically masks `names` and `emails` using the Presidio framework.
+
+### Export
+- Saves processed content in multiple formats (default: Markdown).
 
 ## Getting started
 
