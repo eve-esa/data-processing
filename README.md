@@ -28,7 +28,10 @@ The **Eve Data Processing Pipeline** is a high-performance, modular library desi
 - Corrects LaTeX equations and tables using LLM assistance.
 
 ### PII Removal
-- Automatically masks `names` and `emails` using the Presidio framework.
+- Automatically masks `Names` and `Emails` using the Presidio framework.
+
+### Metadata Extraction
+- Extracts `Title`, `Authors`, `DOI`, `URL`, `Year`, `Journal` and `Citation Count` from the scientific papers.
 
 ### Export
 - Saves processed content in multiple formats (default: Markdown).
