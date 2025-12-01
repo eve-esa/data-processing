@@ -29,6 +29,8 @@ dependencies = [
     "pip>=25.2",
     "hf-transfer>=0.1.9",
     "httpx>=0.28.1",
+    "mkdocs-material>=9.7.0",
+    "mkdocstrings-python>=1.18.2",
 ]
 
 [project.scripts]
