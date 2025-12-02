@@ -1,11 +1,13 @@
-name: ci 
+name: ci
 on:
   push:
     branches:
       - main
+      - gh-pages
   pull_request:
     branches:
       - main
+      - gh-pages
 permissions:
   contents: write
 jobs:
