@@ -6,30 +6,38 @@ This section covers the core components of the EVE Pipeline that form the founda
 
 The main pipeline orchestrator that coordinates all processing stages.
 
-::: eve.pipeline.pipeline
-    :members:
-    :show-inheritance:
+```python
+from eve.pipeline import Pipeline
+```
+
+The pipeline manages the execution flow through all configured stages, handling data transformation, error recovery, and progress tracking.
 
 ## Configuration
 
 Configuration management for the pipeline using Pydantic models.
 
-::: eve.config
-    :members:
-    :show-inheritance:
+```python
+from eve.config import PipelineConfig
+```
+
+Configuration objects provide type-safe settings validation and management for all pipeline components.
 
 ## Document Model
 
 The unified document object that represents content and metadata throughout the pipeline.
 
-::: eve.model.document
-    :members:
-    :show-inheritance:
+```python
+from eve.model.document import Document
+```
+
+Documents are the core data structure that flow through the pipeline, containing both content and associated metadata.
 
 ## Pipeline Step Base
 
 Abstract base class that all pipeline stages must implement.
 
-::: eve.base_step
-    :members:
-    :show-inheritance:
+```python
+from eve.base_step import PipelineStep
+```
+
+All custom pipeline components should inherit from PipelineStep to ensure proper integration with the framework.
