@@ -122,5 +122,3 @@ $ eve run
 ## Next Steps
 
 - Learn about [configuration options](configuration.md)
-- Explore [pipeline stages](../pipeline-stages/)
-- Check out [advanced examples](../examples/)

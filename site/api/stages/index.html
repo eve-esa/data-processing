@@ -3408,7 +3408,7 @@
 
 
 <h2 id="eve.steps.extraction.extract_step" class="doc doc-heading">
-            <code>eve.steps.extraction.extract_step</code>
+            <span class="doc doc-object-name doc-module-name">eve.steps.extraction.extract_step</span>
 
 
 </h2>
@@ -3439,14 +3439,16 @@
 
 
 <h3 id="eve.steps.extraction.extract_step.ExtractionStep" class="doc doc-heading">
-              <code class="highlight language-python"><span class="n">ExtractionStep</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span></code>
+            <span class="doc doc-object-name doc-class-name">ExtractionStep</span>
+
 
 </h3>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">ExtractionStep</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="PipelineStep(config: Any, name: Optional[str] = None) (eve.base_step.PipelineStep)" href="../core/#eve.base_step.PipelineStep">PipelineStep</a></code></p>
+              Bases: <code><span title="eve.base_step.PipelineStep">PipelineStep</span></code></p>
 
 
 
@@ -3498,14 +3500,16 @@
 
 
 <h4 id="eve.steps.extraction.extract_step.ExtractionStep.execute" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">execute</span><span class="p">(</span><span class="n">documents</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Document</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Document</span><span class="p">]</span></code>
+            <span class="doc doc-object-name doc-function-name">execute</span>
+
 
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
 </h4>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">execute</span><span class="p">(</span><span class="n">documents</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Document</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Document</span><span class="p">]</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
 
@@ -3553,11 +3557,12 @@
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code><span title="typing.List">List</span>[<a class="autorefs autorefs-internal" title="Document(content: str, file_path: Path, file_format: str, metadata: Dict[str, Any] = dict())
+                  <code><span title="typing.List">List</span>[<a class="autorefs autorefs-internal" title="eve.model.document.Document
+
 
   
       dataclass
-   (eve.model.document.Document)" href="../core/#eve.model.document.Document">Document</a>]</code>
+  " href="../models/#eve.model.document.Document">Document</a>]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -3688,7 +3693,7 @@
 
 
 <h2 id="eve.steps.extraction.pdfs" class="doc doc-heading">
-            <code>eve.steps.extraction.pdfs</code>
+            <span class="doc doc-object-name doc-module-name">eve.steps.extraction.pdfs</span>
 
 
 </h2>
@@ -3719,10 +3724,12 @@
 
 
 <h3 id="eve.steps.extraction.pdfs.PdfExtractor" class="doc doc-heading">
-              <code class="highlight language-python"><span class="n">PdfExtractor</span><span class="p">(</span><span class="n">document</span><span class="p">:</span> <span class="n">Document</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span></code>
+            <span class="doc doc-object-name doc-class-name">PdfExtractor</span>
+
 
 </h3>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">PdfExtractor</span><span class="p">(</span><span class="n">document</span><span class="p">:</span> <span class="n">Document</span><span class="p">,</span> <span class="n">endpoint</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
 
@@ -3764,14 +3771,16 @@
 
 
 <h4 id="eve.steps.extraction.pdfs.PdfExtractor.extract_text" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">extract_text</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Document</span><span class="p">]</span></code>
+            <span class="doc doc-object-name doc-function-name">extract_text</span>
+
 
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
 </h4>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">extract_text</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Document</span><span class="p">]</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
 
@@ -3789,11 +3798,12 @@
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code><span title="typing.Optional">Optional</span>[<a class="autorefs autorefs-internal" title="Document(content: str, file_path: Path, file_format: str, metadata: Dict[str, Any] = dict())
+                  <code><span title="typing.Optional">Optional</span>[<a class="autorefs autorefs-internal" title="eve.model.document.Document
+
 
   
       dataclass
-   (eve.model.document.Document)" href="../core/#eve.model.document.Document">Document</a>]</code>
+  " href="../models/#eve.model.document.Document">Document</a>]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -3869,7 +3879,7 @@
 
 
 <h2 id="eve.steps.extraction.htmls" class="doc doc-heading">
-            <code>eve.steps.extraction.htmls</code>
+            <span class="doc doc-object-name doc-module-name">eve.steps.extraction.htmls</span>
 
 
 </h2>
@@ -3900,10 +3910,12 @@
 
 
 <h3 id="eve.steps.extraction.htmls.HtmlExtractor" class="doc doc-heading">
-              <code class="highlight language-python"><span class="n">HtmlExtractor</span><span class="p">(</span><span class="n">document</span><span class="p">:</span> <span class="n">Document</span><span class="p">)</span></code>
+            <span class="doc doc-object-name doc-class-name">HtmlExtractor</span>
+
 
 </h3>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">HtmlExtractor</span><span class="p">(</span><span class="n">document</span><span class="p">:</span> <span class="n">Document</span><span class="p">)</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
 
@@ -3941,14 +3953,16 @@
 
 
 <h4 id="eve.steps.extraction.htmls.HtmlExtractor.extract_text" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">extract_text</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Document</span><span class="p">]</span></code>
+            <span class="doc doc-object-name doc-function-name">extract_text</span>
+
 
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
 </h4>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">extract_text</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Document</span><span class="p">]</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
 
@@ -3966,11 +3980,12 @@
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code><span title="typing.Optional">Optional</span>[<a class="autorefs autorefs-internal" title="Document(content: str, file_path: Path, file_format: str, metadata: Dict[str, Any] = dict())
+                  <code><span title="typing.Optional">Optional</span>[<a class="autorefs autorefs-internal" title="eve.model.document.Document
+
 
   
       dataclass
-   (eve.model.document.Document)" href="../core/#eve.model.document.Document">Document</a>]</code>
+  " href="../models/#eve.model.document.Document">Document</a>]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -4052,7 +4067,7 @@
 
 
 <h2 id="eve.steps.extraction.xmls" class="doc doc-heading">
-            <code>eve.steps.extraction.xmls</code>
+            <span class="doc doc-object-name doc-module-name">eve.steps.extraction.xmls</span>
 
 
 </h2>
@@ -4083,10 +4098,12 @@
 
 
 <h3 id="eve.steps.extraction.xmls.XmlExtractor" class="doc doc-heading">
-              <code class="highlight language-python"><span class="n">XmlExtractor</span><span class="p">(</span><span class="n">document</span><span class="p">:</span> <span class="n">Document</span><span class="p">)</span></code>
+            <span class="doc doc-object-name doc-class-name">XmlExtractor</span>
+
 
 </h3>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">XmlExtractor</span><span class="p">(</span><span class="n">document</span><span class="p">:</span> <span class="n">Document</span><span class="p">)</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
 
@@ -4124,14 +4141,16 @@
 
 
 <h4 id="eve.steps.extraction.xmls.XmlExtractor.extract_text" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">extract_text</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Document</span><span class="p">]</span></code>
+            <span class="doc doc-object-name doc-function-name">extract_text</span>
+
 
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
 </h4>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">extract_text</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Document</span><span class="p">]</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
 
@@ -4149,11 +4168,12 @@
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code><span title="typing.Optional">Optional</span>[<a class="autorefs autorefs-internal" title="Document(content: str, file_path: Path, file_format: str, metadata: Dict[str, Any] = dict())
+                  <code><span title="typing.Optional">Optional</span>[<a class="autorefs autorefs-internal" title="eve.model.document.Document
+
 
   
       dataclass
-   (eve.model.document.Document)" href="../core/#eve.model.document.Document">Document</a>]</code>
+  " href="../models/#eve.model.document.Document">Document</a>]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -4265,7 +4285,7 @@
 
 
 <h2 id="eve.steps.extraction.markdown" class="doc doc-heading">
-            <code>eve.steps.extraction.markdown</code>
+            <span class="doc doc-object-name doc-module-name">eve.steps.extraction.markdown</span>
 
 
 </h2>
@@ -4296,10 +4316,12 @@
 
 
 <h3 id="eve.steps.extraction.markdown.MarkdownExtractor" class="doc doc-heading">
-              <code class="highlight language-python"><span class="n">MarkdownExtractor</span><span class="p">(</span><span class="n">document</span><span class="p">:</span> <span class="n">Document</span><span class="p">)</span></code>
+            <span class="doc doc-object-name doc-class-name">MarkdownExtractor</span>
+
 
 </h3>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">MarkdownExtractor</span><span class="p">(</span><span class="n">document</span><span class="p">:</span> <span class="n">Document</span><span class="p">)</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
 
@@ -4337,14 +4359,16 @@
 
 
 <h4 id="eve.steps.extraction.markdown.MarkdownExtractor.extract_text" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">extract_text</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Document</span><span class="p">]</span></code>
+            <span class="doc doc-object-name doc-function-name">extract_text</span>
+
 
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
 </h4>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">extract_text</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Document</span><span class="p">]</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
 
@@ -4362,11 +4386,12 @@
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code><span title="typing.Optional">Optional</span>[<a class="autorefs autorefs-internal" title="Document(content: str, file_path: Path, file_format: str, metadata: Dict[str, Any] = dict())
+                  <code><span title="typing.Optional">Optional</span>[<a class="autorefs autorefs-internal" title="eve.model.document.Document
+
 
   
       dataclass
-   (eve.model.document.Document)" href="../core/#eve.model.document.Document">Document</a>]</code>
+  " href="../models/#eve.model.document.Document">Document</a>]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -4443,7 +4468,7 @@
 
 
 <h2 id="eve.steps.dedup.dedup_step" class="doc doc-heading">
-            <code>eve.steps.dedup.dedup_step</code>
+            <span class="doc doc-object-name doc-module-name">eve.steps.dedup.dedup_step</span>
 
 
 </h2>
@@ -4474,14 +4499,16 @@
 
 
 <h3 id="eve.steps.dedup.dedup_step.DuplicationStep" class="doc doc-heading">
-              <code class="highlight language-python"><span class="n">DuplicationStep</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span></code>
+            <span class="doc doc-object-name doc-class-name">DuplicationStep</span>
+
 
 </h3>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">DuplicationStep</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="PipelineStep(config: Any, name: Optional[str] = None) (eve.base_step.PipelineStep)" href="../core/#eve.base_step.PipelineStep">PipelineStep</a></code></p>
+              Bases: <code><span title="eve.base_step.PipelineStep">PipelineStep</span></code></p>
 
 
 
@@ -4533,14 +4560,16 @@
 
 
 <h4 id="eve.steps.dedup.dedup_step.DuplicationStep.execute" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">execute</span><span class="p">(</span><span class="n">documents</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Document</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Document</span><span class="p">]</span></code>
+            <span class="doc doc-object-name doc-function-name">execute</span>
+
 
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
 </h4>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">execute</span><span class="p">(</span><span class="n">documents</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Document</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Document</span><span class="p">]</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
 
@@ -4588,11 +4617,12 @@
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code><span title="typing.List">List</span>[<a class="autorefs autorefs-internal" title="Document(content: str, file_path: Path, file_format: str, metadata: Dict[str, Any] = dict())
+                  <code><span title="typing.List">List</span>[<a class="autorefs autorefs-internal" title="eve.model.document.Document
+
 
   
       dataclass
-   (eve.model.document.Document)" href="../core/#eve.model.document.Document">Document</a>]</code>
+  " href="../models/#eve.model.document.Document">Document</a>]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -4715,7 +4745,7 @@
 
 
 <h2 id="eve.steps.dedup.exact_duplicates" class="doc doc-heading">
-            <code>eve.steps.dedup.exact_duplicates</code>
+            <span class="doc doc-object-name doc-module-name">eve.steps.dedup.exact_duplicates</span>
 
 
 </h2>
@@ -4746,10 +4776,12 @@
 
 
 <h3 id="eve.steps.dedup.exact_duplicates.ExactDuplication" class="doc doc-heading">
-              <code class="highlight language-python"><span class="n">ExactDuplication</span><span class="p">(</span><span class="n">documents</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Document</span><span class="p">])</span></code>
+            <span class="doc doc-object-name doc-class-name">ExactDuplication</span>
+
 
 </h3>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">ExactDuplication</span><span class="p">(</span><span class="n">documents</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Document</span><span class="p">])</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
 
@@ -4797,14 +4829,16 @@
 
 
 <h4 id="eve.steps.dedup.exact_duplicates.ExactDuplication.find_duplicates" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">find_duplicates</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Document</span><span class="p">]]</span></code>
+            <span class="doc doc-object-name doc-function-name">find_duplicates</span>
+
 
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
 </h4>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">find_duplicates</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Document</span><span class="p">]]</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
 
@@ -4907,7 +4941,7 @@
 
 
 <h2 id="eve.steps.dedup.minhash" class="doc doc-heading">
-            <code>eve.steps.dedup.minhash</code>
+            <span class="doc doc-object-name doc-module-name">eve.steps.dedup.minhash</span>
 
 
 </h2>
@@ -4942,10 +4976,12 @@ Adjust SHINGLE_SIZE: Larger shingles are more specific but increase computation.
 
 
 <h3 id="eve.steps.dedup.minhash.LSH" class="doc doc-heading">
-              <code class="highlight language-python"><span class="n">LSH</span><span class="p">(</span><span class="n">documents</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Document</span><span class="p">],</span> <span class="n">shingle_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">num_perm</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">128</span><span class="p">,</span> <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span><span class="p">)</span></code>
+            <span class="doc doc-object-name doc-class-name">LSH</span>
+
 
 </h3>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">LSH</span><span class="p">(</span><span class="n">documents</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Document</span><span class="p">],</span> <span class="n">shingle_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">num_perm</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">128</span><span class="p">,</span> <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.8</span><span class="p">)</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
 
@@ -5009,10 +5045,12 @@ Adjust SHINGLE_SIZE: Larger shingles are more specific but increase computation.
 
 
 <h4 id="eve.steps.dedup.minhash.LSH.create_shingles" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">create_shingles</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span></code>
+            <span class="doc doc-object-name doc-function-name">create_shingles</span>
+
 
 </h4>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">create_shingles</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
 
@@ -5038,10 +5076,12 @@ Adjust SHINGLE_SIZE: Larger shingles are more specific but increase computation.
 
 
 <h4 id="eve.steps.dedup.minhash.LSH.find_duplicates" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">find_duplicates</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Document</span><span class="p">]]</span></code>
+            <span class="doc doc-object-name doc-function-name">find_duplicates</span>
+
 
 </h4>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">find_duplicates</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Document</span><span class="p">]]</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
 
@@ -5129,7 +5169,7 @@ Adjust SHINGLE_SIZE: Larger shingles are more specific but increase computation.
 
 
 <h2 id="eve.steps.cleaning.cleaning_step" class="doc doc-heading">
-            <code>eve.steps.cleaning.cleaning_step</code>
+            <span class="doc doc-object-name doc-module-name">eve.steps.cleaning.cleaning_step</span>
 
 
 </h2>
@@ -5162,14 +5202,16 @@ Adjust SHINGLE_SIZE: Larger shingles are more specific but increase computation.
 
 
 <h3 id="eve.steps.cleaning.cleaning_step.CleaningStep" class="doc doc-heading">
-              <code class="highlight language-python"><span class="n">CleaningStep</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span></code>
+            <span class="doc doc-object-name doc-class-name">CleaningStep</span>
+
 
 </h3>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">CleaningStep</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="PipelineStep(config: Any, name: Optional[str] = None) (eve.base_step.PipelineStep)" href="../core/#eve.base_step.PipelineStep">PipelineStep</a></code></p>
+              Bases: <code><span title="eve.base_step.PipelineStep">PipelineStep</span></code></p>
 
 
 
@@ -5322,14 +5364,16 @@ Adjust SHINGLE_SIZE: Larger shingles are more specific but increase computation.
 
 
 <h4 id="eve.steps.cleaning.cleaning_step.CleaningStep.execute" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">execute</span><span class="p">(</span><span class="n">documents</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Document</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Document</span><span class="p">]</span></code>
+            <span class="doc doc-object-name doc-function-name">execute</span>
+
 
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
 </h4>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">execute</span><span class="p">(</span><span class="n">documents</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Document</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Document</span><span class="p">]</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
 
@@ -5352,11 +5396,12 @@ Adjust SHINGLE_SIZE: Larger shingles are more specific but increase computation.
                 <code>documents</code>
             </td>
             <td>
-                  <code><span title="typing.List">List</span>[<a class="autorefs autorefs-internal" title="Document(content: str, file_path: Path, file_format: str, metadata: Dict[str, Any] = dict())
+                  <code><span title="typing.List">List</span>[<a class="autorefs autorefs-internal" title="eve.model.document.Document
+
 
   
       dataclass
-   (eve.model.document.Document)" href="../core/#eve.model.document.Document">Document</a>]</code>
+  " href="../models/#eve.model.document.Document">Document</a>]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -5382,11 +5427,12 @@ Adjust SHINGLE_SIZE: Larger shingles are more specific but increase computation.
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code><span title="typing.List">List</span>[<a class="autorefs autorefs-internal" title="Document(content: str, file_path: Path, file_format: str, metadata: Dict[str, Any] = dict())
+                  <code><span title="typing.List">List</span>[<a class="autorefs autorefs-internal" title="eve.model.document.Document
+
 
   
       dataclass
-   (eve.model.document.Document)" href="../core/#eve.model.document.Document">Document</a>]</code>
+  " href="../models/#eve.model.document.Document">Document</a>]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -5531,10 +5577,12 @@ Adjust SHINGLE_SIZE: Larger shingles are more specific but increase computation.
 
 
 <h4 id="eve.steps.cleaning.cleaning_step.CleaningStep.get_component_info" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">get_component_info</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span></code>
+            <span class="doc doc-object-name doc-function-name">get_component_info</span>
+
 
 </h4>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">get_component_info</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
 
@@ -5629,7 +5677,7 @@ Adjust SHINGLE_SIZE: Larger shingles are more specific but increase computation.
 
 
 <h2 id="eve.steps.cleaning.processors" class="doc doc-heading">
-            <code>eve.steps.cleaning.processors</code>
+            <span class="doc doc-object-name doc-module-name">eve.steps.cleaning.processors</span>
 
 
 </h2>
@@ -5664,14 +5712,16 @@ for better organization and maintainability.</p>
 
 
 <h3 id="eve.steps.cleaning.processors.DuplicateRemovalProcessor" class="doc doc-heading">
-              <code class="highlight language-python"><span class="n">DuplicateRemovalProcessor</span><span class="p">(</span><span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.99</span><span class="p">,</span> <span class="n">min_words</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span></code>
+            <span class="doc doc-object-name doc-class-name">DuplicateRemovalProcessor</span>
+
 
 </h3>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">DuplicateRemovalProcessor</span><span class="p">(</span><span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.99</span><span class="p">,</span> <span class="n">min_words</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="TextProcessor(debug: bool = False) (eve.steps.cleaning.processors.TextProcessor)" href="#eve.steps.cleaning.processors.TextProcessor">TextProcessor</a></code></p>
+              Bases: <code><a class="autorefs autorefs-internal" title="TextProcessor (eve.steps.cleaning.processors.TextProcessor)" href="#eve.steps.cleaning.processors.TextProcessor">TextProcessor</a></code></p>
 
 
 
@@ -5794,14 +5844,16 @@ for better organization and maintainability.</p>
 
 
 <h4 id="eve.steps.cleaning.processors.DuplicateRemovalProcessor.process" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">process</span><span class="p">(</span><span class="n">document</span><span class="p">:</span> <span class="n">Document</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Document</span></code>
+            <span class="doc doc-object-name doc-function-name">process</span>
+
 
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
 </h4>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">process</span><span class="p">(</span><span class="n">document</span><span class="p">:</span> <span class="n">Document</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Document</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
 
@@ -5892,14 +5944,16 @@ for better organization and maintainability.</p>
 
 
 <h3 id="eve.steps.cleaning.processors.LaTeXProcessor" class="doc doc-heading">
-              <code class="highlight language-python"><span class="n">LaTeXProcessor</span><span class="p">(</span><span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">api_key</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;anthropic/claude-3-haiku&#39;</span><span class="p">)</span></code>
+            <span class="doc doc-object-name doc-class-name">LaTeXProcessor</span>
+
 
 </h3>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">LaTeXProcessor</span><span class="p">(</span><span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">api_key</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;anthropic/claude-3-haiku&#39;</span><span class="p">)</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="TextProcessor(debug: bool = False) (eve.steps.cleaning.processors.TextProcessor)" href="#eve.steps.cleaning.processors.TextProcessor">TextProcessor</a></code></p>
+              Bases: <code><a class="autorefs autorefs-internal" title="TextProcessor (eve.steps.cleaning.processors.TextProcessor)" href="#eve.steps.cleaning.processors.TextProcessor">TextProcessor</a></code></p>
 
 
 
@@ -6028,14 +6082,16 @@ for better organization and maintainability.</p>
 
 
 <h4 id="eve.steps.cleaning.processors.LaTeXProcessor.process" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">process</span><span class="p">(</span><span class="n">document</span><span class="p">:</span> <span class="n">Document</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Document</span></code>
+            <span class="doc doc-object-name doc-function-name">process</span>
+
 
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
 </h4>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">process</span><span class="p">(</span><span class="n">document</span><span class="p">:</span> <span class="n">Document</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Document</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
 
@@ -6190,14 +6246,16 @@ for better organization and maintainability.</p>
 
 
 <h3 id="eve.steps.cleaning.processors.NougatProcessor" class="doc doc-heading">
-              <code class="highlight language-python"><span class="n">NougatProcessor</span><span class="p">(</span><span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span></code>
+            <span class="doc doc-object-name doc-class-name">NougatProcessor</span>
+
 
 </h3>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">NougatProcessor</span><span class="p">(</span><span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="TextProcessor(debug: bool = False) (eve.steps.cleaning.processors.TextProcessor)" href="#eve.steps.cleaning.processors.TextProcessor">TextProcessor</a></code></p>
+              Bases: <code><a class="autorefs autorefs-internal" title="TextProcessor (eve.steps.cleaning.processors.TextProcessor)" href="#eve.steps.cleaning.processors.TextProcessor">TextProcessor</a></code></p>
 
 
 
@@ -6247,14 +6305,16 @@ for better organization and maintainability.</p>
 
 
 <h4 id="eve.steps.cleaning.processors.NougatProcessor.process" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">process</span><span class="p">(</span><span class="n">document</span><span class="p">:</span> <span class="n">Document</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Document</span></code>
+            <span class="doc doc-object-name doc-function-name">process</span>
+
 
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
 </h4>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">process</span><span class="p">(</span><span class="n">document</span><span class="p">:</span> <span class="n">Document</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Document</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
 
@@ -6357,14 +6417,16 @@ for better organization and maintainability.</p>
 
 
 <h3 id="eve.steps.cleaning.processors.OCRProcessor" class="doc doc-heading">
-              <code class="highlight language-python"><span class="n">OCRProcessor</span><span class="p">(</span><span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span></code>
+            <span class="doc doc-object-name doc-class-name">OCRProcessor</span>
+
 
 </h3>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">OCRProcessor</span><span class="p">(</span><span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="TextProcessor(debug: bool = False) (eve.steps.cleaning.processors.TextProcessor)" href="#eve.steps.cleaning.processors.TextProcessor">TextProcessor</a></code></p>
+              Bases: <code><a class="autorefs autorefs-internal" title="TextProcessor (eve.steps.cleaning.processors.TextProcessor)" href="#eve.steps.cleaning.processors.TextProcessor">TextProcessor</a></code></p>
 
 
 
@@ -6414,14 +6476,16 @@ for better organization and maintainability.</p>
 
 
 <h4 id="eve.steps.cleaning.processors.OCRProcessor.process" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">process</span><span class="p">(</span><span class="n">document</span><span class="p">:</span> <span class="n">Document</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Document</span></code>
+            <span class="doc doc-object-name doc-function-name">process</span>
+
 
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
 </h4>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">process</span><span class="p">(</span><span class="n">document</span><span class="p">:</span> <span class="n">Document</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Document</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
 
@@ -6500,14 +6564,16 @@ for better organization and maintainability.</p>
 
 
 <h3 id="eve.steps.cleaning.processors.RuleBasedProcessor" class="doc doc-heading">
-              <code class="highlight language-python"><span class="n">RuleBasedProcessor</span><span class="p">(</span><span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span></code>
+            <span class="doc doc-object-name doc-class-name">RuleBasedProcessor</span>
+
 
 </h3>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">RuleBasedProcessor</span><span class="p">(</span><span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="TextProcessor(debug: bool = False) (eve.steps.cleaning.processors.TextProcessor)" href="#eve.steps.cleaning.processors.TextProcessor">TextProcessor</a></code></p>
+              Bases: <code><a class="autorefs autorefs-internal" title="TextProcessor (eve.steps.cleaning.processors.TextProcessor)" href="#eve.steps.cleaning.processors.TextProcessor">TextProcessor</a></code></p>
 
 
 
@@ -6557,14 +6623,16 @@ for better organization and maintainability.</p>
 
 
 <h4 id="eve.steps.cleaning.processors.RuleBasedProcessor.process" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">process</span><span class="p">(</span><span class="n">document</span><span class="p">:</span> <span class="n">Document</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Document</span></code>
+            <span class="doc doc-object-name doc-function-name">process</span>
+
 
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
 </h4>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">process</span><span class="p">(</span><span class="n">document</span><span class="p">:</span> <span class="n">Document</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Document</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
 
@@ -6655,10 +6723,12 @@ for better organization and maintainability.</p>
 
 
 <h3 id="eve.steps.cleaning.processors.TextProcessor" class="doc doc-heading">
-              <code class="highlight language-python"><span class="n">TextProcessor</span><span class="p">(</span><span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span></code>
+            <span class="doc doc-object-name doc-class-name">TextProcessor</span>
+
 
 </h3>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">TextProcessor</span><span class="p">(</span><span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
@@ -6745,7 +6815,8 @@ for better organization and maintainability.</p>
 
 
 <h4 id="eve.steps.cleaning.processors.TextProcessor.process" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">process</span><span class="p">(</span><span class="n">document</span><span class="p">:</span> <span class="n">Document</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Document</span></code>
+            <span class="doc doc-object-name doc-function-name">process</span>
+
 
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
@@ -6753,7 +6824,8 @@ for better organization and maintainability.</p>
   </span>
 
 </h4>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">process</span><span class="p">(</span><span class="n">document</span><span class="p">:</span> <span class="n">Document</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Document</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
 
@@ -6776,11 +6848,12 @@ for better organization and maintainability.</p>
                 <code>document</code>
             </td>
             <td>
-                  <code><a class="autorefs autorefs-internal" title="Document(content: str, file_path: Path, file_format: str, metadata: Dict[str, Any] = dict())
+                  <code><a class="autorefs autorefs-internal" title="eve.model.document.Document
+
 
   
       dataclass
-   (eve.model.document.Document)" href="../core/#eve.model.document.Document">Document</a></code>
+  " href="../models/#eve.model.document.Document">Document</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -6806,11 +6879,12 @@ for better organization and maintainability.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code><a class="autorefs autorefs-internal" title="Document(content: str, file_path: Path, file_format: str, metadata: Dict[str, Any] = dict())
+                  <code><a class="autorefs autorefs-internal" title="eve.model.document.Document
+
 
   
       dataclass
-   (eve.model.document.Document)" href="../core/#eve.model.document.Document">Document</a></code>
+  " href="../models/#eve.model.document.Document">Document</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -6874,7 +6948,7 @@ for better organization and maintainability.</p>
 
 
 <h2 id="eve.steps.cleaning.nougat_helpers" class="doc doc-heading">
-            <code>eve.steps.cleaning.nougat_helpers</code>
+            <span class="doc doc-object-name doc-module-name">eve.steps.cleaning.nougat_helpers</span>
 
 
 </h2>
@@ -6910,10 +6984,12 @@ LICENSE file in the root directory of this source tree.</p>
 
 
 <h3 id="eve.steps.cleaning.nougat_helpers.get_slices" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">get_slices</span><span class="p">(</span><span class="n">lines</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">clean_lines</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">slice</span><span class="p">]</span></code>
+            <span class="doc doc-object-name doc-function-name">get_slices</span>
+
 
 </h3>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">get_slices</span><span class="p">(</span><span class="n">lines</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">clean_lines</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">slice</span><span class="p">]</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
 
@@ -6951,10 +7027,12 @@ LICENSE file in the root directory of this source tree.</p>
 
 
 <h3 id="eve.steps.cleaning.nougat_helpers.markdown_compatible" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">markdown_compatible</span><span class="p">(</span><span class="n">s</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span></code>
+            <span class="doc doc-object-name doc-function-name">markdown_compatible</span>
+
 
 </h3>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">markdown_compatible</span><span class="p">(</span><span class="n">s</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
 
@@ -7097,10 +7175,12 @@ LICENSE file in the root directory of this source tree.</p>
 
 
 <h3 id="eve.steps.cleaning.nougat_helpers.postprocess" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">postprocess</span><span class="p">(</span><span class="n">generation</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="n">markdown_fix</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span></code>
+            <span class="doc doc-object-name doc-function-name">postprocess</span>
+
 
 </h3>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">postprocess</span><span class="p">(</span><span class="n">generation</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span> <span class="n">markdown_fix</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
 
@@ -7243,10 +7323,12 @@ LICENSE file in the root directory of this source tree.</p>
 
 
 <h3 id="eve.steps.cleaning.nougat_helpers.postprocess_single" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">postprocess_single</span><span class="p">(</span><span class="n">generation</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">markdown_fix</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span></code>
+            <span class="doc doc-object-name doc-function-name">postprocess_single</span>
+
 
 </h3>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">postprocess_single</span><span class="p">(</span><span class="n">generation</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">markdown_fix</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
 
@@ -7612,10 +7694,12 @@ LICENSE file in the root directory of this source tree.</p>
 
 
 <h3 id="eve.steps.cleaning.nougat_helpers.remove_hallucinated_references" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">remove_hallucinated_references</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span></code>
+            <span class="doc doc-object-name doc-function-name">remove_hallucinated_references</span>
+
 
 </h3>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">remove_hallucinated_references</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
 
@@ -7747,10 +7831,12 @@ from the input text.</p>
 
 
 <h3 id="eve.steps.cleaning.nougat_helpers.remove_numbers" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">remove_numbers</span><span class="p">(</span><span class="n">lines</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span></code>
+            <span class="doc doc-object-name doc-function-name">remove_numbers</span>
+
 
 </h3>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">remove_numbers</span><span class="p">(</span><span class="n">lines</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
 
@@ -7784,10 +7870,12 @@ from the input text.</p>
 
 
 <h3 id="eve.steps.cleaning.nougat_helpers.remove_slice_from_lines" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">remove_slice_from_lines</span><span class="p">(</span><span class="n">lines</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">clean_lines</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">sli</span><span class="p">:</span> <span class="nb">slice</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span></code>
+            <span class="doc doc-object-name doc-function-name">remove_slice_from_lines</span>
+
 
 </h3>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">remove_slice_from_lines</span><span class="p">(</span><span class="n">lines</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">clean_lines</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">sli</span><span class="p">:</span> <span class="nb">slice</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
 
@@ -7813,10 +7901,12 @@ from the input text.</p>
 
 
 <h3 id="eve.steps.cleaning.nougat_helpers.truncate_repetitions" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">truncate_repetitions</span><span class="p">(</span><span class="n">generation</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">score_cutoff</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">min_len</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">)</span></code>
+            <span class="doc doc-object-name doc-function-name">truncate_repetitions</span>
+
 
 </h3>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">truncate_repetitions</span><span class="p">(</span><span class="n">generation</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">score_cutoff</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">min_len</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">)</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
 
@@ -7900,7 +7990,7 @@ from the input text.</p>
 
 
 <h2 id="eve.steps.pii.pii_step" class="doc doc-heading">
-            <code>eve.steps.pii.pii_step</code>
+            <span class="doc doc-object-name doc-module-name">eve.steps.pii.pii_step</span>
 
 
 </h2>
@@ -7931,14 +8021,16 @@ from the input text.</p>
 
 
 <h3 id="eve.steps.pii.pii_step.PiiStep" class="doc doc-heading">
-              <code class="highlight language-python"><span class="n">PiiStep</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span></code>
+            <span class="doc doc-object-name doc-class-name">PiiStep</span>
+
 
 </h3>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">PiiStep</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="PipelineStep(config: Any, name: Optional[str] = None) (eve.base_step.PipelineStep)" href="../core/#eve.base_step.PipelineStep">PipelineStep</a></code></p>
+              Bases: <code><span title="eve.base_step.PipelineStep">PipelineStep</span></code></p>
 
 
 
@@ -8010,7 +8102,7 @@ from the input text.</p>
 
 
 <h2 id="eve.steps.metadata.metadata_step" class="doc doc-heading">
-            <code>eve.steps.metadata.metadata_step</code>
+            <span class="doc doc-object-name doc-module-name">eve.steps.metadata.metadata_step</span>
 
 
 </h2>
@@ -8043,14 +8135,16 @@ from the input text.</p>
 
 
 <h3 id="eve.steps.metadata.metadata_step.MetadataStep" class="doc doc-heading">
-              <code class="highlight language-python"><span class="n">MetadataStep</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span></code>
+            <span class="doc doc-object-name doc-class-name">MetadataStep</span>
+
 
 </h3>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">MetadataStep</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="PipelineStep(config: Any, name: Optional[str] = None) (eve.base_step.PipelineStep)" href="../core/#eve.base_step.PipelineStep">PipelineStep</a></code></p>
+              Bases: <code><span title="eve.base_step.PipelineStep">PipelineStep</span></code></p>
 
 
 
@@ -8176,14 +8270,16 @@ from the input text.</p>
 
 
 <h4 id="eve.steps.metadata.metadata_step.MetadataStep.execute" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">execute</span><span class="p">(</span><span class="n">documents</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Document</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Document</span><span class="p">]</span></code>
+            <span class="doc doc-object-name doc-function-name">execute</span>
+
 
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
 </h4>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">execute</span><span class="p">(</span><span class="n">documents</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Document</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Document</span><span class="p">]</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
 
@@ -8206,11 +8302,12 @@ from the input text.</p>
                 <code>documents</code>
             </td>
             <td>
-                  <code><span title="typing.List">List</span>[<a class="autorefs autorefs-internal" title="Document(content: str, file_path: Path, file_format: str, metadata: Dict[str, Any] = dict())
+                  <code><span title="typing.List">List</span>[<a class="autorefs autorefs-internal" title="eve.model.document.Document
+
 
   
       dataclass
-   (eve.model.document.Document)" href="../core/#eve.model.document.Document">Document</a>]</code>
+  " href="../models/#eve.model.document.Document">Document</a>]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -8236,11 +8333,12 @@ from the input text.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code><span title="typing.List">List</span>[<a class="autorefs autorefs-internal" title="Document(content: str, file_path: Path, file_format: str, metadata: Dict[str, Any] = dict())
+                  <code><span title="typing.List">List</span>[<a class="autorefs autorefs-internal" title="eve.model.document.Document
+
 
   
       dataclass
-   (eve.model.document.Document)" href="../core/#eve.model.document.Document">Document</a>]</code>
+  " href="../models/#eve.model.document.Document">Document</a>]</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -8397,7 +8495,7 @@ from the input text.</p>
 
 
 <h2 id="eve.steps.metadata.extractors.html_extractor" class="doc doc-heading">
-            <code>eve.steps.metadata.extractors.html_extractor</code>
+            <span class="doc doc-object-name doc-module-name">eve.steps.metadata.extractors.html_extractor</span>
 
 
 </h2>
@@ -8428,10 +8526,12 @@ from the input text.</p>
 
 
 <h3 id="eve.steps.metadata.extractors.html_extractor.HtmlMetadataExtractor" class="doc doc-heading">
-              <code class="highlight language-python"><span class="n">HtmlMetadataExtractor</span><span class="p">(</span><span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span></code>
+            <span class="doc doc-object-name doc-class-name">HtmlMetadataExtractor</span>
+
 
 </h3>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">HtmlMetadataExtractor</span><span class="p">(</span><span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
 
@@ -8526,14 +8626,16 @@ for parsing HTML content efficiently without requiring a full HTML parser.</p>
 
 
 <h4 id="eve.steps.metadata.extractors.html_extractor.HtmlMetadataExtractor.extract_metadata" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">extract_metadata</span><span class="p">(</span><span class="n">document</span><span class="p">:</span> <span class="n">Document</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span></code>
+            <span class="doc doc-object-name doc-function-name">extract_metadata</span>
+
 
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
 </h4>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">extract_metadata</span><span class="p">(</span><span class="n">document</span><span class="p">:</span> <span class="n">Document</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
 
@@ -8556,11 +8658,12 @@ for parsing HTML content efficiently without requiring a full HTML parser.</p>
                 <code>document</code>
             </td>
             <td>
-                  <code><a class="autorefs autorefs-internal" title="Document(content: str, file_path: Path, file_format: str, metadata: Dict[str, Any] = dict())
+                  <code><a class="autorefs autorefs-internal" title="eve.model.document.Document
+
 
   
       dataclass
-   (eve.model.document.Document)" href="../core/#eve.model.document.Document">Document</a></code>
+  " href="../models/#eve.model.document.Document">Document</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -8794,7 +8897,7 @@ for parsing HTML content efficiently without requiring a full HTML parser.</p>
 
 
 <h2 id="eve.steps.metadata.extractors.pdf_extractor" class="doc doc-heading">
-            <code>eve.steps.metadata.extractors.pdf_extractor</code>
+            <span class="doc doc-object-name doc-module-name">eve.steps.metadata.extractors.pdf_extractor</span>
 
 
 </h2>
@@ -8829,10 +8932,12 @@ for parsing HTML content efficiently without requiring a full HTML parser.</p>
 
 
 <h3 id="eve.steps.metadata.extractors.pdf_extractor.PdfMetadataExtractor" class="doc doc-heading">
-              <code class="highlight language-python"><span class="n">PdfMetadataExtractor</span><span class="p">(</span><span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span></code>
+            <span class="doc doc-object-name doc-class-name">PdfMetadataExtractor</span>
+
 
 </h3>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">PdfMetadataExtractor</span><span class="p">(</span><span class="n">debug</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
 
@@ -8917,14 +9022,16 @@ for parsing HTML content efficiently without requiring a full HTML parser.</p>
 
 
 <h4 id="eve.steps.metadata.extractors.pdf_extractor.PdfMetadataExtractor.extract_metadata" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">extract_metadata</span><span class="p">(</span><span class="n">document</span><span class="p">:</span> <span class="n">Document</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span></code>
+            <span class="doc doc-object-name doc-function-name">extract_metadata</span>
+
 
   <span class="doc doc-labels">
       <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
 </h4>
-
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">extract_metadata</span><span class="p">(</span><span class="n">document</span><span class="p">:</span> <span class="n">Document</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
+</span></code></pre></div>
 
     <div class="doc doc-contents ">
 
@@ -8947,11 +9054,12 @@ for parsing HTML content efficiently without requiring a full HTML parser.</p>
                 <code>document</code>
             </td>
             <td>
-                  <code><a class="autorefs autorefs-internal" title="Document(content: str, file_path: Path, file_format: str, metadata: Dict[str, Any] = dict())
+                  <code><a class="autorefs autorefs-internal" title="eve.model.document.Document
+
 
   
       dataclass
-   (eve.model.document.Document)" href="../core/#eve.model.document.Document">Document</a></code>
+  " href="../models/#eve.model.document.Document">Document</a></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -9184,7 +9292,7 @@ for parsing HTML content efficiently without requiring a full HTML parser.</p>
 
 
 <h2 id="eve.steps.export.export_step" class="doc doc-heading">
-            <code>eve.steps.export.export_step</code>
+            <span class="doc doc-object-name doc-module-name">eve.steps.export.export_step</span>
 
 
 </h2>

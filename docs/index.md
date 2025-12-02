@@ -78,15 +78,13 @@ A high-performance, modular library for extracting, deduplicating, cleaning, ano
 
 - [Installation Guide](getting-started/installation.md)
 - [Quick Start Tutorial](getting-started/quick-start.md)
-- [Pipeline Stages](pipeline-stages/)
-- [API Reference](api/)
 <!-- - [Examples](examples/) -->
 
 ## Contributing
 
 We welcome contributions! Please open an issue or submit a pull request on GitHub to help improve the pipeline.
 
-See our [Contributing Guide](development/contributing.md) for details.
+See our [Contributing Guide](development/contributing.md) for details. (maybe add in future?)
 
 ## License
 

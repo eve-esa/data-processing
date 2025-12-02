@@ -393,9 +393,3 @@ pipeline:
       config:
         destination: "validated_output"
 ```
-
-## Next Steps
-
-- Explore [advanced configuration examples](advanced-configuration.md)
-- Learn about [server setup](server-setup.md)
-- Check the [API reference](../api/) for programmatic usage
