@@ -32,7 +32,7 @@ class ExtractionStep(PipelineStep):
         """Execute text extraction on input files or documents.
         
         Args:
-            input_data: List of file paths or Document objects to extract text from
+            documents: List of file paths or Document objects to extract text from
             
         Returns:
             List of Document objects with extracted text

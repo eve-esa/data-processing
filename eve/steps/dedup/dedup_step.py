@@ -24,7 +24,7 @@ class DuplicationStep(PipelineStep):
         """Execute deduplication on input files or documents.
         
         Args:
-            input_data: List of file paths or Document objects to deduplicate
+            documents: List of file paths or Document objects to deduplicate
             
         Returns:
             List of Document objects with duplicates removed
