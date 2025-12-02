@@ -3,31 +3,11 @@ site_description: High-performance, modular library for extracting, deduplicatin
 repo_url: https://github.com/eve-esa/data-processing
 edit_uri: edit/main/
 
-nav:
-  - Home: index.md
-  - Getting Started:
-    - Installation: getting-started/installation.md
-    - Quick Start: getting-started/quick-start.md
-    - Configuration: getting-started/configuration.md
-  - Pipeline Stages:
-    - Extraction: pipeline-stages/extraction.md
-    - Deduplication: pipeline-stages/deduplication.md
-    - Cleaning: pipeline-stages/cleaning.md
-    - PII Removal: pipeline-stages/pii-removal.md
-    - Metadata Extraction: pipeline-stages/metadata-extraction.md
-    - Export: pipeline-stages/export.md
-  - API Reference:
-    - Core Components: api/core.md
-    - Pipeline Stages: api/stages.md
-    - Utilities: api/utilities.md
-    - Models: api/models.md
-  # - Examples:
-  #   - Basic Usage: examples/basic-usage.md
-  #   - Advanced Configuration: examples/advanced-configuration.md
-  #   - Server Setup: examples/server-setup.md
-
 theme:
   name: material
+  custom_dir: overrides
+  logo: assets/esa_logo.svg
+  favicon: assets/esa_logo.ico
   palette:
     - scheme: default
       primary: blue
@@ -53,6 +33,30 @@ theme:
     - search.share
     - content.code.copy
     - content.code.annotate
+
+extra_css:
+  - stylesheets/extra.css
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Installation: getting-started/installation.md
+      - Quick Start: getting-started/quick-start.md
+      - Configuration: getting-started/configuration.md
+  - Pipeline Stages:
+      - Extraction: pipeline-stages/extraction.md
+      - Deduplication: pipeline-stages/deduplication.md
+      - Cleaning: pipeline-stages/cleaning.md
+      - PII Removal: pipeline-stages/pii-removal.md
+      - Metadata Extraction: pipeline-stages/metadata-extraction.md
+      - Export: pipeline-stages/export.md
+  - API Reference:
+      - Core Components: api/core.md
+      - Pipeline Stages: api/stages.md
+      - Utilities: api/utilities.md
+      - Models: api/models.md
+  - Examples:
+      - Basic Usage: examples/basic-usage.md
 
 plugins:
   - search:
@@ -106,6 +110,5 @@ markdown_extensions:
   - pymdownx.tasklist:
       custom_checkbox: true
   - pymdownx.tilde
-
 
 copyright: Copyright &copy; 2025 Earth Virtual Expert (EVE) - ESA Φ-lab
