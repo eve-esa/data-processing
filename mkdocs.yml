@@ -1,4 +1,4 @@
-site_name: EVE Pipeline
+site_name: Data Processing Pipeline
 site_description: High-performance, modular library for extracting, deduplicating, cleaning, anonymizing, and exporting large-scale Earth science and Earth observation datasets
 repo_url: https://github.com/eve-esa/data-processing
 edit_uri: edit/main/
@@ -54,7 +54,7 @@ nav:
       - Core Components: api/core.md
       - Pipeline Stages: api/stages.md
       - Utilities: api/utilities.md
-      - Models: api/models.md
+      # - Models: api/models.md
   - Examples:
       - Basic Usage: examples/basic-usage.md
 

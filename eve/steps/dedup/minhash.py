@@ -1,10 +1,3 @@
-# REFERENCE - https://github.com/ekzhu/datasketch
-
-'''
-Adjust NUM_PERM: Higher values increase accuracy but use more memory.
-Adjust THRESHOLD: Higher values find closer duplicates but may miss some.
-Adjust SHINGLE_SIZE: Larger shingles are more specific but increase computation.
-'''
 from typing import List, Any
 
 from datasketch import MinHash, MinHashLSH

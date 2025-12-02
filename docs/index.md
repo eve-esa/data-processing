@@ -1,4 +1,4 @@
-# EVE Pipeline
+# Data Processing Pipeline
 
 [![ESA](https://img.shields.io/badge/ESA-Φ--lab-blue.svg)](https://philab.esa.int/)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)

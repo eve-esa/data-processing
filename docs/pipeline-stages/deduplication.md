@@ -35,23 +35,20 @@ Finds near-duplicates using MinHash:
 #### shingle_size
 - **Type**: Integer
 - **Default**: `3`
-- **Range**: 1-10
-- **Description**: Size of text chunks (shingles) for comparison
+- **Description**: Size of text chunks (shingles) for comparison. Larger shingles are more specific but increases computation.
 
 
 #### num_perm
 - **Type**: Integer
 - **Default**: `128`
-- **Range**: 64-1024
-- **Description**: Number of random permutations for MinHash
+- **Description**: Number of random permutations for MinHash. Higher values increase accuracy but use more memory
 
 
 #### threshold
 - **Type**: Float
 - **Default**: `0.8`
 - **Range**: 0.0-1.0
-- **Description**: Similarity threshold for duplicate detection
-
+- **Description**: Similarity threshold for duplicate detection. Higher values find closer duplicates but may miss some.
 
 
 ## Next Steps

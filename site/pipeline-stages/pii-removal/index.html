@@ -25,7 +25,7 @@
     
     
       
-        <title>PII Removal - EVE Pipeline</title>
+        <title>PII Removal - Data Processing Pipeline</title>
       
     
     
@@ -94,7 +94,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="EVE Pipeline" class="md-header__button md-logo" aria-label="EVE Pipeline" data-md-component="logo">
+    <a href="../.." title="Data Processing Pipeline" class="md-header__button md-logo" aria-label="Data Processing Pipeline" data-md-component="logo">
       
   <img src="../../assets/esa_logo.svg" alt="logo">
 
@@ -107,7 +107,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            EVE Pipeline
+            Data Processing Pipeline
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -346,12 +346,12 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="EVE Pipeline" class="md-nav__button md-logo" aria-label="EVE Pipeline" data-md-component="logo">
+    <a href="../.." title="Data Processing Pipeline" class="md-nav__button md-logo" aria-label="Data Processing Pipeline" data-md-component="logo">
       
   <img src="../../assets/esa_logo.svg" alt="logo">
 
     </a>
-    EVE Pipeline
+    Data Processing Pipeline
   </label>
   
     <div class="md-nav__source">
@@ -748,6 +748,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#pii-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PII Server
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#configuration" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -764,6 +775,34 @@
     <span class="md-ellipsis">
       
         Basic Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Parameters
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#url" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        url
       
     </span>
   </a>
@@ -996,34 +1035,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../api/models/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Models
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -1147,6 +1158,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#pii-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PII Server
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#configuration" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1163,6 +1185,34 @@
     <span class="md-ellipsis">
       
         Basic Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Parameters
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#url" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        url
       
     </span>
   </a>
@@ -1206,13 +1256,25 @@
 
 
 <h1 id="pii-removal-stage">PII Removal Stage</h1>
-<p>The PII (Personally Identifiable Information) removal stage automatically detects and redacts <strong>NAMES</strong> and <strong>EMAILS</strong> to protect privacy and ensure compliance.</p>
+<p>This stage detects and redacts <strong>NAMES</strong> and <strong>EMAILS</strong> to protect privacy and ensure compliance. We use the <a href="https://github.com/microsoft/presidio">Presidio</a> framework with <code>flair/ner-english-large</code> model to detect the entities.</p>
+<h3 id="pii-server">PII Server</h3>
+<p>You need to setup the PII server found under the <code>/server</code></p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nb">cd</span><span class="w"> </span>server
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>python3<span class="w"> </span>pii_server.py
+</span></code></pre></div>
 <h2 id="configuration">Configuration</h2>
 <h3 id="basic-configuration">Basic Configuration</h3>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pii</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">config</span><span class="p">:</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;http://127.0.0.1:8000&quot;</span>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pii</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">config</span><span class="p">:</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="nt">url</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;http://127.0.0.1:8000&quot;</span>
 </span></code></pre></div>
+<h2 id="configuration-parameters">Configuration Parameters</h2>
+<h3 id="url">url</h3>
+<ul>
+<li><strong>Type</strong>: URL</li>
+<li><strong>Default</strong>: <code>http://127.0.0.1:8000</code></li>
+<li><strong>Description</strong>: The endpoint for the pii server.</li>
+</ul>
 <h2 id="next-steps">Next Steps</h2>
 <ul>
 <li>Learn about <a href="../metadata-extraction/">metadata extraction</a></li>

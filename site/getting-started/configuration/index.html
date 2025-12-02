@@ -25,7 +25,7 @@
     
     
       
-        <title>Configuration - EVE Pipeline</title>
+        <title>Configuration - Data Processing Pipeline</title>
       
     
     
@@ -94,7 +94,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="EVE Pipeline" class="md-header__button md-logo" aria-label="EVE Pipeline" data-md-component="logo">
+    <a href="../.." title="Data Processing Pipeline" class="md-header__button md-logo" aria-label="Data Processing Pipeline" data-md-component="logo">
       
   <img src="../../assets/esa_logo.svg" alt="logo">
 
@@ -107,7 +107,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            EVE Pipeline
+            Data Processing Pipeline
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -346,12 +346,12 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="EVE Pipeline" class="md-nav__button md-logo" aria-label="EVE Pipeline" data-md-component="logo">
+    <a href="../.." title="Data Processing Pipeline" class="md-nav__button md-logo" aria-label="Data Processing Pipeline" data-md-component="logo">
       
   <img src="../../assets/esa_logo.svg" alt="logo">
 
     </a>
-    EVE Pipeline
+    Data Processing Pipeline
   </label>
   
     <div class="md-nav__source">
@@ -721,15 +721,15 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#cleaning-stagecheck-this-stage" class="md-nav__link">
+  <a href="#cleaning-stage" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Cleaning Stage(check this stage?)
+        Cleaning Stage
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Cleaning Stage(check this stage?)">
+    <nav class="md-nav" aria-label="Cleaning Stage">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1192,34 +1192,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../api/models/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Models
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -1489,15 +1461,15 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#cleaning-stagecheck-this-stage" class="md-nav__link">
+  <a href="#cleaning-stage" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Cleaning Stage(check this stage?)
+        Cleaning Stage
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Cleaning Stage(check this stage?)">
+    <nav class="md-nav" aria-label="Cleaning Stage">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1598,7 +1570,7 @@
 
 
 <h1 id="configuration-guide">Configuration Guide</h1>
-<p>This guide covers all configuration options for the EVE Pipeline.</p>
+<p>This guide covers the main configuration options for the EVE Pipeline. You can find the detailed configurations under each <code>Pipeline Stage</code>.</p>
 <h2 id="configuration-file-structure">Configuration File Structure</h2>
 <p>The pipeline is configured using a YAML file (typically <code>config.yaml</code>) with the following structure:</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">pipeline</span><span class="p">:</span>
@@ -1677,7 +1649,7 @@
 <li><strong>num_perm</strong>: Number of permutations (default: <code>128</code>)</li>
 <li><strong>threshold</strong>: Similarity threshold (default: <code>0.8</code>)</li>
 </ul>
-<h3 id="cleaning-stagecheck-this-stage">Cleaning Stage(check this stage?)</h3>
+<h3 id="cleaning-stage">Cleaning Stage</h3>
 <p>Removes noise and improves document quality.</p>
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cleaning</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">config</span><span class="p">:</span>

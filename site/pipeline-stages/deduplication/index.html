@@ -25,7 +25,7 @@
     
     
       
-        <title>Deduplication - EVE Pipeline</title>
+        <title>Deduplication - Data Processing Pipeline</title>
       
     
     
@@ -94,7 +94,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="EVE Pipeline" class="md-header__button md-logo" aria-label="EVE Pipeline" data-md-component="logo">
+    <a href="../.." title="Data Processing Pipeline" class="md-header__button md-logo" aria-label="Data Processing Pipeline" data-md-component="logo">
       
   <img src="../../assets/esa_logo.svg" alt="logo">
 
@@ -107,7 +107,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            EVE Pipeline
+            Data Processing Pipeline
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -346,12 +346,12 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="EVE Pipeline" class="md-nav__button md-logo" aria-label="EVE Pipeline" data-md-component="logo">
+    <a href="../.." title="Data Processing Pipeline" class="md-nav__button md-logo" aria-label="Data Processing Pipeline" data-md-component="logo">
       
   <img src="../../assets/esa_logo.svg" alt="logo">
 
     </a>
-    EVE Pipeline
+    Data Processing Pipeline
   </label>
   
     <div class="md-nav__source">
@@ -1074,34 +1074,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../api/models/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Models
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -1385,22 +1357,20 @@
 <ul>
 <li><strong>Type</strong>: Integer</li>
 <li><strong>Default</strong>: <code>3</code></li>
-<li><strong>Range</strong>: 1-10</li>
-<li><strong>Description</strong>: Size of text chunks (shingles) for comparison</li>
+<li><strong>Description</strong>: Size of text chunks (shingles) for comparison. Larger shingles are more specific but increases computation.</li>
 </ul>
 <h4 id="num_perm">num_perm</h4>
 <ul>
 <li><strong>Type</strong>: Integer</li>
 <li><strong>Default</strong>: <code>128</code></li>
-<li><strong>Range</strong>: 64-1024</li>
-<li><strong>Description</strong>: Number of random permutations for MinHash</li>
+<li><strong>Description</strong>: Number of random permutations for MinHash. Higher values increase accuracy but use more memory</li>
 </ul>
 <h4 id="threshold">threshold</h4>
 <ul>
 <li><strong>Type</strong>: Float</li>
 <li><strong>Default</strong>: <code>0.8</code></li>
 <li><strong>Range</strong>: 0.0-1.0</li>
-<li><strong>Description</strong>: Similarity threshold for duplicate detection</li>
+<li><strong>Description</strong>: Similarity threshold for duplicate detection. Higher values find closer duplicates but may miss some.</li>
 </ul>
 <h2 id="next-steps">Next Steps</h2>
 <ul>

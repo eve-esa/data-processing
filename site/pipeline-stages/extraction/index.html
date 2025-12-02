@@ -25,7 +25,7 @@
     
     
       
-        <title>Extraction - EVE Pipeline</title>
+        <title>Extraction - Data Processing Pipeline</title>
       
     
     
@@ -94,7 +94,7 @@
 
 <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="EVE Pipeline" class="md-header__button md-logo" aria-label="EVE Pipeline" data-md-component="logo">
+    <a href="../.." title="Data Processing Pipeline" class="md-header__button md-logo" aria-label="Data Processing Pipeline" data-md-component="logo">
       
   <img src="../../assets/esa_logo.svg" alt="logo">
 
@@ -107,7 +107,7 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            EVE Pipeline
+            Data Processing Pipeline
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
@@ -346,12 +346,12 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="EVE Pipeline" class="md-nav__button md-logo" aria-label="EVE Pipeline" data-md-component="logo">
+    <a href="../.." title="Data Processing Pipeline" class="md-nav__button md-logo" aria-label="Data Processing Pipeline" data-md-component="logo">
       
   <img src="../../assets/esa_logo.svg" alt="logo">
 
     </a>
-    EVE Pipeline
+    Data Processing Pipeline
   </label>
   
     <div class="md-nav__source">
@@ -754,6 +754,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#nougat-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nougat Server
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#html-extraction" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1085,34 +1096,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../api/models/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Models
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -1326,6 +1309,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#nougat-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nougat Server
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#html-extraction" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1413,7 +1407,7 @@
 <h3 id="pdf-extraction">PDF Extraction</h3>
 <p>For PDF documents, the extractor:</p>
 <ul>
-<li>Extracts text content using Nougat OCR.</li>
+<li>Extracts text content using <a href="https://github.com/facebookresearch/nougat">Nougat OCR</a>.</li>
 <li>Preserves document structure (headings, paragraphs).</li>
 <li>Maintains table and formulas.</li>
 </ul>
@@ -1421,11 +1415,16 @@
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">config</span><span class="p">:</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="nt">format</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;pdf&quot;</span>
 </span></code></pre></div>
+<h3 id="nougat-server">Nougat Server</h3>
+<p>You need to setup the nougat server found under the <code>/server</code></p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nb">cd</span><span class="w"> </span>server
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>python3<span class="w"> </span>nougat_server.py
+</span></code></pre></div>
 <h3 id="html-extraction">HTML Extraction</h3>
-<p>For HTML documents, the extractor use trafilatura to extract the content.</p>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">extraction</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">config</span><span class="p">:</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="nt">format</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;html&quot;</span>
+<p>For HTML documents, the extractor use <a href="https://github.com/adbar/trafilatura">Trafilatura</a> to extract the content.</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">extraction</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nt">config</span><span class="p">:</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="nt">format</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;html&quot;</span>
 </span></code></pre></div>
 <h3 id="xml-extraction">XML Extraction</h3>
 <p>For XML documents, the extractor:</p>
@@ -1435,9 +1434,9 @@
 <li>Handles namespaces appropriately</li>
 <li>Maintains attribute information when relevant</li>
 </ul>
-<div class="language-yaml highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">extraction</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nt">config</span><span class="p">:</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="nt">format</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;xml&quot;</span>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">extraction</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">config</span><span class="p">:</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="nt">format</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;xml&quot;</span>
 </span></code></pre></div>
 <h2 id="next-steps">Next Steps</h2>
 <ul>

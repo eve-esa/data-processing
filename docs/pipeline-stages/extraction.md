@@ -41,7 +41,7 @@ pipeline:
 
 For PDF documents, the extractor:
 
-- Extracts text content using Nougat OCR.
+- Extracts text content using [Nougat OCR](https://github.com/facebookresearch/nougat).
 - Preserves document structure (headings, paragraphs).
 - Maintains table and formulas.
 
@@ -51,9 +51,18 @@ For PDF documents, the extractor:
     format: "pdf"
 ```
 
+### Nougat Server
+
+You need to setup the nougat server found under the `/server`
+
+```bash
+cd server
+python3 nougat_server.py
+```
+
 ### HTML Extraction
 
-For HTML documents, the extractor use trafilatura to extract the content.
+For HTML documents, the extractor use [Trafilatura](https://github.com/adbar/trafilatura) to extract the content.
 
 ```yaml
 - name: extraction

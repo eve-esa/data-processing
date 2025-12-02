@@ -1,6 +1,6 @@
 # Configuration Guide
 
-This guide covers all configuration options for the EVE Pipeline.
+This guide covers the main configuration options for the EVE Pipeline. You can find the detailed configurations under each `Pipeline Stage`.
 
 ## Configuration File Structure
 
@@ -94,7 +94,7 @@ Removes duplicate and near-duplicate documents.
 - **num_perm**: Number of permutations (default: `128`)
 - **threshold**: Similarity threshold (default: `0.8`)
 
-### Cleaning Stage(check this stage?)
+### Cleaning Stage
 
 Removes noise and improves document quality.
 
