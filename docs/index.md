@@ -84,8 +84,6 @@ A high-performance, modular library for extracting, deduplicating, cleaning, ano
 
 We welcome contributions! Please open an issue or submit a pull request on GitHub to help improve the pipeline.
 
-See our [Contributing Guide](development/contributing.md) for details. (maybe add in future?)
-
 ## License
 
 This project is released under the Apache 2.0 License - see the [LICENSE](https://github.com/eve-esa/eve-pipeline/blob/main/LICENSE) file for more details.

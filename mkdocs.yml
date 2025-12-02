@@ -64,7 +64,7 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
-          paths: [eve]
+          paths: [.]  # Current directory
           options:
             docstring_style: google
             show_source: true
