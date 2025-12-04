@@ -19,5 +19,6 @@ reqs.txt
 *.ipynb
 *.log
 build/
-.pytest_cache/
+pytest_cache/
 .DS_Store
+site/
