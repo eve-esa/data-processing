@@ -1,9 +1,60 @@
 site_name: "EVE Data Processing Pipeline"
-site_description: High-performance, modular library for extracting, deduplicating, cleaning, anonymizing, and exporting large-scale Earth science and Earth observation datasets
-site_url: https://eve-esa.github.io/data-processing/
-repo_url: https://github.com/eve-esa/data-processing
-edit_uri: edit/main/
-site_dir: site
+
+theme:
+  font:
+    text: Arial
+    code: The Sans
+  name: material
+  logo: docs/assets/esa_logo.svg
+  favicon: docs/assets/esa_logo.ico
+  palette:
+    primary: custom
+
+extra_css:
+  - docs/styles/overrides.css
+
+copyright: Implemented by <a href="https://picampus-school.com/" target="_blank">Pi School</a>, <a href="https://www.imperative.space/" target="_blank">Imperative Space</a>
+
+extra:
+  social:
+    - icon: fontawesome/solid/globe
+      link: https://eve.philab.esa.int/
+      name: Project Page
+    - icon: fontawesome/brands/github
+      link: https://github.com/eve-esa/data-processing
+      name: GitHub
+    - icon: simple/huggingface
+      link: https://huggingface.co/eve-esa
+      name: Hugging Face
+  generator: false
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: ["eve"] # add current directory to sys.path
+          options:
+            show_root_heading: true
+            show_root_full_path: false
+            members_order: source
+            show_signature_annotations: true
+            docstring_style: google
+            docstring_options:
+              ignore_init_summary: false
+              trim_doctest_flags: true
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - meta
+  - md_in_html
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - pymdownx.tabbed
 
 nav:
   - Home: index.md
@@ -25,96 +76,3 @@ nav:
     - Models: api/models.md
   - Examples:
     - Basic Usage: examples/basic-usage.md
-
-theme:
-  name: material
-  font:
-    text: Arial
-    code: The Sans
-  logo: docs/assets/esa_logo.svg
-  favicon: docs/assets/esa_logo.ico
-  palette:
-    primary: custom
-  features:
-    - navigation.tabs
-    - navigation.sections
-    - navigation.expand
-    - navigation.top
-    - search.highlight
-    - search.share
-    - content.code.copy
-    - content.code.annotate
-
-extra_css:
-  - docs/styles/overrides.css
-
-copyright: Implemented by <a href="https://picampus-school.com/" target="_blank">Pi School</a>, <a href="https://www.imperative.space/" target="_blank">Imperative Space</a>
-
-extra:
-  social:
-    - icon: fontawesome/solid/globe
-      link: https://eve.philab.esa.int/
-      name: Project Page
-    - icon: fontawesome/brands/github
-      link: https://github.com/eve-esa/data-processing
-      name: GitHub
-    - icon: simple/huggingface
-      link: https://huggingface.co/eve-esa
-      name: Hugging Face
-  generator: false
-
-plugins:
-  - search:
-      lang: en
-  - mkdocstrings:
-      handlers:
-        python:
-          paths: ["eve"]
-          options:
-            show_root_heading: true
-            show_root_full_path: false
-            members_order: source
-            show_signature_annotations: true
-            docstring_style: google
-            docstring_options:
-              ignore_init_summary: false
-              trim_doctest_flags: true
-
-markdown_extensions:
-  - admonition
-  - attr_list
-  - def_list
-  - footnotes
-  - meta
-  - md_in_html
-  - pymdownx.arithmatex:
-      generic: true
-  - pymdownx.betterem:
-      smart_enable: all
-  - pymdownx.caret
-  - pymdownx.details
-  - pymdownx.emoji:
-      emoji_index: !!python/name:material.extensions.emoji.twemoji
-      emoji_generator: !!python/name:material.extensions.emoji.to_svg
-  - pymdownx.highlight:
-      anchor_linenums: true
-      line_spans: __span
-      pygments_lang_class: true
-  - pymdownx.inlinehilite
-  - pymdownx.keys
-  - pymdownx.magiclink:
-      repo_url_shorthand: true
-      user: eve-esa
-      repo: data-processing
-  - pymdownx.mark
-  - pymdownx.smartsymbols
-  - pymdownx.superfences:
-      custom_fences:
-        - name: mermaid
-          class: mermaid
-          format: !!python/name:pymdownx.superfences.fence_code_format
-  - pymdownx.tabbed:
-      alternate_style: true
-  - pymdownx.tasklist:
-      custom_checkbox: true
-  - pymdownx.tilde
