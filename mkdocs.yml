@@ -31,8 +31,8 @@ theme:
   font:
     text: Arial
     code: The Sans
-  logo: assets/esa_logo.svg
-  favicon: assets/esa_logo.ico
+  logo: docs/assets/esa_logo.svg
+  favicon: docs/assets/esa_logo.ico
   palette:
     primary: custom
   features:
@@ -46,7 +46,7 @@ theme:
     - content.code.annotate
 
 extra_css:
-  - styles/overrides.css
+  - docs/styles/overrides.css
 
 copyright: Implemented by <a href="https://picampus-school.com/" target="_blank">Pi School</a>, <a href="https://www.imperative.space/" target="_blank">Imperative Space</a>
 
