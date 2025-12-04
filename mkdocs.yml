@@ -3,40 +3,6 @@ site_description: High-performance, modular library for extracting, deduplicatin
 repo_url: https://github.com/eve-esa/data-processing
 edit_uri: edit/main/
 
-theme:
-  name: material
-  custom_dir: overrides
-  logo: assets/esa_logo.svg
-  favicon: assets/esa_logo.ico
-  palette:
-    - scheme: default
-      primary: blue
-      accent: blue
-      toggle:
-        icon: material/brightness-7
-        name: Switch to dark mode
-    - scheme: slate
-      primary: blue
-      accent: blue
-      toggle:
-        icon: material/brightness-4
-        name: Switch to light mode
-  font:
-    text: Roboto
-    code: Roboto Mono
-  features:
-    - navigation.tabs
-    - navigation.sections
-    - navigation.expand
-    - navigation.top
-    - search.highlight
-    - search.share
-    - content.code.copy
-    - content.code.annotate
-
-extra_css:
-  - stylesheets/extra.css
-
 nav:
   - Home: index.md
   - Getting Started:
@@ -58,63 +24,10 @@ nav:
   - Examples:
       - Basic Usage: examples/basic-usage.md
 
-plugins:
-  - search:
-      lang: en
-  - mkdocstrings:
-      handlers:
-        python:
-          paths: [.]  # Current directory
-          options:
-            docstring_style: google
-            show_source: true
-            show_root_heading: true
-            show_root_members_full_path: false
-            show_object_full_path: false
-            show_signature: true
-            show_signature_annotations: true
-            separate_signature: true
-            merge_init_into_class: true
-      watch:
-        - eve
-
 markdown_extensions:
-  - admonition
-  - attr_list
-  - def_list
-  - footnotes
-  - meta
-  - md_in_html
-  - pymdownx.arithmatex:
-      generic: true
-  - pymdownx.betterem:
-      smart_enable: all
-  - pymdownx.caret
-  - pymdownx.details
-  - pymdownx.emoji:
-      emoji_index: !!python/name:material.extensions.emoji.twemoji
-      emoji_generator: !!python/name:material.extensions.emoji.to_svg
-  - pymdownx.highlight:
-      anchor_linenums: true
-      line_spans: __span
-      pygments_lang_class: true
-  - pymdownx.inlinehilite
-  - pymdownx.keys
-  - pymdownx.magiclink:
-      repo_url_shorthand: true
-      user: eve-esa
-      repo: data-processing
-  - pymdownx.mark
-  - pymdownx.smartsymbols
-  - pymdownx.superfences:
-      custom_fences:
-        - name: mermaid
-          class: mermaid
-          format: !!python/name:pymdownx.superfences.fence_code_format
-  - pymdownx.tabbed:
-      alternate_style: true
-  - pymdownx.tasklist:
-      custom_checkbox: true
-  - pymdownx.tilde
+  - codehilite
+  - toc
+  - tables
+  - fenced_code
 
 copyright: Copyright &copy; 2025 Earth Virtual Expert (EVE) - ESA Φ-lab
