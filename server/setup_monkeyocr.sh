@@ -16,8 +16,9 @@ echo "Using CUDA version: $CUDA_VERSION"
 
 
 pip install paddlepaddle-gpu==3.0.0 -i https://www.paddlepaddle.org.cn/packages/stable/cu${CUDA_VERSION}/
-pip install langchain==0.3.26
 pip install "paddlex[base]==3.1.4"
+pip install paddlepaddle
+pip install langchain==0.3.26
 pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu${CUDA_VERSION}
 pip install -e .
 pip install lmdeploy==0.9.2
