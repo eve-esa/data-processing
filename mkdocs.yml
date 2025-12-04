@@ -21,7 +21,7 @@ extra:
       link: https://eve.philab.esa.int/
       name: Project Page
     - icon: fontawesome/brands/github
-      link: https://github.com/eve-esa/backend
+      link: https://github.com/eve-esa/data-processing
       name: GitHub
     - icon: simple/huggingface
       link: https://huggingface.co/eve-esa
@@ -33,7 +33,7 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
-          paths: ["eve"] # add src to sys.path
+          paths: ["eve"]
           options:
             show_root_heading: true
             show_root_full_path: false
