@@ -1,0 +1,78 @@
+site_name: "EVE Data Processing Pipeline"
+
+theme:
+  font:
+    text: Arial
+    code: The Sans
+  name: material
+  logo: docs/assets/esa_logo.svg
+  favicon: docs/assets/esa_logo.ico
+  palette:
+    primary: custom
+
+extra_css:
+  - docs/styles/overrides.css
+
+copyright: Implemented by <a href="https://picampus-school.com/" target="_blank">Pi School</a>, <a href="https://www.imperative.space/" target="_blank">Imperative Space</a>
+
+extra:
+  social:
+    - icon: fontawesome/solid/globe
+      link: https://eve.philab.esa.int/
+      name: Project Page
+    - icon: fontawesome/brands/github
+      link: https://github.com/eve-esa/data-processing
+      name: GitHub
+    - icon: simple/huggingface
+      link: https://huggingface.co/eve-esa
+      name: Hugging Face
+  generator: false
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: ["eve"] # add current directory to sys.path
+          options:
+            show_root_heading: true
+            show_root_full_path: false
+            members_order: source
+            show_signature_annotations: true
+            docstring_style: google
+            docstring_options:
+              ignore_init_summary: false
+              trim_doctest_flags: true
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - meta
+  - md_in_html
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - pymdownx.tabbed
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: getting-started/installation.md
+    - Quick Start: getting-started/quick-start.md
+    - Configuration: getting-started/configuration.md
+  - Pipeline Stages:
+    - Extraction: pipeline-stages/extraction.md
+    - Deduplication: pipeline-stages/deduplication.md
+    - Cleaning: pipeline-stages/cleaning.md
+    - PII Removal: pipeline-stages/pii-removal.md
+    - Metadata Extraction: pipeline-stages/metadata-extraction.md
+    - Export: pipeline-stages/export.md
+  - API Reference:
+    - Core Components: api/core.md
+    - Pipeline Stages: api/stages.md
+    - Utilities: api/utilities.md
+    - Models: api/models.md
+  - Examples:
+    - Basic Usage: examples/basic-usage.md

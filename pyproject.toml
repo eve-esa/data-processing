@@ -32,6 +32,10 @@ dependencies = [
     "langchain_text_splitters>=0.3.11",
     "hf_transfer",
     "qdrant-client==1.15.1",
+    "hf-transfer>=0.1.9",
+    "httpx>=0.28.1",
+    "mkdocs-material>=9.7.0",
+    "mkdocstrings-python>=1.18.2",
 ]
 
 [project.scripts]
@@ -40,6 +44,10 @@ eve = "eve.pipeline:cli"
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["eve*"]
 
 [tool.setuptools]
 packages = ["eve"]

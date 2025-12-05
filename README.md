@@ -1,15 +1,40 @@
-# Eve Data Processing Pipeline
+# Data Processing Pipeline
 
-Eve data pipeline is a library to process, duplicate and clean data at a large scale.
+## Overview
+
+The **Data Processing Pipeline** is a high-performance, modular library designed to extract, deduplicate, clean, anonymize, and export large-scale Earth science and Earth observation datasets. It is part of the Earth Virtual Expert (EVE) initiative—an open-science program funded by the European Space Agency’s Φ-lab and developed by Pi School, in collaboration with Imperative Space and Mistral AI.
+
+## Earth Virtual Expert (EVE)
+
+**Earth Virtual Expert (EVE)** aims to advance the use of Large Language Models (LLMs) within the Earth Observation (EO) and Earth Science (ES) community.
+
+- Website: https://eve.philab.esa.int/  
+- HuggingFace: https://huggingface.co/eve-esa
+- Other repositories: https://github.com/eve-esa
 
 
 ## Features
 
-1. Extraction Step - Extraction from different files formats like pdf, html and xml. You can pass in any heirarchy of folder structure.
-2. Deduplication Step - Exact duplication and close duplication using lsh.
-3. Cleaning Step - Handles all the irregularities and artifacts present in the documents. Performs latex equations and table correction using an LLM.
-4. Pii Step - Aanonymizes the document by masking out the `names` and `emails` present in the documents.
-4. Export Step - This steps saves all the processed files in the desired format.
+### Extraction
+- Supports PDF, HTML, XML, Markdown and nested folder structures.
+- Automatically detects file formats unless explicitly specified.
+
+### Deduplication
+- Performs exact matching using SHA-256 checksum.
+- Supports LSH based near-duplicate detection (configurable: shingle size, permutations, similarity threshold).
+
+### Cleaning
+- Removes irregularities and noise artifacts.
+- Corrects LaTeX equations and tables using LLM assistance.
+
+### PII Removal
+- Automatically masks `Names` and `Emails` using the Presidio framework.
+
+### Metadata Extraction
+- Extracts `Title`, `Authors`, `DOI`, `URL`, `Year`, `Journal` and `Citation Count` from the scientific papers.
+
+### Export
+- Saves processed content in multiple formats (default: Markdown).
 
 ## Getting started
 
@@ -43,7 +68,26 @@ pipeline:
 eve run
 ```
 
+4. For pdf based metadata extraction you need to setup [MonkeyOCR](https://github.com/Yuliang-Liu/MonkeyOCR/tree/main) in the `server` folder. 
+   Run inference on the files and then setup metadata extraction config.yaml file.
+
 ## Examples
 
 You can find examples of `config.py` files on how to use this pipeline effectively.
 
+## Funding
+
+This project is supported by the European Space Agency (ESA) Φ-lab through the Large Language Model for Earth Observation and Earth Science project, as part of the Foresight Element within FutureEO Block 4 programme.
+
+## Citation 
+
+If you use this project in academic or research settings, please cite:
+
+## License
+
+This project is released under the Apache 2.0 License - see the [LICENSE](LICENSE) file for more details.
+
+## Contributing
+
+We welcome contributions!
+Please open an issue or submit a pull request on GitHub to help improve the pipeline.

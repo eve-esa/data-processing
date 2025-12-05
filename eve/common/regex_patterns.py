@@ -39,6 +39,23 @@ HTML_ENTITY_PATTERN: Pattern[str] = re.compile(r'&[a-zA-Z]+;')
 HTML_NUMERIC_ENTITY_PATTERN: Pattern[str] = re.compile(r'&#\d+;')
 JSON_LD_SCRIPT_PATTERN: Pattern[str] = re.compile(r'<script[^>]*type=["\']application/ld\+json["\'][^>]*>(.*?)</script>', re.IGNORECASE | re.DOTALL)
 
+doi_regexp = [
+    r'doi[\s\.\:]{0,2}(10\.\d{4}[\d\:\.\-\/a-z]+)(?:[\s\n\"<]|$)',
+    r'(10\.\d{4}[\d\:\.\-\/a-z]+)(?:[\s\n\"<]|$)',
+    r'(10\.\d{4}[\:\.\-\/a-z]+[\:\.\-\d]+)(?:[\s\na-z\"<]|$)',
+    r'https?://[ -~]*doi[ -~]*/(10\.\d{4,9}/[-._;()/:a-z0-9]+)(?:[\s\n\"<]|$)',
+    r'^(10\.\d{4,9}/[-._;()/:a-z0-9]+)$'
+]
+arxiv_regexp = [
+    r'arxiv[\s]*\:[\s]*(\d{4}\.\d+)(?:v\d+)?(?:[\s\n\"<]|$)',
+    r'(\d{4}\.\d+)(?:v\d+)?(?:\.pdf)',
+    r'^(\d{4}\.\d+)(?:v\d+)?$'
+]
+isbn_regexp = [
+    r'(?:ISBN(?:-1[03])?:? )?(?=[0-9X]{10}$|(?=(?:[0-9]+[- ]){3})[- 0-9X]{13}$|97[89][0-9]{10}$)(?:97[89][- ]?)?[0-9]{1,5}[- ]?[0-9]+[- ]?[0-9]+[- ]?[0-9X]',
+    r'\bISBN(?:-1[03])?:? (?=[0-9X]{10}$|(?=(?:[0-9]+[- ]){3})[- 0-9X]{13}$|97[89][0-9]{10}$)(?:97[89][- ]?)?[0-9]{1,5}[- ]?[0-9]+[- ]?[0-9]+[- ]?[0-9X]\b'
+]
+
 
 def get_latex_formula_patterns() -> dict[str, Pattern[str]]:
     """
