@@ -14,7 +14,11 @@ from eve.model.document import Document
 
 
 class VLLMEmbedder:
-    """Client for VLLM embedding server."""
+    """Client for VLLM embedding server.
+
+    This class provides a simple interface to interact with a VLLM server
+    that exposes an OpenAI-compatible embeddings API endpoint.
+    """
 
     def __init__(
         self, url: str, model_name: str, timeout: int = 300, api_key: str = "EMPTY"
@@ -22,10 +26,11 @@ class VLLMEmbedder:
         """Initialize VLLM embedder client.
 
         Args:
-            url: Base URL of the VLLM server
-            model_name: Name of the embedding model
-            timeout: Request timeout in seconds
-            api_key: API key for authentication (default: "EMPTY" for local servers)
+            url (str): Base URL of the VLLM server.
+            model_name (str): Name of the embedding model to use.
+            timeout (int, optional): Request timeout in seconds. Defaults to 300.
+            api_key (str, optional): API key for authentication. Use "EMPTY" for
+                local servers. Defaults to "EMPTY".
         """
         self.url = url.rstrip("/")
         self.model_name = model_name
@@ -43,14 +48,15 @@ class VLLMEmbedder:
     def embed_documents(self, texts: List[str]) -> List[List[float] | None]:
         """Generate embeddings for a list of texts.
 
+        Sends requests to the VLLM server's /v1/embeddings endpoint to generate
+        embeddings for each text. Failed requests return None for that text.
+
         Args:
-            texts: List of text strings to embed
+            texts (List[str]): List of text strings to embed.
 
         Returns:
-            List of embedding vectors
-
-        Raises:
-            Exception: If the API request fails
+            List[List[float] | None]: List of embedding vectors. Each element is
+                either a list of floats (the embedding) or None if embedding failed.
         """
         embeddings = []
         for text in texts:
@@ -94,20 +100,28 @@ class QdrantUploadStep(PipelineStep):
         """Initialize the Qdrant upload step.
 
         Args:
-            config: Configuration containing:
-                - mode: "qdrant" or "local" (default: "qdrant")
-                - use_existing_embeddings: If True, use embeddings from document.embedding field (default: False)
-                - upload_pipeline_metadata: If True, include pipeline_metadata in Qdrant payload (default: False)
-                - vector_store.url: Qdrant instance URL (required for mode="qdrant")
-                - vector_store.api_key: API key for Qdrant authentication (optional)
-                - vector_store.collection_name: Target collection name (required for mode="qdrant")
-                - vector_store.batch_size: Number of documents per batch (required for mode="qdrant")
-                - vector_store.vector_size: Dimension of embedding vectors (required for mode="qdrant")
-                - embedder.url: URL of VLLM embedding server (not required if use_existing_embeddings=True)
-                - embedder.model_name: Embedding model identifier (not required if use_existing_embeddings=True)
-                - embedder.timeout: Optional request timeout (default: 300)
-                - embedder.api_key: Optional API key for VLLM authentication (default: "EMPTY")
-            name: Name for logging purposes
+            config (dict): Configuration dictionary containing:
+                - mode (str, optional): "qdrant" or "local". Defaults to "qdrant".
+                - use_existing_embeddings (bool, optional): If True, use embeddings
+                    from document.embedding field. Defaults to False.
+                - upload_pipeline_metadata (bool, optional): If True, include
+                    pipeline_metadata in Qdrant payload. Defaults to False.
+                - vector_store (dict, required for "qdrant" mode):
+                    - url (str): Qdrant instance URL.
+                    - api_key (str, optional): API key for Qdrant authentication.
+                    - collection_name (str): Target collection name.
+                    - batch_size (int): Number of documents per batch.
+                    - vector_size (int): Dimension of embedding vectors.
+                - embedder (dict, required if use_existing_embeddings=False):
+                    - url (str): URL of VLLM embedding server.
+                    - model_name (str): Embedding model identifier.
+                    - timeout (int, optional): Request timeout in seconds. Defaults to 300.
+                    - api_key (str, optional): API key for VLLM. Defaults to "EMPTY".
+                - batch_size (int, optional): Batch size for local mode. Defaults to 10.
+            name (str, optional): Name for logging purposes. Defaults to "QdrantUpload".
+
+        Raises:
+            ValueError: If mode is not "qdrant" or "local".
         """
         super().__init__(config, name)
 
@@ -164,7 +178,12 @@ class QdrantUploadStep(PipelineStep):
             self.client = None
 
     def _ensure_collection(self) -> None:
-        """Create Qdrant collection if it doesn't exist."""
+        """Create Qdrant collection if it doesn't exist.
+
+        Creates a new collection with optimized settings including HNSW indexing,
+        binary quantization, and on-disk storage. Also creates payload indexes
+        for efficient filtering.
+        """
         if self.client.collection_exists(self.collection_name):
             self.logger.info(f"Collection '{self.collection_name}' already exists")
             return
@@ -218,7 +237,12 @@ class QdrantUploadStep(PipelineStep):
         self.logger.info("Collection created and optimized")
 
     def _create_payload_indexes(self) -> None:
-        """Create indexes on payload fields for efficient filtering."""
+        """Create indexes on payload fields for efficient filtering.
+
+        Creates text indexes for 'title' and 'journal' fields, and integer
+        indexes for 'year' and 'n_citations' fields to enable fast filtering
+        and searching on these metadata fields.
+        """
         # Text index for title
         self.client.create_payload_index(
             collection_name=self.collection_name,
@@ -255,12 +279,29 @@ class QdrantUploadStep(PipelineStep):
 
     @staticmethod
     def _string_to_uint(s: str) -> int:
-        """Convert string to unsigned integer using SHA256 hash."""
+        """Convert string to unsigned integer using SHA256 hash.
+
+        Args:
+            s (str): Input string to hash.
+
+        Returns:
+            int: Unsigned 64-bit integer derived from the hash.
+        """
         hash_bytes = hashlib.sha256(s.encode("utf-8")).digest()
         return int.from_bytes(hash_bytes[:8], byteorder="big", signed=False)
 
     def _get_existing_ids(self) -> Set[int]:
-        """Retrieve all existing point IDs from the collection with retry logic."""
+        """Retrieve all existing point IDs from the collection with retry logic.
+
+        Scrolls through the entire collection to fetch all point IDs. Implements
+        retry logic with exponential backoff to handle temporary failures.
+
+        Returns:
+            Set[int]: Set of existing point IDs in the collection.
+
+        Raises:
+            Exception: If scroll request fails after max retries.
+        """
         existing_ids = set()
         scroll_offset = None
         max_retries = 3
@@ -302,11 +343,15 @@ class QdrantUploadStep(PipelineStep):
     ) -> None:
         """Upload a batch of documents to Qdrant.
 
+        Generates embeddings (if not provided) and uploads points to Qdrant.
+        Implements retry logic with up to 3 attempts on failure.
+
         Args:
-            batch_ids: List of unique IDs
-            batch_chunks: List of text chunks
-            batch_metadata: List of metadata dictionaries
-            batch_embeddings: Optional pre-computed embeddings (if use_existing_embeddings=True)
+            batch_ids (List[int]): List of unique point IDs.
+            batch_chunks (List[str]): List of text chunks to embed.
+            batch_metadata (List[dict]): List of metadata dictionaries for each point.
+            batch_embeddings (List[List[float]], optional): Pre-computed embeddings
+                to use instead of generating new ones. Defaults to None.
         """
         # Generate embeddings if not provided
         if batch_embeddings is None:
@@ -347,16 +392,17 @@ class QdrantUploadStep(PipelineStep):
     def _prepare_metadata(self, doc: Document) -> dict:
         """Prepare metadata from Document object for Qdrant storage.
 
-        Only includes:
-        - content field
-        - metadata fields (unwrapped at root level)
-        - pipeline_metadata (wrapped in dict if upload_pipeline_metadata=True)
+        Extracts and cleans metadata fields, performing type conversions and
+        formatting for Qdrant compatibility. Includes document content, user
+        metadata (unwrapped), and optionally pipeline metadata (wrapped).
 
         Args:
-            doc: Document object
+            doc (Document): Document object containing content and metadata.
 
         Returns:
-            Dictionary with cleaned metadata for Qdrant payload
+            dict: Dictionary with cleaned metadata ready for Qdrant payload.
+                Includes 'content' field, all metadata fields at root level,
+                and optionally 'pipeline_metadata' as a nested dict.
         """
         payload = {}
 
@@ -391,11 +437,15 @@ class QdrantUploadStep(PipelineStep):
     async def execute(self, documents: List[Document]) -> List[Document]:
         """Execute the upload step.
 
+        Routes to appropriate execution method based on configured mode
+        (local or qdrant).
+
         Args:
-            documents: List of Document objects to process
+            documents (List[Document]): List of Document objects to process.
 
         Returns:
-            The same list of documents (pass-through for chaining)
+            List[Document]: The same list of documents passed through for
+                pipeline chaining.
         """
         if not documents:
             self.logger.warning("No documents to process")
@@ -411,13 +461,16 @@ class QdrantUploadStep(PipelineStep):
             return await self._execute_qdrant(documents)
 
     async def _execute_local(self, documents: List[Document]) -> List[Document]:
-        """Execute local embedding storage (add embeddings to document.embedding field).
+        """Execute local embedding storage.
+
+        Generates embeddings for documents and stores them in the document.embedding
+        field without uploading to Qdrant. Processes documents in configurable batches.
 
         Args:
-            documents: List of Document objects
+            documents (List[Document]): List of Document objects to process.
 
         Returns:
-            Documents with embeddings added to embedding field
+            List[Document]: Documents with embeddings added to embedding field.
         """
         self.logger.info("Generating embeddings in local mode")
 
@@ -447,11 +500,15 @@ class QdrantUploadStep(PipelineStep):
     async def _execute_qdrant(self, documents: List[Document]) -> List[Document]:
         """Execute Qdrant upload mode.
 
+        Prepares document data, generates or extracts embeddings, filters out
+        existing documents, and uploads to Qdrant in batches.
+
         Args:
-            documents: List of Document objects to upload
+            documents (List[Document]): List of Document objects to upload.
 
         Returns:
-            The same list of documents (pass-through for chaining)
+            List[Document]: The same list of documents passed through for
+                pipeline chaining.
         """
         # Prepare data for upload
         ids = []

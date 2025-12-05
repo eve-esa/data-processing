@@ -1,3 +1,5 @@
+"""Sentence-based text splitter that preserves LaTeX formulas and Markdown tables."""
+
 from langchain_core.documents import Document
 from langchain_text_splitters import TextSplitter
 import re
@@ -15,31 +17,37 @@ except LookupError:
 logger = logging.getLogger(__name__)
 
 class SentenceTextSplitter(TextSplitter):
-    """
-    A text splitter that splits text by sentences while preserving LaTeX and tables.
+    """Sentence-based text splitter that preserves LaTeX and tables.
+
+    Splits text at sentence boundaries using NLTK's sentence tokenizer while
+    treating LaTeX environments, formulas, and Markdown tables as atomic units
+    that cannot be split.
+
+    This ensures mathematical content and tables remain intact and readable.
     """
 
     def __init__(self, chunk_size: int = 1800, chunk_overlap: int = 0):
-        """
-        Initialize the sentence splitter.
+        """Initialize the sentence splitter.
 
         Args:
-            chunk_size: Maximum size of chunks in characters
+            chunk_size: Maximum size of chunks in words
             chunk_overlap: Number of characters to overlap between chunks
         """
         super().__init__(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
 
-    def _find_latex_environments(self, text):
-        """
-        Identify all LaTeX environments in the text, handling nested environments correctly.
+    def _find_latex_environments(self, text: str) -> List[tuple]:
+        """Identify all LaTeX environments in text, handling nesting correctly.
+
+        Finds all \\begin{...} ... \\end{...} blocks, properly handling nested
+        environments of the same type.
 
         Args:
-            text: The text to analyze
+            text: Text to analyze for LaTeX environments
 
         Returns:
-            List of (start, end) tuples for all LaTeX environments
+            List of (start_pos, end_pos) tuples for all LaTeX environments
         """
         environments = []
         pos = 0
@@ -62,17 +70,17 @@ class SentenceTextSplitter(TextSplitter):
 
         return environments
 
-    def _find_matching_end(self, text, begin_pos):
-        """
-        Find the matching \\end{...} for a \\begin{...} at the given position.
-        Handles nested environments correctly.
+    def _find_matching_end(self, text: str, begin_pos: int) -> int:
+        """Find the matching \\end{...} for a \\begin{...} at given position.
+
+        Correctly handles nested environments by tracking nesting level.
 
         Args:
-            text: The text to search in
+            text: Text to search in
             begin_pos: Position of the \\begin{...} command
 
         Returns:
-            Position of the end of the matching \\end{...} command or -1 if not found
+            Position of the end of the matching \\end{...} command, or -1 if not found
         """
         # Extract the environment name
         begin_match = re.search(r'\\begin\{([^}]+)\}', text[begin_pos:])
@@ -106,15 +114,17 @@ class SentenceTextSplitter(TextSplitter):
 
         return current_pos if nesting_level == 0 else -1
 
-    def _identify_preserved_spans(self, text):
-        """
-        Identify all spans in the text that should be preserved atomically.
+    def _identify_preserved_spans(self, text: str) -> List[tuple]:
+        """Identify all spans that should be preserved as atomic units.
+
+        Finds LaTeX environments and Markdown tables that should not be split.
+        Merges overlapping spans into unified regions.
 
         Args:
-            text: The text to analyze
+            text: Text to analyze
 
         Returns:
-            List of (start, end) tuples for preserved spans
+            Sorted, merged list of (start_pos, end_pos) tuples for preserved spans
         """
         preserved_spans = []
 
@@ -155,7 +165,19 @@ class SentenceTextSplitter(TextSplitter):
 
         return preserved_spans
 
-    def tokenize_with_protection(self, text):
+    def tokenize_with_protection(self, text: str) -> List[str]:
+        """Tokenize text into sentences while protecting LaTeX and figure references.
+
+        Replaces LaTeX formulas and figure references with placeholders before
+        sentence tokenization, then restores them afterward. This prevents NLTK
+        from incorrectly splitting at periods within formulas or figure captions.
+
+        Args:
+            text: Text to tokenize
+
+        Returns:
+            List of sentence strings with LaTeX and references preserved
+        """
         # Store patterns that should be protected
         protected_patterns = []
 
@@ -187,14 +209,18 @@ class SentenceTextSplitter(TextSplitter):
         return sentences
 
     def split_text(self, text: str) -> List[str]:
-        """
-        Split text into chunks based on sentences while preserving LaTeX content and tables.
+        """Split text into chunks at sentence boundaries while preserving special content.
+
+        Identifies preserved spans (LaTeX environments, tables), tokenizes the rest
+        into sentences, then groups sentences into chunks that respect the size limit.
+        Adds overlap between chunks if configured.
 
         Args:
-            text: The text to split
+            text: Text to split
 
         Returns:
-            List of text chunks respecting sentence boundaries and preserving special content
+            List of text chunk strings respecting sentence boundaries and preserving
+            LaTeX/tables as atomic units
         """
         # First, identify spans that should be preserved
         preserved_spans = self._identify_preserved_spans(text)
@@ -273,14 +299,17 @@ class SentenceTextSplitter(TextSplitter):
         return chunks
 
     def split_documents(self, documents: List[Document]) -> List[Document]:
-        """
-        Split documents into chunks based on sentences.
+        """Split LangChain Documents into chunks based on sentences.
+
+        Processes each document independently, splitting its content while
+        preserving LaTeX and tables, then creating new Document objects for
+        each chunk with the original metadata.
 
         Args:
-            documents: List of Documents to split
+            documents: List of LangChain Documents to split
 
         Returns:
-            List of Documents after splitting
+            List of Document chunks with preserved metadata
         """
         splits = []
         for doc in documents:

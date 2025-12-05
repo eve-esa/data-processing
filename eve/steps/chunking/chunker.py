@@ -1,3 +1,5 @@
+"""Two-step chunking strategy for Markdown documents preserving structure and LaTeX."""
+
 import dataclasses
 from typing import List
 import logging
@@ -19,8 +21,14 @@ logger.addHandler(logging.StreamHandler())
 
 @dataclasses.dataclass
 class Section:
-    """
-    A class representing a section in a Markdown document.
+    """Represents a section in a Markdown document.
+
+    Attributes:
+        level: Heading level (1-6 for H1-H6)
+        title: Section title text
+        header: Full header string including markup
+        content: Section content text
+        subsections: List of nested Section objects
     """
     level: int
     title: str
@@ -30,26 +38,29 @@ class Section:
 
 
 class MarkdownTwoStepChunker:
-    """
-    A class that implements a two-step chunking strategy for Markdown documents:
+    """Two-step chunking strategy for Markdown documents.
+
+    Implements a sophisticated chunking approach:
     1. Split the document into logical sections based on Markdown headers
-    2. If any section exceeds the max chunk size, apply a secondary chunking method
-       that preserves LaTeX formulas and tables
-    3. Try to aggregate subsections into sections when possible
-    4. Add word-based overlap between chunks
+    2. If any section exceeds the max chunk size, apply secondary sentence-based splitting
+       that preserves LaTeX formulas and tables as atomic units
+    3. Merge small chunks that share compatible heading levels
+    4. Add word-based overlap between chunks for better retrieval
+
+    The chunker preserves document structure while ensuring chunks fit within size constraints.
     """
 
     def __init__(self, max_chunk_size: int = 1800, chunk_overlap: int = 0, add_headers: bool = True,
                  word_overlap: int = None, headers_to_split_on: List[int] = None, merge_small_chunks: bool = False):
-        """
-        Initialize the chunker with configuration parameters.
+        """Initialize the chunker with configuration parameters.
 
         Args:
-            max_chunk_size: Maximum size of any chunk in characters
-            chunk_overlap: Number of characters to overlap between chunks in the secondary split
-            add_headers: Whether to add headers to the chunks
-            word_overlap: Number of words to overlap between chunks (defaults to None,
-                         will estimate from chunk_overlap if not specified)
+            max_chunk_size: Maximum size of any chunk in words
+            chunk_overlap: Number of characters to overlap between chunks in secondary split
+            add_headers: Whether to prepend section headers to chunk content
+            word_overlap: Number of words to overlap between chunks (if None, estimated from chunk_overlap)
+            headers_to_split_on: List of header levels (1-6) to split on (default: [1, 2, 3, 4, 5, 6])
+            merge_small_chunks: Whether to merge small chunks with compatible headers
         """
         if headers_to_split_on is None:
             headers_to_split_on = [1, 2, 3, 4, 5, 6]
@@ -69,26 +80,28 @@ class MarkdownTwoStepChunker:
         self.merge_small_chunks = merge_small_chunks
 
     def _text_split(self, docs: list[Document]) -> List[Document]:
-        """
-        Split the text into chunks using the PreservingRecursiveCharacterTextSplitter.
+        """Split documents using the sentence-based text splitter.
+
+        Uses SentenceTextSplitter which preserves LaTeX and tables.
 
         Args:
-            docs: The documents to split
+            docs: Documents to split
 
         Returns:
-            List of chunks
+            List of split document chunks
         """
         return self.text_splitter.split_documents(docs)
 
-    def _add_section_header(self, section: Document):
-        """
-        Add a header to the section content.
+    def _add_section_header(self, section: Document) -> Document:
+        """Add section headers to the beginning of chunk content.
+
+        Prepends all relevant headers (from highest to lowest level) to the chunk.
 
         Args:
-            section: The section to process
+            section: Document chunk to process
 
         Returns:
-            The section with added header
+            Document with headers prepended to content
         """
         headers = section.metadata
         reverse_headers = headers.items()
@@ -100,30 +113,38 @@ class MarkdownTwoStepChunker:
         return section
 
     def _chunk_markdown(self, markdown_text: str) -> List[Document]:
-        """
-        Process the markdown text using the two-step chunking strategy.
+        """Split markdown text by headers using the header-based splitter.
+
+        This is the first step of the two-step chunking strategy.
 
         Args:
-            markdown_text: The markdown document to process
+            markdown_text: Markdown document to process
 
         Returns:
-            List of properly sized markdown chunks
+            List of Document chunks split by headers
         """
         logger.info(f"Markdown splitting started")
         sections = self.markdown_splitter.split_text(markdown_text)
         return sections
 
     def _merge_small_chunks(self, chunks: List[Document]) -> List[Document]:
-        """
-        Merge small chunks if they meet the criteria, with continuous merging.
+        """Merge small adjacent chunks that share compatible heading levels.
+
+        Chunks can be merged if:
         1. Their combined length doesn't exceed max_chunk_size
-        2. They have compatible heading levels (same level or previous at higher level)
+        2. They have compatible heading levels:
+           - No headers in either chunk
+           - Same level headers
+           - Previous chunk has higher level header (lower number)
+
+        Performs continuous merging, attempting to merge each chunk with as many
+        subsequent chunks as possible before moving on.
 
         Args:
-            chunks: List of Document objects to consider for merging
+            chunks: List of Document chunks to consider for merging
 
         Returns:
-            List of Documents after merging small chunks
+            List of Documents after merging compatible small chunks
         """
         if not chunks or len(chunks) <= 1:
             return chunks
@@ -187,12 +208,15 @@ class MarkdownTwoStepChunker:
         return result
 
     def _add_word_overlap(self, chunks: List[str], overlap_words: int = None) -> List[str]:
-        """
-        Add overlap between adjacent chunks based on word count.
+        """Add word-based overlap between adjacent chunks.
+
+        Takes the last N words from the previous chunk and prepends them to the
+        current chunk. This improves retrieval by ensuring concepts at chunk
+        boundaries aren't lost.
 
         Args:
-            chunks: List of text chunks
-            overlap_words: Number of words to overlap (calculates from self.overlap if None)
+            chunks: List of text chunk strings
+            overlap_words: Number of words to overlap (if None, estimated from self.overlap)
 
         Returns:
             List of chunks with word-based overlap added
@@ -228,11 +252,12 @@ class MarkdownTwoStepChunker:
 
         return result
     def set_max_chunk_size(self, max_chunk_size: int) -> None:
-        """
-        Set the maximum size of any chunk in characters.
+        """Set the maximum chunk size dynamically.
+
+        Updates both the chunker's max size and the underlying text splitter's size.
 
         Args:
-            max_chunk_size: Maximum size of any chunk in characters
+            max_chunk_size: Maximum size of any chunk in words
         """
         self.max_chunk_size = max_chunk_size
         self.text_splitter.chunk_size = max_chunk_size
@@ -240,27 +265,34 @@ class MarkdownTwoStepChunker:
 
 
     def split(self, markdown_text: str) -> List[str]:
-        """
-        Same as `chunk` but returns a list of strings instead of Document objects.
-        :param markdown_text:
-        :return:
+        """Chunk markdown text and return list of strings.
+
+        Convenience method that calls chunk() and extracts just the text content.
+
+        Args:
+            markdown_text: Markdown document to chunk
+
+        Returns:
+            List of chunk text strings
         """
 
         docs = self.chunk(markdown_text)
         return [doc.page_content for doc in docs]
 
     def chunk(self, markdown_text: str) -> List[Document]:
-        """
-        Chunk the markdown text into sections and subsections.
-        Merges small chunks when appropriate and adds word-based overlap between chunks.
-        Preserves LaTeX formulas and tables as atomic units.
+        """Chunk markdown text using the two-step strategy.
+
+        Main entry point for chunking. Performs:
+        1. Header-based splitting to create initial sections
+        2. Sentence-based splitting for oversized sections (preserving LaTeX/tables)
+        3. Optional merging of small chunks with compatible headers
+        4. Optional addition of headers to chunk content
 
         Args:
-            markdown_text: The markdown document to process
-            overlap_words: Number of words to overlap between chunks (optional)
+            markdown_text: Markdown document to process
 
         Returns:
-            List of sections and subsections with word-based overlap
+            List of Document chunks with metadata indicating their headers
         """
         logger.info(f"Markdown chunking started")
         sections = self._chunk_markdown(markdown_text)

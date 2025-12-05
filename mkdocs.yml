@@ -5,13 +5,13 @@ theme:
     text: Arial
     code: The Sans
   name: material
-  logo: docs/assets/esa_logo.svg
-  favicon: docs/assets/esa_logo.ico
+  logo: assets/esa_logo.svg
+  favicon: assets/esa_logo.ico
   palette:
     primary: custom
 
 extra_css:
-  - docs/styles/overrides.css
+  - styles/overrides.css
 
 copyright: Implemented by <a href="https://picampus-school.com/" target="_blank">Pi School</a>, <a href="https://www.imperative.space/" target="_blank">Imperative Space</a>
 
@@ -33,7 +33,7 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
-          paths: ["eve"] # add current directory to sys.path
+          paths: ["."] # add current directory to sys.path
           options:
             show_root_heading: true
             show_root_full_path: false
@@ -66,9 +66,12 @@ nav:
     - Extraction: pipeline-stages/extraction.md
     - Deduplication: pipeline-stages/deduplication.md
     - Cleaning: pipeline-stages/cleaning.md
+    - Filters: pipeline-stages/filters.md
+    - Chunking: pipeline-stages/chunking.md
     - PII Removal: pipeline-stages/pii-removal.md
     - Metadata Extraction: pipeline-stages/metadata-extraction.md
     - Export: pipeline-stages/export.md
+    - QDrant: pipeline-stages/qdrant.md
   - API Reference:
     - Core Components: api/core.md
     - Pipeline Stages: api/stages.md
