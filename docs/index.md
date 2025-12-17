@@ -1,17 +1,6 @@
 # Data Processing Pipeline
 
-[![ESA](https://img.shields.io/badge/ESA-Φ--lab-blue.svg)](https://philab.esa.int/)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-
-A high-performance, modular library for extracting, deduplicating, cleaning, anonymizing, and exporting large-scale Earth science and Earth observation datasets. This is part of the Earth Virtual Expert (EVE) initiative—an open-science program funded by the European Space Agency's Φ-lab.
-
-## 🌍 Earth Virtual Expert (EVE)
-
-**Earth Virtual Expert (EVE)** aims to advance the use of Large Language Models (LLMs) within the Earth Observation (EO) and Earth Science (ES) community.
-
-- **Website**: https://eve.philab.esa.int/
-- **HuggingFace**: https://huggingface.co/eve-esa
-- **GitHub**: https://github.com/eve-esa
+A high-performance, modular library for extracting, deduplicating, cleaning, anonymizing, and exporting large-scale Earth science and Earth observation datasets.
 
 ## Features
 
@@ -74,20 +63,15 @@ A high-performance, modular library for extracting, deduplicating, cleaning, ano
     eve run
     ```
 
-## Documentation
 
-- [Installation Guide](getting-started/installation.md)
-- [Quick Start Tutorial](getting-started/quick-start.md)
-<!-- - [Examples](examples/) -->
+## Funding
 
-## Contributing
+This project is supported by the European Space Agency (ESA) Φ-lab through the Large Language Model for Earth Observation and Earth Science project, as part of the Foresight Element within FutureEO Block 4 programme.
 
-We welcome contributions! Please open an issue or submit a pull request on GitHub to help improve the pipeline.
+## Citation
+
+If you use this project in academic or research settings, please cite:
 
 ## License
 
 This project is released under the Apache 2.0 License - see the [LICENSE](https://github.com/eve-esa/eve-pipeline/blob/main/LICENSE) file for more details.
-
-## Acknowledgments
-
-This project is supported by the European Space Agency (ESA) Φ-lab through the Large Language Model for Earth Observation and Earth Science project, as part of the Foresight Element within FutureEO Block 4 programme.
