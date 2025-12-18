@@ -16,6 +16,7 @@ class ChunkerStep(PipelineStep):
     """Chunk documents into smaller, semantically meaningful pieces.
 
     Uses a two-step chunking strategy:
+    
     1. Split by Markdown headers to maintain document structure
     2. Further split large sections by sentences while preserving LaTeX and tables
     3. Optionally merge small chunks that share compatible heading levels

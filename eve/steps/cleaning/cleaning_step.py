@@ -34,6 +34,7 @@ class CleaningStep(PipelineStep):
             config: Configuration dictionary with component settings.
 
                 Expected keys:
+                
                 - ocr_threshold: float (default 0.99) - OCR duplicate threshold
                 - min_words: int (default 2) - Minimum words for processing
                 - enable_latex_correction: bool (default False) - Enable LaTeX correction
