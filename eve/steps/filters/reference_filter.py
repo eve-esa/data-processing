@@ -13,6 +13,7 @@ class ReferenceFilterStep(PipelineStep):
     checking both in document headers and in the document text content.
 
     The filter checks for:
+    
     - Headers containing: "reference", "references", "acknowledgement", "acknowledgements"
     - Text content containing markdown headers with these keywords
 
