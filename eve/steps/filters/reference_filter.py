@@ -17,7 +17,8 @@ class ReferenceFilterStep(PipelineStep):
     - Text content containing markdown headers with these keywords
 
     Config parameters:
-        action (str): Either "keep" or "discard" (default: "discard")
+    
+        - action (str): Either "keep" or "discard" (default: "discard")
             - "discard": Remove documents with references/acknowledgements
             - "keep": Keep only documents with references/acknowledgements
 

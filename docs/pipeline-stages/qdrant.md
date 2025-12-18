@@ -134,14 +134,17 @@ When creating a new collection, the step automatically applies optimized setting
 <summary><h3>Vector Configuration</h3></summary>
 
 #### Distance Metric: COSINE
+
 Cosine similarity measures the angle between vectors, making it ideal for text embeddings where the direction matters more than magnitude. This is the standard choice for semantic search applications.
 
 [Read about Distance Metrics →](https://qdrant.tech/documentation/concepts/search/#metrics)
 
 #### On-Disk Storage: Enabled
+
 Stores vectors on disk rather than in RAM, significantly reducing memory requirements for large collections. While slightly slower than in-memory storage, this allows you to store millions of vectors affordably.
 
 #### Shards: 8
+
 Distributes data across 8 shards for parallel processing. More shards improve write throughput and allow better resource utilization, especially important for large datasets.
 
 [Learn about Sharding →](https://qdrant.tech/documentation/guides/distributed_deployment/)

@@ -32,13 +32,14 @@ class CleaningStep(PipelineStep):
         
         Args:
             config: Configuration dictionary with component settings.
-                   Expected keys:
-                   - ocr_threshold: float (default 0.99) - OCR duplicate threshold
-                   - min_words: int (default 2) - Minimum words for processing
-                   - enable_latex_correction: bool (default False) - Enable LaTeX correction
-                   - openrouter_api_key: str (optional) - API key for LaTeX correction
-                   - openrouter_model: str (default "anthropic/claude-3-haiku") - Model for corrections
-                   - debug: bool (default False) - Enable debug output
+
+                Expected keys:
+                - ocr_threshold: float (default 0.99) - OCR duplicate threshold
+                - min_words: int (default 2) - Minimum words for processing
+                - enable_latex_correction: bool (default False) - Enable LaTeX correction
+                - openrouter_api_key: str (optional) - API key for LaTeX correction
+                - openrouter_model: str (default "anthropic/claude-3-haiku") - Model for corrections
+                - debug: bool (default False) - Enable debug output
         """
         super().__init__(config, name="CleaningStep")
         

@@ -102,6 +102,7 @@ class QdrantUploadStep(PipelineStep):
 
         Args:
             config (dict): Configuration dictionary containing:
+            
                 - mode (str, optional): "qdrant" or "local". Defaults to "qdrant".
                 - use_existing_embeddings (bool, optional): If True, use embeddings
                     from document.embedding field. Defaults to False.

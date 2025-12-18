@@ -60,11 +60,12 @@ Extracts content from various document formats.
 #### Options
 
 - **format**: Document format specification
-  - `""` (default): Automatically detect format
-  - `"pdf"`: PDF documents
-  - `"html"`: HTML documents
-  - `"xml"`: XML documents
-  - `"markdown"`: Markdown documents
+
+    - `""` (default): Automatically detect format
+    - `"pdf"`: PDF documents
+    - `"html"`: HTML documents
+    - `"xml"`: XML documents
+    - `"markdown"`: Markdown documents
 
 - **url**: Server URL for nougat extraction
 
@@ -85,8 +86,9 @@ Removes duplicate and near-duplicate documents.
 #### Options
 
 - **method**: Deduplication method
-  - `"exact"` (default): Exact hash-based deduplication
-  - `"lsh"`: Locality Sensitive Hashing for near-duplicates
+
+    - `"exact"` (default): Exact hash-based deduplication
+    - `"lsh"`: Locality Sensitive Hashing for near-duplicates
 
 #### LSH Options
 
@@ -142,8 +144,9 @@ Saves processed documents to output.
 #### Options
 
 - **format**: Output format
-  - `"md"` (default): Markdown
-  - `"txt"`: Plain text
-  - `"json"`: JSON with metadata
+
+    - `"md"` (default): Markdown
+    - `"txt"`: Plain text
+    - `"json"`: JSON with metadata
 
 - **destination**: Output directory path

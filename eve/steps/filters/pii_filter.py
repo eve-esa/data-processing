@@ -14,11 +14,12 @@ class PiiFilterStep(PipelineStep):
     headers or text are kept regardless of PII percentage.
 
     Config parameters:
-        threshold (float): PII token percentage threshold (e.g., 0.03 for 3%)
-        action (str): Either "keep" or "discard" (default: "discard")
+
+        - threshold (float): PII token percentage threshold (e.g., 0.03 for 3%)
+        - action (str): Either "keep" or "discard" (default: "discard")
             - "discard": Remove documents with PII >= threshold (except abstract/intro)
             - "keep": Keep only documents with PII >= threshold (except abstract/intro)
-        apply_filter (bool): Whether to apply filtering (default: True)
+        - apply_filter (bool): Whether to apply filtering (default: True)
 
     Examples:
         # Remove documents with >= 3% PII tokens (but keep abstracts/intros)

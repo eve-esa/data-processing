@@ -23,13 +23,14 @@ class ChunkerStep(PipelineStep):
     The chunker processes documents in parallel using multiprocessing for performance.
 
     Config parameters:
-        max_chunk_size (int): Maximum size of any chunk in words (default: 512)
-        chunk_overlap (int): Number of characters to overlap between chunks (default: 0)
-        word_overlap (int): Number of words to overlap between chunks (default: 0)
-        add_headers (bool): Whether to prepend section headers to chunks (default: False)
-        merge_small_chunks (bool): Whether to merge small chunks with compatible headers (default: True)
-        headers_to_split_on (list[int]): Markdown header levels to split on (default: [1, 2, 3, 4, 5, 6])
-        max_workers (int): Number of parallel workers, None uses CPU count (default: None)
+
+        - max_chunk_size (int): Maximum size of any chunk in words (default: 512)
+        - chunk_overlap (int): Number of characters to overlap between chunks (default: 0)
+        - word_overlap (int): Number of words to overlap between chunks (default: 0)
+        - add_headers (bool): Whether to prepend section headers to chunks (default: False)
+        - merge_small_chunks (bool): Whether to merge small chunks with compatible headers (default: True)
+        - headers_to_split_on (list[int]): Markdown header levels to split on (default: [1, 2, 3, 4, 5, 6])
+        - max_workers (int): Number of parallel workers, None uses CPU count (default: None)
 
     Examples:
         # Basic chunking with default settings
