@@ -156,13 +156,15 @@ HNSW (Hierarchical Navigable Small World) is the indexing algorithm that enables
 
 #### m: 16
 Number of bidirectional links created for each node. Higher values improve search quality but increase memory usage and indexing time. 16 is a balanced choice for most applications.
-- **Lower (4-8)**: Less memory, faster indexing, slightly lower recall
-- **Higher (32-64)**: Better recall, more memory, slower indexing
+
+  - **Lower (4-8)**: Less memory, faster indexing, slightly lower recall
+  - **Higher (32-64)**: Better recall, more memory, slower indexing
 
 #### ef_construct: 128
 Size of the dynamic candidate list during index construction. Higher values produce better index quality but take longer to build. 128 provides good quality without excessive build time.
-- **Lower (64)**: Faster indexing, slightly lower search quality
-- **Higher (256-512)**: Better search quality, slower indexing
+
+  - **Lower (64)**: Faster indexing, slightly lower search quality
+  - **Higher (256-512)**: Better search quality, slower indexing
 
 #### full_scan_threshold: 10,000
 When collection size is below this threshold, Qdrant uses exact (brute-force) search instead of the HNSW index. Exact search is faster for small collections.
@@ -183,10 +185,11 @@ Binary quantization compresses vectors from 32-bit floats to 1-bit representatio
 Converts vector components to binary (0 or 1) for massive memory savings. The original vectors are still used for final re-ranking, so search quality remains high.
 
 **Benefits:**
-- 32x memory reduction (32-bit float → 1-bit)
-- Faster distance calculations
-- More vectors fit in RAM for better performance
-- Negligible impact on search quality (typically <2% recall loss)
+
+  - 32x memory reduction (32-bit float → 1-bit)
+  - Faster distance calculations
+  - More vectors fit in RAM for better performance
+  - Negligible impact on search quality (typically <2% recall loss)
 
 #### always_ram: false
 Allows quantized vectors to be stored on disk when needed, rather than always keeping them in RAM. This provides flexibility for very large collections.
@@ -219,40 +222,46 @@ The pipeline automatically creates indexes on common academic metadata fields:
 
 #### Text Indexes (title, journal)
 Enable full-text search and filtering on text fields. The word tokenizer splits text into searchable terms.
-- **min_token_len**: Minimum word length to index
-- **max_token_len**: Maximum word length to index
-- **lowercase**: Normalize to lowercase for case-insensitive search
+
+  - **min_token_len**: Minimum word length to index
+  - **max_token_len**: Maximum word length to index
+  - **lowercase**: Normalize to lowercase for case-insensitive search
 
 **Example filters:**
-- Find papers with "neural" in title
-- Filter by journal name
-- Combine with vector search for semantic + keyword search
+
+  - Find papers with "neural" in title
+  - Filter by journal name
+  - Combine with vector search for semantic + keyword search
 
 #### Integer Indexes (year, n_citations)
 Enable efficient range queries on numeric fields.
 
 **Example filters:**
-- Papers published after 2020
-- Papers with >100 citations
-- Combine filters: papers from 2015-2023 with >50 citations
+
+  - Papers published after 2020
+  - Papers with >100 citations
+  - Combine filters: papers from 2015-2023 with >50 citations
 
 **Performance Impact:**
-- Indexes speed up filtering by 100-1000x
-- Small storage overhead (~10-20% of original data)
-- Slightly slower writes (indexes must be updated)
+
+  - Indexes speed up filtering by 100-1000x
+  - Small storage overhead (~10-20% of original data)
+  - Slightly slower writes (indexes must be updated)
 
 ## Stage Behavior
 
 ### Metadata Handling
 
 Document metadata is prepared for storage:
-- **content**: Document text content
-- **metadata**: All user metadata fields (unwrapped at root level)
-- **pipeline_metadata**: Processing metadata (if `upload_pipeline_metadata: true`)
+
+  - **content**: Document text content
+  - **metadata**: All user metadata fields (unwrapped at root level)
+  - **pipeline_metadata**: Processing metadata (if `upload_pipeline_metadata: true`)
 
 Type conversions:
-- `year` field converted to integer
-- `title` field converted to string
+
+  - `year` field converted to integer
+  - `title` field converted to string
 
 ### Error Handling
 

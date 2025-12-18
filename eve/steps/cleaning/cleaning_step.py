@@ -18,6 +18,7 @@ class CleaningStep(PipelineStep):
     Comprehensive cleaning step that applies multiple data cleaning components.
     
     This step processes extracted text through various cleaning components to:
+    
     - Fix OCR-induced errors
     - Remove OCR duplicates
     - Apply Nougat corrections
