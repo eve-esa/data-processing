@@ -13,7 +13,6 @@ dependencies = [
     "rapidfuzz>=3.0.0",
     "nltk>=3.8",
     "datasketch>=1.6.0",
-    "pdflatex>=0.1.3",
     "pytest-asyncio==1.1.0",
     "fastapi>=0.118.2",
     "pypdfium2>=4.30.0",
@@ -37,8 +36,7 @@ dependencies = [
     "mkdocs-material>=9.7.0",
     "mkdocstrings-python>=1.18.2",
     "torch>=2.7.0",  # Downgrade from 2.8.0
-    # "pdflatex>=0.1.3",  # Comment out or remove
-    "pylatex>=1.4.0",  # Add this if you need LaTeX functionality
+    "pylatex>=1.4.0",
 ]
 
 [project.scripts]
@@ -50,7 +48,4 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["eve*"]
 
-[tool.setuptools]
-packages = ["eve"]

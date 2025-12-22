@@ -9,10 +9,12 @@ import os
 import re
 import asyncio
 import tempfile
+import subprocess
 from typing import Optional, List, Tuple
 from abc import ABC, abstractmethod
 
-from pdflatex import PDFLaTeX
+from pylatex import Document as LaTeXDocument, NoEscape
+from pylatex.package import Package
 
 from eve.logging import get_logger
 from eve.model.document import Document
@@ -349,43 +351,53 @@ class LaTeXProcessor(TextProcessor):
     async def _check_formula_syntax(
         self, formula: str, formula_type: str
     ) -> Tuple[bool, str]:
-        """Check if a LaTeX formula has valid syntax using pdflatex package."""
+        """Check if a LaTeX formula has valid syntax using pylatex and subprocess."""
         try:
-            # Create appropriate test content based on formula type
-            if formula_type == "inline":
-                test_content = f"\\documentclass{{article}}\\usepackage{{amsmath}}\\usepackage{{amssymb}}\\begin{{document}}${formula}$\\end{{document}}"
-            elif formula_type == "display":
-                test_content = f"\\documentclass{{article}}\\usepackage{{amsmath}}\\usepackage{{amssymb}}\\begin{{document}}$${formula}$$\\end{{document}}"
-            elif formula_type == "bracket":
-                test_content = f"\\documentclass{{article}}\\usepackage{{amsmath}}\\usepackage{{amssymb}}\\begin{{document}}\\({formula}\\)\\end{{document}}"
-            elif formula_type == "square_bracket":
-                test_content = f"\\documentclass{{article}}\\usepackage{{amsmath}}\\usepackage{{amssymb}}\\begin{{document}}\\[{formula}\\]\\end{{document}}"
-            else:
-                test_content = f"\\documentclass{{article}}\\usepackage{{amsmath}}\\usepackage{{amssymb}}\\usepackage{{multirow}}\\usepackage{{bm}}\\begin{{document}}{formula}\\end{{document}}"
-
             def check_latex():
                 """Run pdflatex compilation in a separate thread."""
                 try:
                     with tempfile.TemporaryDirectory() as tmp_dir:
-                        tex_file = os.path.join(tmp_dir, "test.tex")
-                        with open(tex_file, "w", encoding="utf-8") as f:
-                            f.write(test_content)
+                        # Create a pylatex Document
+                        doc = LaTeXDocument(documentclass="article")
 
-                        pdfl = PDFLaTeX.from_texfile(tex_file)
-                        _, log, completed_process = pdfl.create_pdf(
-                            keep_pdf_file=False, keep_log_file=False
+                        # Add required packages
+                        doc.packages.append(Package("amsmath"))
+                        doc.packages.append(Package("amssymb"))
+
+                        # Add formula-specific content wrapped in NoEscape
+                        if formula_type == "inline":
+                            doc.append(NoEscape(f"${formula}$"))
+                        elif formula_type == "display":
+                            doc.append(NoEscape(f"$${formula}$$"))
+                        elif formula_type == "bracket":
+                            doc.append(NoEscape(f"\\({formula}\\)"))
+                        elif formula_type == "square_bracket":
+                            doc.append(NoEscape(f"\\[{formula}\\]"))
+                        else:
+                            # Environment type - add extra packages
+                            doc.packages.append(Package("multirow"))
+                            doc.packages.append(Package("bm"))
+                            doc.append(NoEscape(formula))
+
+                        # Generate the .tex file
+                        tex_file = os.path.join(tmp_dir, "test")
+                        doc.generate_tex(tex_file)
+
+                        # Run pdflatex using subprocess
+                        result = subprocess.run(
+                            ["pdflatex", "-interaction=nonstopmode", f"{tex_file}.tex"],
+                            cwd=tmp_dir,
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE,
+                            timeout=30,
                         )
 
-                        if completed_process.returncode == 0:
+                        if result.returncode == 0:
                             return True, "Formula syntax is valid"
                         else:
-                            # Parse log for error messages
-                            log_content = (
-                                log.decode("utf-8", errors="replace")
-                                if log
-                                else "No log available"
-                            )
-                            error_lines = log_content.split("\n")
+                            # Parse output for error messages
+                            output = result.stdout.decode("utf-8", errors="replace")
+                            error_lines = output.split("\n")
                             error_msg = "Unknown error"
                             for i, line in enumerate(error_lines):
                                 if "! " in line:
@@ -397,6 +409,10 @@ class LaTeXProcessor(TextProcessor):
                                         error_msg += " " + error_lines[i + 1].strip()
                                     break
                             return False, error_msg
+                except subprocess.TimeoutExpired:
+                    return False, "PDFLaTeX compilation timed out"
+                except FileNotFoundError:
+                    return False, "pdflatex command not found. Please ensure LaTeX is installed."
                 except Exception as e:
                     return False, f"PDFLaTeX compilation failed: {str(e)}"
 
