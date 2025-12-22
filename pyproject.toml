@@ -2,7 +2,7 @@
 name = "eve"
 version = "0.1.0"
 description = ""
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "aiofiles",
     "aiohttp",
@@ -21,7 +21,7 @@ dependencies = [
     "albumentations==1.0",
     "python-multipart>=0.0.20",
     "uvicorn>=0.37.0",
-    "transformers==4.38.2",
+    "transformers==4.55.2",
     "litserve>=0.2.15",
     "flair>=0.15.1",
     "presidio-analyzer>=2.2.360",
