@@ -13,11 +13,13 @@ class ReferenceFilterStep(PipelineStep):
     checking both in document headers and in the document text content.
 
     The filter checks for:
+    
     - Headers containing: "reference", "references", "acknowledgement", "acknowledgements"
     - Text content containing markdown headers with these keywords
 
     Config parameters:
-        action (str): Either "keep" or "discard" (default: "discard")
+    
+        - action (str): Either "keep" or "discard" (default: "discard")
             - "discard": Remove documents with references/acknowledgements
             - "keep": Keep only documents with references/acknowledgements
 

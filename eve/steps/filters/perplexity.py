@@ -17,12 +17,13 @@ class PerplexityFilterStep(PipelineStep):
     natural, coherent text.
 
     Config parameters:
-        model_name (str): Hugging Face model name (default: "TinyLlama/TinyLlama-1.1B-Chat-v1.0")
+
+        - model_name (str): Hugging Face model name (default: "TinyLlama/TinyLlama-1.1B-Chat-v1.0")
         stride (int): Stride for sliding window perplexity calculation (default: 128)
-        batch_size (int): Batch size for model inference (default: 128)
-        max_length (int): Maximum sequence length for model (default: 1024)
-        threshold (float): Perplexity threshold for filtering (default: 0.0)
-        enable_threshold (bool): Whether to apply threshold-based filtering (default: False)
+        - batch_size (int): Batch size for model inference (default: 128)
+        - max_length (int): Maximum sequence length for model (default: 1024)
+        - threshold (float): Perplexity threshold for filtering (default: 0.0)
+        - enable_threshold (bool): Whether to apply threshold-based filtering (default: False)
 
     Examples:
         # Calculate perplexity without filtering

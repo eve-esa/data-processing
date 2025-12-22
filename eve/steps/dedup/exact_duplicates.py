@@ -10,6 +10,7 @@ from eve.utils import read_in_chunks
 
 class ExactDuplication:
     """this class does exact duplication by -
+    
     1. calculate size as a first filter to save computation.
     2. calcuates checksum and finds the duplicates.
     """

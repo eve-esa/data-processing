@@ -13,9 +13,10 @@ class NewLineFilterStep(PipelineStep):
     separated by newline characters.
 
     Config parameters:
-        chunks (int): The newline chunk count threshold for filtering
-        comparison (str): Either "less" or "greater" to compare against threshold
-        action (str): Either "keep" or "discard" - what to do with documents matching the condition
+
+        - chunks (int): The newline chunk count threshold for filtering
+        - comparison (str): Either "less" or "greater" to compare against threshold
+        - action (str): Either "keep" or "discard" - what to do with documents matching the condition
 
     Examples:
         # Keep documents with more than 10 chunks

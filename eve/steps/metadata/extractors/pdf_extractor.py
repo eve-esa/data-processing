@@ -1,5 +1,6 @@
 """
 PDF metadata extractor is a two stage process.
+
 1. Extract content using monkeyocr.
 2. Use crossref to extract metadata from the content.
 """

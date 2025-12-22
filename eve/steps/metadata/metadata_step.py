@@ -23,6 +23,7 @@ class MetadataStep(PipelineStep):
         
         Args:
             config: Configuration dictionary with options:
+            
                 - enabled_formats: List of file formats to process (pdf, html, txt, md)
                 - fallback_to_filename: Use filename as title fallback
                 - debug: Enable debug logging

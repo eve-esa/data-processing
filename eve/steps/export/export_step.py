@@ -15,6 +15,7 @@ class ExportStep(PipelineStep):
 
         Args:
             config: Configuration containing:
+            
                 - output_dir: Output directory path
                 - format: Output format (jsonl, md, etc.)
                 - resume: Whether to enable resume functionality (default: False)

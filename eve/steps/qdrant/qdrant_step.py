@@ -92,6 +92,7 @@ class QdrantUploadStep(PipelineStep):
     """Pipeline step for uploading chunked documents to Qdrant vector database or storing embeddings locally.
 
     Supports two modes:
+    
     - "qdrant": Upload embeddings to a Qdrant vector database
     - "local": Store embeddings in document metadata without uploading
     """
@@ -101,6 +102,7 @@ class QdrantUploadStep(PipelineStep):
 
         Args:
             config (dict): Configuration dictionary containing:
+            
                 - mode (str, optional): "qdrant" or "local". Defaults to "qdrant".
                 - use_existing_embeddings (bool, optional): If True, use embeddings
                     from document.embedding field. Defaults to False.
