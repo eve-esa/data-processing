@@ -1,26 +1,11 @@
 pipeline:
+  batch_size: 2
   inputs:
-    mode: "directory"
-    path: "input_files"
+    path: "htmls" # path to the html folder
   stages:
-    - name: extraction
-      config:
-        format: "auto"
     - name: metadata
       config:
-        enabled_formats: ["pdf", "html", "txt"]  # Extract metadata from multiple formats
-        fallback_to_filename: true              # Use filename as title if extraction fails
-        debug: true                             # Enable debug logging to see Scholar search progress
-        export_metadata: true                   # Export metadata to JSON file
-        metadata_destination: "./output"        # Directory to save metadata file
-        metadata_filename: "metadata.json"      # Name of metadata JSON file
-        enable_scholar_search: true             # Enable Google Scholar search for all file formats
-    - name: cleaning
-      config:
-        ocr_threshold: 0.99
-        min_words: 2
-        enable_latex_correction: false
+        enabled_formats: ["pdf", "html", "txt", "md"]
+
     - name: export
-      config:
-        format: "md"
-        destination: "output/processed_files"
+      config: { format: "jsonl", output_dir: "output"}
