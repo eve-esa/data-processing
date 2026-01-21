@@ -20,7 +20,23 @@ The metadata extraction stage automatically identifies and extracts structured m
 
 ### PDF Metadata Extraction
 
-Setup MonkeyOCR using the bash file under the `\server` directory.
+Setup MonkeyOCR using the bash file under the `\server` directory. Then run the extractions using this command `python3 parse.py <dir> --pred-abandon`
+You will see the predictions stored in the MonkeyOCR folder. You can then run the metadata extraction pipeline given below -
+
+```yaml
+pipeline:
+  batch_size: 2
+  inputs:
+    path: "htmls" # path to the folder
+  stages:
+    - name: metadata
+      config:
+        enabled_formats: ["pdf", "html", "txt", "md"]
+
+    - name: export
+      config: { format: "jsonl", output_dir: "output"}
+```
+
 
 1. We first extract text from the first page of the PDF files using MonkeyOCR. The doi and the title are usually present within the first page of the document.
 2. We extract dois using handwritten regex patterns
@@ -31,12 +47,6 @@ Setup MonkeyOCR using the bash file under the `\server` directory.
 ### Other format Extraction
 
 For other documents like HTML, TXT, JSON, the extractor uses handwritten regex patterns to extract the document title and the URL of the page.
-
-```yaml
-- name: metadata
-  config:
-    enabled_formats: ["pdf", "html", "txt", "md"]
-```
 
 ## Configuration Parameters
 
