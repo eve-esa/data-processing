@@ -186,6 +186,13 @@ class MetadataStep(PipelineStep):
                 "has_extracted_metadata": bool(document.get_metadata("extracted_metadata"))
             }
             if document.metadata:
+                if document.file_format == 'pdf': # TO-DO, hacky fix, find a more cleaner solution
+                    file_id = document.filename.removesuffix(".pdf")
+                    document.metadata = {
+                        "extracted_metadata": {
+                            file_id: document.metadata["extracted_metadata"].get(file_id)
+                        }
+                    }
                 for key, value in document.metadata.items():
                     doc_metadata[key] = value
 
