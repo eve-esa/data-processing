@@ -45,7 +45,7 @@ class ExportStep(PipelineStep):
         for document in documents:
             output_file = (
                 output_dir
-                / f"{Path(document.filename).stem}.{self.config.get('format', 'jsonl')}"
+                / f"{Path(document.filename).stem}.{self.config.get('format', 'md')}"
             )
             async with aiofiles.open(output_file, "a+", encoding="utf-8") as f:
                 await f.write(json.dumps(document.__dict__()))
@@ -67,10 +67,10 @@ class ExportStep(PipelineStep):
         for document in documents:
             output_file = (
                 output_dir
-                / f"{Path(document.filename).stem}.{self.config.get('format', 'jsonl')}"
+                / f"{Path(document.filename).stem}.{self.config.get('format', 'md')}"
             )
             async with aiofiles.open(output_file, "a+", encoding="utf-8") as f:
-                await f.write(json.dumps(document.__dict__()))
+                await f.write(json.dumps(document.content))
                 await f.write("\n")
             self.logger.info(f"Saved file: {output_file}")
 
@@ -88,7 +88,7 @@ class ExportStep(PipelineStep):
         # Note: Documents are already filtered in create_batches() when resume is enabled
         # No need to filter again here to avoid memory overhead
 
-        format = self.config.get("format", "jsonl")
+        format = self.config.get("format", "md")
         if format == "jsonl":
             result = await self.export_jsonl(documents)
         elif format == "dummy":

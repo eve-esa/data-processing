@@ -18,7 +18,7 @@ from eve.common.regex_patterns import doi_regexp, arxiv_regexp, isbn_regexp
 
 MAX_CONCURRENT = 40
 
-main_dir = "server/MonkeyOCR/output" # this should depend on where the monekyocr outputs are
+main_dir = "server/MonkeyOCR/output" # this should depend on where the monkeyocr outputs are
 
 class PdfMetadataExtractor():
 
