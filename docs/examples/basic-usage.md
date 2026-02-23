@@ -127,13 +127,39 @@ pipeline:
         destination: "unified_output"
 ```
 
-## Complete End-to-End Pipeline: Process and Upload to Qdrant
+## Process and Upload to Qdrant
 
 This example demonstrates a complete pipeline that extracts, chunks, filters, embeds, and uploads documents to Qdrant in one workflow.
 
 **Prerequisites:**
 - VLLM server running for embeddings: `python server/vllm.py`
 - Qdrant instance running: `docker run -p 6333:6333 qdrant/qdrant`
+
+### Understanding JSONL Input Format
+
+The pipeline accepts JSONL (JSON Lines) files where each line is a JSON document. The extractor recognizes the following fields:
+
+**Required Fields:**
+- `content` (string): The document text content
+
+**Optional Fields:**
+- `metadata` (object): Custom metadata that will be preserved throughout the pipeline
+- `embedding` (array): Pre-computed embedding vector (if using `use_existing_embeddings: true`)
+- `pipeline_metadata` (object): Internal metadata from previous pipeline runs
+
+**Example JSONL file:**
+```jsonl
+{"content": "This is the first document.", "metadata": {"title": "Doc 1", "author": "John Doe", "year": 2024}}
+{"content": "This is the second document.", "metadata": {"title": "Doc 2", "source": "research_paper.pdf"}}
+{"content": "Third document with embedding.", "metadata": {"title": "Doc 3"}, "embedding": [0.123, 0.456, ...]}
+```
+
+**Important Notes:**
+- Each line must be valid JSON
+- The `content` field is required; documents without it will be skipped
+- Metadata fields are completely flexible - you can include any custom fields
+- When chunks are created, they **inherit all metadata from the original document**
+- Chunking adds a `headers` field to metadata containing markdown header hierarchy
 
 ```yaml
 # examples/process_and_upload.yaml
@@ -220,14 +246,32 @@ eve run
 ```
 
 **What this pipeline does:**
-1. Extracts content from JSONL documents
-2. Splits documents into chunks of up to 512 words
-3. Filters chunks by length (40-1024 words)
-4. Removes references and acknowledgements sections
-5. Filters out chunks with PII above 3% threshold
-6. Removes chunks with excessive newlines
-7. Generates embeddings using VLLM server
-8. Uploads filtered documents with embeddings to Qdrant
+1. **Extracts content** from JSONL documents (preserves all metadata from input)
+2. **Splits documents into chunks** of up to 512 words
+   - Each chunk inherits all metadata from the original document
+   - Chunking adds a `headers` field to metadata with markdown header hierarchy
+3. **Filters chunks by length** (40-1024 words)
+4. **Removes references and acknowledgements** sections
+5. **Filters out chunks with PII** above 3% threshold
+6. **Removes chunks with excessive newlines**
+7. **Generates embeddings** using VLLM server
+8. **Uploads filtered documents with embeddings to Qdrant**
+   - Includes original metadata from JSONL input
+   - Includes chunk headers
+   - Includes filter statistics (if `upload_pipeline_metadata: true`)
+
+**Metadata Flow Example:**
+
+```
+Input JSONL:
+{"content": "# Introduction\n\nThis is my paper...", "metadata": {"title": "My Paper", "author": "Jane Doe"}}
+
+After Chunking:
+Document 1: {"content": "This is my paper...", "metadata": {"title": "My Paper", "author": "Jane Doe", "headers": ["#Introduction"]}}
+
+After Upload to Qdrant:
+All chunks retain: title="My Paper", author="Jane Doe", headers=["#Introduction"], plus any filter metadata
+```
 
 ## Selective Stage Processing
 
