@@ -69,11 +69,6 @@ pipeline:
         chunks: 60
         comparison: "less"
         action: "keep"
-    # Step 2: Generate embeddings and store locally
-    - name: qdrant_upload
-      config:
-        mode: "local"
-        batch_size: 5
 
     # Step 8: Upload to Qdrant using existing embeddings
     - name: qdrant_upload
