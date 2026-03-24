@@ -38,7 +38,14 @@ The **Data Processing Pipeline** is a high-performance, modular library designed
 
 ## Getting started
 
-1. Install the packages.
+1. Clone the repository.
+
+```
+git clone https://github.com/eve-esa/data-processing
+cd data-processing
+```
+
+2. Install the packages.
 
 ```
 uv sync
