@@ -9,8 +9,14 @@ import re
 import json
 import asyncio
 import httpx
+import xml.etree.ElementTree as ET
 from typing import Dict, Any, Optional
-from tqdm.auto import tqdm
+
+try:
+    from tqdm.auto import tqdm
+except ImportError:
+    def tqdm(iterable, *args, **kwargs):
+        return iterable
 
 from eve.model.document import Document
 from eve.logging import get_logger
@@ -85,6 +91,15 @@ class PdfMetadataExtractor():
             return resp.json()
         except Exception:
             return None
+
+    @staticmethod
+    async def _fetch_text(client, url):
+        try:
+            resp = await client.get(url, timeout=50)
+            resp.raise_for_status()
+            return resp.text
+        except Exception:
+            return None
     
     async def _fetch_crossref_by_doi(self, client, doi):
         data = await self._fetch_json(client, f"https://api.crossref.org/works/{doi}")
@@ -133,12 +148,59 @@ class PdfMetadataExtractor():
         }
 
 
-    async def fetch_doi_from_arxiv(self, client, arxiv_id):
-        data = await self._fetch_json(client, f"https://api.crossref.org/works?query={arxiv_id}")
+    @staticmethod
+    def _normalize_arxiv_id(arxiv_id):
+        match = re.search(r"(\d{4}\.\d+)(?:v\d+)?", arxiv_id or "")
+        return match.group(1) if match else arxiv_id
+
+    async def _fetch_arxiv_metadata(self, client, arxiv_id):
+        arxiv_id = self._normalize_arxiv_id(arxiv_id)
+        data = await self._fetch_text(
+            client, f"https://export.arxiv.org/api/query?id_list={arxiv_id}"
+        )
         if not data:
             return None
-        items = data.get("message", {}).get("items", [])
-        return self._safe_str(items[0].get("DOI")) if items else None
+
+        try:
+            root = ET.fromstring(data)
+        except ET.ParseError:
+            return None
+
+        ns = {
+            "atom": "http://www.w3.org/2005/Atom",
+            "arxiv": "http://arxiv.org/schemas/atom",
+        }
+        entry = root.find("atom:entry", ns)
+        if entry is None:
+            return None
+
+        def text(path):
+            node = entry.find(path, ns)
+            return " ".join(node.text.split()) if node is not None and node.text else None
+
+        authors = [
+            name.text.strip()
+            for name in entry.findall("atom:author/atom:name", ns)
+            if name.text and name.text.strip()
+        ]
+        published = text("atom:published")
+        doi = text("arxiv:doi")
+        journal_ref = text("arxiv:journal_ref")
+        primary_category = entry.find("arxiv:primary_category", ns)
+        abs_url = f"https://arxiv.org/abs/{arxiv_id}"
+
+        return {
+            "title": text("atom:title"),
+            "authors": ", ".join(authors) or None,
+            "year": published[:4] if published else None,
+            "publisher": "arXiv",
+            "journal": journal_ref or (
+                primary_category.get("term") if primary_category is not None else None
+            ),
+            "pub_url": abs_url,
+            "doi": doi,
+            "citation_count": None,
+        }
 
     async def _extract_metadata(self, sub_dir, main_dir, client, sem):
         async with sem:
@@ -148,9 +210,7 @@ class PdfMetadataExtractor():
             if id_type == "doi":
                 meta = await self._fetch_crossref_by_doi(client, identifier)
             elif id_type == "arxiv":
-                doi = await self._fetch_doi_from_arxiv(client, identifier)
-                if doi:
-                    meta = await self._fetch_crossref_by_doi(client, doi)
+                meta = await self._fetch_arxiv_metadata(client, identifier)
 
             title = self._extract_title(main_dir, sub_dir)
             if not meta and title != "NA":
@@ -205,5 +265,4 @@ class PdfMetadataExtractor():
                     print(f"Failed on {coro}: {e}")
             
         return metadata
-
 
