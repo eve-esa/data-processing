@@ -23,4 +23,11 @@ pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https
 pip install -e .
 pip install lmdeploy==0.9.2
 
+cd MonkeyOCR
+python tools/download_model.py -n MonkeyOCR-pro-3B
+
 echo "Setup complete. MonkeyOCR environment ready."
+
+
+# write a small helper to extract first pages of the pdfs so you dont have to run the whole thing on all pages
+# after you setup, run the predictions using the following command: python3 parse.py <dir> --pred-abandon
